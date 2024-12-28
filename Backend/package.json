@@ -1,7 +1,7 @@
 {
-  "name": "tamang-backend",
+  "name": "nestly-backend",
   "version": "1.0.0",
-  "description": "backend for an Tamang E-commerce app",
+  "description": "backend for an nestly app",
   "main": "./dist/index.js",
   "scripts": {
     "start": "node ./dist/index.js",
@@ -25,6 +25,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.33.0",
+    "email-validator": "^2.0.4",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -46,6 +47,7 @@
     "drizzle-kit": "^0.24.2",
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
+    "husky": "^8.0.0",
     "jest": "^29.7.0",
     "lint-staged": "^15.2.10",
     "nodemon": "^3.1.4",
@@ -53,8 +55,7 @@
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.17.0",
-    "husky": "^8.0.0"
+    "typescript-eslint": "^8.17.0"
   },
   "author": "Kevin Ndahayo",
   "license": "MIT"
