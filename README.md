@@ -1,10 +1,4 @@
-# Nestly-App
-
-Got it! Let’s make an amazing README file for **The Nest**. Based on what I know about The Nest, here’s a first draft: 
-
----
-
-# The Nest 🕊️  
+# Nestly 🏤 
 **Discover, Explore, and Book Your Next Adventure**  
 
 ## Overview  
@@ -22,11 +16,11 @@ Unlike anything else in the market, The Nest bridges the gap between content cre
 ## Installation  
 1. Clone the repository:  
    ```bash  
-   git clone https://github.com/username/TheNest.git  
+   git clone https://github.com/Nestly-dev/Nestly-App.git  
    ```  
 2. Navigate to the project directory:  
    ```bash  
-   cd TheNest  
+   cd Nestly-App  
    ```  
 3. Install dependencies:  
    ```bash  
@@ -44,10 +38,10 @@ Unlike anything else in the market, The Nest bridges the gap between content cre
 - Follow creators and explore their curated travel guides.  
 
 ## Technologies  
-- **Frontend:** React, Next.js  
+- **Frontend:** React Native, Expo  
 - **Backend:** Node.js, Express  
-- **Database:** MongoDB  
-- **Authentication:** NextAuth  
+- **Database:** Neon 
+- **Authentication:** email 
 - **APIs:** Custom RESTful APIs  
 
 ## Contributions  
@@ -67,10 +61,7 @@ We welcome contributions! Please follow these steps:
    ```  
 5. Open a pull request.  
 
-## License  
-[MIT License](LICENSE)  
 
 ## Contact  
 For support or inquiries, reach out to us:  
-📧 Email: contact@thenest.com  
-🌐 Website: [The Nest](https://thenest.com)  
+📧 Email: atnestly@gmail.com
