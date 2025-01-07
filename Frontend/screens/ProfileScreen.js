@@ -12,6 +12,7 @@ import React from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 const ProfileScreen = () => {
+
   return (
     <SafeAreaView>
       <View>
@@ -26,7 +27,7 @@ const ProfileScreen = () => {
             }}
           />
           <View>
-            <Text style={{ marginLeft: 20, fontSize: 30 }}>Gentil</Text>
+            <Text style={{ marginLeft: 20, fontSize: 30 }}></Text>
             <View
               style={{
                 backgroundColor: "#1995AD",
@@ -44,7 +45,7 @@ const ProfileScreen = () => {
         </View>
         <View style={styles.settings}>
           {/* Personal Info Details */}
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() =>{console.log(user);}}>
             <View
               style={{
                 flexDirection: "row",

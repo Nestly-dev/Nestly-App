@@ -10,14 +10,22 @@ import {
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Entypo from "@expo/vector-icons/Entypo";
-import React, { useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
+
+
+
+
+
+
 
 const SignInScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation("");
+  const [userName, setUserName] = useState("");
+
   const handleSignIn = () =>{
     if (!email || !password){
       alert("Please fill up all the details")
@@ -35,7 +43,13 @@ const SignInScreen = () => {
         const {message, user} = result
   
         if(message === "Login successful"){
-          navigation.navigate("Main Page", { username: 'JohnDoe' })
+          navigation.navigate("Main Page")
+
+          setUserName(user.username)
+          console.log(user.username)
+          console.log(userName);
+          updateUser(user)
+
         } else{console.log("Login Failed")}
   
       })
@@ -44,9 +58,8 @@ const SignInScreen = () => {
         alert("Check your Internet connection")
       })
     }
-
-   
   }
+
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: "White", alignItems: "center" }}
