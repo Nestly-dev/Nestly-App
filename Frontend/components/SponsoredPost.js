@@ -24,9 +24,8 @@ const SponsoredPost = () => {
         <Image
           source={require("../assets/images/hotel3.jpg")}
           style={{
-            width: "95%",
+            width: "100%",
             height: 250,
-            marginLeft: 10,
             marginRight: 20,
             borderRadius: 5,
             marginTop: 5,
@@ -38,7 +37,7 @@ const SponsoredPost = () => {
             backgroundColor: "rgba(0, 0, 0, 0.4)",
             height: 50,
             position: "absolute",
-            left: 20,
+            left: 10,
             top: 20,
             flexDirection: "row",
             borderRadius: 200,
@@ -113,9 +112,8 @@ const SponsoredPost = () => {
         <Image
           source={require("../assets/images/hotel11.avif")}
           style={{
-            width: "95%",
+            width: "100%",
             height: 250,
-            marginLeft: 10,
             marginRight: 20,
             borderRadius: 5,
             marginTop: 5,
@@ -127,7 +125,7 @@ const SponsoredPost = () => {
             backgroundColor: "rgba(0, 0, 0, 0.4)",
             height: 50,
             position: "absolute",
-            left: 20,
+            left: 10,
             top: 20,
             flexDirection: "row",
             borderRadius: 200,

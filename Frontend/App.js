@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import AppNavigation from "./Navigation/AppNavigation"
 import React, { useState } from "react";
+import LoginInNavigation from "./Navigation/LoginInNavigation"
 
 export default function App() {
   const [showSplashScreen, setShowSplashScreen] = useState(true)

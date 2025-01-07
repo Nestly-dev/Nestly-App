@@ -17,6 +17,9 @@ import SearchScreen from "../screens/SearchScreen";
 import BookingScreen from "../screens/BookingScreen";
 import NotificationScreen from "../screens/NotificationScreen"
 import ProfileScreen from "../screens/ProfileScreen";
+import SignInScreen from '../screens/SigninScreen';
+import SignUpScreen from '../screens/SignUpScreen'
+import Mainscreen from '../screens/Mainscreen';
 
 // Screen names
 const HomeScreenName = "Home";
@@ -74,7 +77,7 @@ const HomeStackNavigator = () => {
     <Stack.Navigator>
       <Stack.Screen
         name="Home"
-        component={HomeScreen}
+        component={SignInScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen
@@ -107,6 +110,9 @@ const HomeStackNavigator = () => {
         component={NotificationScreen}
         options={{ headerTransparent: true, headerShown: true, title: "Notification" }}
       />
+      <Stack.Screen name="SignIn" component={SignInScreen} options={{headerShown: false}} />
+      <Stack.Screen name="SignUp" component={SignUpScreen} options={{headerShown: false}} />
+      <Stack.Screen name="Main Page" component={HomeScreen} options={{headerShown: false}} />
     </Stack.Navigator>
   );
 };
