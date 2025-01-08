@@ -76,8 +76,8 @@ const HomeStackNavigator = () => {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="Home"
-        component={SignInScreen}
+        name="Home Page"
+        component={HomeScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

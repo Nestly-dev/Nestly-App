@@ -10,8 +10,12 @@ import {
 } from "react-native";
 import React from "react";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useContext } from "react";
+import UserContext from "../context/UserContext";
 
 const ProfileScreen = () => {
+
+  const {user} = useContext(UserContext)
 
   return (
     <SafeAreaView>
@@ -27,7 +31,7 @@ const ProfileScreen = () => {
             }}
           />
           <View>
-            <Text style={{ marginLeft: 20, fontSize: 30 }}></Text>
+            <Text style={{ marginLeft: 20, fontSize: 30 }}>{user.username}</Text>
             <View
               style={{
                 backgroundColor: "#1995AD",
@@ -45,7 +49,7 @@ const ProfileScreen = () => {
         </View>
         <View style={styles.settings}>
           {/* Personal Info Details */}
-          <TouchableOpacity onPress={() =>{console.log(user);}}>
+          <TouchableOpacity>
             <View
               style={{
                 flexDirection: "row",

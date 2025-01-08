@@ -7,16 +7,15 @@ import {
   KeyboardAvoidingView,
   TextInput,
   Pressable,
+  ActivityIndicator
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Entypo from "@expo/vector-icons/Entypo";
-import React, { createContext, useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
-
-
-
-
+import UserContext from "../context/UserContext";
+import SignUpScreen from "./SignUpScreen";
 
 
 
@@ -24,7 +23,8 @@ const SignInScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation("");
-  const [userName, setUserName] = useState("");
+  const {setUser} = useContext(UserContext)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSignIn = () =>{
     if (!email || !password){
@@ -35,6 +35,7 @@ const SignInScreen = () => {
         "email": email,
         "password": password
       }
+      setIsLoading(true)
       console.log(credentials);
       axios.post(url, credentials)
       .then((response) =>{
@@ -44,11 +45,7 @@ const SignInScreen = () => {
   
         if(message === "Login successful"){
           navigation.navigate("Main Page")
-
-          setUserName(user.username)
-          console.log(user.username)
-          console.log(userName);
-          updateUser(user)
+          setUser(user)
 
         } else{console.log("Login Failed")}
   
@@ -56,6 +53,7 @@ const SignInScreen = () => {
       .catch((error) =>{
         console.log(error);
         alert("Check your Internet connection")
+        setIsLoading(false)
       })
     }
   }
@@ -175,6 +173,7 @@ const SignInScreen = () => {
         <View style={{ marginTop: 30 }}>
           <Pressable
             onPress={handleSignIn}
+            disabled={isLoading ? true : false}
             style={{
               backgroundColor: "#1995AD",
               width: "85%",
@@ -184,11 +183,11 @@ const SignInScreen = () => {
               marginRight: "auto",
             }}
           >
-            <Text
+           {isLoading ? <ActivityIndicator color={"white"} size={20} /> : <Text
               style={{ textAlign: "center", fontSize: 16, fontWeight:"bold", color:"white" }}
             >
               Login
-            </Text>
+            </Text>}
           </Pressable>
           <Pressable
             onPress={() => {

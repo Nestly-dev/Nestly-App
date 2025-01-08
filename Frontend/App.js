@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import AppNavigation from "./Navigation/AppNavigation"
-import React, { useState } from "react"
+import React, { useState } from "react";
+import UserContexProvider from './context/UserContextProvider';
 
 
 export default function App() {
@@ -8,9 +9,9 @@ export default function App() {
 
   return (
     
-    <>
-    <AppNavigation />
-    </>
+    <UserContexProvider>
+      <AppNavigation />
+    </UserContexProvider>
   );
 }
 
