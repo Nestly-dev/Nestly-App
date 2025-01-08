@@ -11,7 +11,7 @@ import jwt from 'jsonwebtoken';
 import * as EmailValidator from 'email-validator';
 
 
-export class AuthenticationRepository {
+ export class AuthenticationRepository {
   private static readonly SALT_ROUNDS = SECRETS.SALT_ROUNDS;
 
   async checkExistingUser(
@@ -64,7 +64,7 @@ export class AuthenticationRepository {
       status: HttpStatusCodes.OK
     }
   }
-  
+
   async hashPassword(password: string): Promise<string> {
     return hash(password, AuthenticationRepository.SALT_ROUNDS);
   }
@@ -146,3 +146,4 @@ export class AuthenticationRepository {
       .where(eq(userTable.email, email));
   }
 }
+

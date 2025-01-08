@@ -44,5 +44,29 @@ export interface NoDataResponse {
 
 export interface DataResponse {
   message: string,
-  status: number
+  status: number,
+  data: any
 }
+
+export interface profileDataTypes {
+  userId: number,
+  first_name: string,
+  last_name: string,
+  phone_number: string,
+  date_of_birth: string,
+  avatar_url: string,
+  preferred_language: string,
+  preferred_currency: string
+}
+
+export interface updateProfileDataTypes {
+  profile_id: string
+  first_name: string,
+  last_name: string,
+  phone_number: string,
+  date_of_birth: string,
+  avatar_url: string,
+  preferred_language: string,
+  preferred_currency: string
+}
+

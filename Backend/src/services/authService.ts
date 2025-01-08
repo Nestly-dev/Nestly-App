@@ -4,6 +4,7 @@ import { HttpStatusCodes } from '../utils/helpers';
 import { loginDataType, RegisterUserTypes, resetPasswordDataType, UserDataProfile } from '../utils/types';
 import { AuthenticationRepository } from '../repository/User';
 
+
 export class AuthenticationService {
   private repository: AuthenticationRepository = new AuthenticationRepository;
 

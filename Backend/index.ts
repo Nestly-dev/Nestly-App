@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 const app: Express = express();
 const port = SECRETS.PORT;
 import { authRoutes } from "./src/routes/auth";
-import { welcomeRoute } from "./src/routes/test";
+import { authMiddleware } from "./src/middleware/authMiddleware";
+import { ProfileRoute } from "./src/routes/profile";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -25,6 +26,7 @@ app.get('/api/v1/test', (req: Request, res: Response) => {
   res.json('Welcome')
 });
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/profile', authMiddleware, ProfileRoute);
 
 
 app.listen(port, () => {
