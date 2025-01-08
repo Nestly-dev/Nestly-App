@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Nestly",
+    "slug": "Nestly",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/3.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1995AD"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-video",
+      "expo-font"
+    ]
+  }
+}
