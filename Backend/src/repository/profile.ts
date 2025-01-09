@@ -1,68 +1,78 @@
 import { Request, Response } from "express";
 import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
-import { DataResponse, profileDataTypes, updateProfileDataTypes } from "../utils/types";
+import { DataResponse, existingUserTypes, profileDataTypes, updateProfileDataTypes } from "../utils/types";
 import { userProfiles, userTable } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
 
 
 export class profileRepo {
   async checkExistingProfile(
-    req: Request, res: Response,
+    req: Request,
+    res: Response
   ): Promise<boolean> {
-    const profile_id = req.user?.id as string;
-    const existingUser = await database
-      .select()
+    const user_ID = req.user?.id as string;
+    // Only check userProfiles table for existing profile
+    const existingProfile = await database
+      .select({
+        profileId: userProfiles.id,
+      })
       .from(userProfiles)
-      .where(eq(userProfiles.id, profile_id))
+      .where(eq(userProfiles.user_id, user_ID))
       .limit(1);
 
-    if (existingUser.length > 0) {
-      return true
-    }
-    return false;
+    return existingProfile.length > 0;
   }
 
-  async registerProfile(req: Request, res: Response, profileData: profileDataTypes): Promise<DataResponse> {
-    const existingProfile = await this.checkExistingProfile(req, res);
-    const id = req.user?.id as string
+  async registerProfile(
+    req: Request,
+    res: Response,
+    profileData: profileDataTypes
+  ): Promise<DataResponse> {
     try {
+      const user_ID = req.user?.id as string;
+
+      // Check if profile already exists
+      const existingProfile = await this.checkExistingProfile(req, res);
+      if (existingProfile) {
+        return {
+          message: "Profile already exists for this user",
+          data: '',
+          status: HttpStatusCodes.UNAUTHORIZED
+        };
+      }
+
       const data = {
-        user_id: id,
+        user_id: user_ID,
         first_name: profileData.first_name,
         last_name: profileData.last_name,
         phone_number: profileData.phone_number,
         date_of_birth: profileData.date_of_birth,
         avatar_url: profileData.avatar_url,
-        preferred_language: profileData.preferred_language,
-        preferred_currency: profileData.preferred_currency
-      }
-      // First check if a given user has profile Registered.
-      if (!existingProfile) {
-        return {
-          data: '',
-          status: HttpStatusCodes.UNAUTHORIZED,
-          message: "You can't Register Profile twice"
-        }
-      }
+        preferred_language: profileData.preferred_language || 'en',
+        preferred_currency: profileData.preferred_currency || 'USD'
+      };
+
       const createProfile = await database
         .insert(userProfiles)
         .values(data)
-        .returning()
-        .then((rows) => rows[0]);
+        .returning();
+
       return {
-        data: createProfile,
+        data: createProfile[0],
         status: HttpStatusCodes.CREATED,
         message: "User Profile Created Successfully"
       };
+
     } catch (error) {
+      console.error('Profile registration error:', error);
+
       return {
         data: '',
-        message: error as string,
+        message: error instanceof Error ? error.message : 'An unknown error occurred',
         status: HttpStatusCodes.INTERNAL_SERVER_ERROR
-      }
+      };
     }
-
   }
 
   async updateProfile(req: Request, res: Response, profileData: updateProfileDataTypes): Promise<DataResponse> {

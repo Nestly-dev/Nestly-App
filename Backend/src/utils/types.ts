@@ -70,3 +70,8 @@ export interface updateProfileDataTypes {
   preferred_currency: string
 }
 
+export interface existingUserTypes {
+  userId: string | null,
+  profileId: string | null,
+  email: string | null
+}
