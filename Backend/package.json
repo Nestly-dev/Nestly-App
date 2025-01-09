@@ -1,7 +1,7 @@
 {
   "name": "nestly-backend",
   "version": "1.0.0",
-  "description": "backend for an nestly app",
+  "description": "backend for an nestly rental app",
   "main": "./dist/index.js",
   "scripts": {
     "start": "node ./dist/index.js",
