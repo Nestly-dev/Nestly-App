@@ -19,7 +19,7 @@ import NotificationScreen from "../screens/NotificationScreen"
 import ProfileScreen from "../screens/ProfileScreen";
 import SignInScreen from '../screens/SigninScreen';
 import SignUpScreen from '../screens/SignUpScreen'
-import Mainscreen from '../screens/Mainscreen';
+import WelcomeScreen from "../screens/WelcomeScreen";
 
 // Screen names
 const HomeScreenName = "Home";
@@ -76,7 +76,7 @@ const HomeStackNavigator = () => {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="Home Page"
+        name="Home"
         component={HomeScreen}
         options={{ headerShown: false }}
       />

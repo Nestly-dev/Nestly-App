@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Pressable,
   ScrollView,
+  Modal,
 } from "react-native";
 import React, {useEffect} from "react";
 import { Feather } from "@expo/vector-icons";
@@ -24,6 +25,9 @@ import Octicons from '@expo/vector-icons/Octicons';
 import Entypo from '@expo/vector-icons/Entypo';
 import Categories from "../components/Categories";
 import { useNavigation } from "@react-navigation/native";
+import { useContext } from "react";
+import UserContext from "../context/UserContext";
+import WelcomeScreen from "./WelcomeScreen";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,6 +39,7 @@ const HomeScreen = () => {
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
     'Inter': require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
   });
+  const {signedIn} = useContext(UserContext)
 
   useEffect(() => {
     if (loaded || error) {
@@ -46,10 +51,15 @@ const HomeScreen = () => {
     return null;
   }
 
-  return (
+
+  if(!signedIn){
+    return <Modal visible={true} animationType="slide">
+      <WelcomeScreen />
+    </Modal>
+  } else{ return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["rgb(247, 247, 247)", "rgb(247, 247, 247)"]}
+   i     colors={["rgb(247, 247, 247)", "rgb(247, 247, 247)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -159,7 +169,9 @@ const HomeScreen = () => {
         </ScrollView>
       </LinearGradient>
     </View>
-  );
+  );}
+
+ 
 };
 
 export default HomeScreen;

@@ -15,7 +15,7 @@ import React, { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import UserContext from "../context/UserContext";
-import SignUpScreen from "./SignUpScreen";
+
 
 
 
@@ -23,7 +23,7 @@ const SignInScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation("");
-  const {setUser} = useContext(UserContext)
+  const {setUser, setSignedIn} = useContext(UserContext)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSignIn = () =>{
@@ -46,6 +46,8 @@ const SignInScreen = () => {
         if(message === "Login successful"){
           navigation.navigate("Main Page")
           setUser(user)
+          setSignedIn(true)
+          setIsLoading(false)
 
         } else{console.log("Login Failed")}
   
