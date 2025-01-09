@@ -32,6 +32,7 @@ const ProfileScreen = () => {
           />
           <View>
             <Text style={{ marginLeft: 20, fontSize: 30 }}>{user.username}</Text>
+            <Text style={{ marginLeft: 20, fontSize: 16, fontStyle:"italic" }}>{user.email}</Text>
             <View
               style={{
                 backgroundColor: "#1995AD",
