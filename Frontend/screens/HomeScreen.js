@@ -26,7 +26,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import Categories from "../components/Categories";
 import { useNavigation } from "@react-navigation/native";
 import { useContext } from "react";
-import UserContext from "../context/UserContext";
+import AuthContext from "../context/AuthContext";
 import WelcomeScreen from "./WelcomeScreen";
 
 SplashScreen.preventAutoHideAsync();
@@ -39,18 +39,37 @@ const HomeScreen = () => {
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
     'Inter': require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
   });
-  const {signedIn} = useContext(UserContext)
+  const {signedIn, loadAuthStatus, authStatus, setSignedIn} = useContext(AuthContext)
 
   useEffect(() => {
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
+    
   }, [loaded, error]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      await loadAuthStatus("isLoggedIn");
+      
+      console.log("The status of authStatus is", signedIn);
+
+      if (authStatus === "loggedIn") {
+        setSignedIn(true);
+      } else {
+        setSignedIn(false);
+      }
+    };
+    
+    checkAuth();
+    console.log("Current auth status:", authStatus); // Debug log
+  }, [authStatus]);
 
   if (!loaded && !error) {
     return null;
   }
 
+    // UI Design
 
   if(!signedIn){
     return <Modal visible={true} animationType="slide">

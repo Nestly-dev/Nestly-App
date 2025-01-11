@@ -14,8 +14,7 @@ import Entypo from "@expo/vector-icons/Entypo";
 import React, { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
-import UserContext from "../context/UserContext";
-
+import AuthContext from "../context/AuthContext";
 
 
 
@@ -23,8 +22,11 @@ const SignInScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation("");
-  const {setUser, setSignedIn} = useContext(UserContext)
+  const {setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails} = useContext(AuthContext)
   const [isLoading, setIsLoading] = useState(false)
+ 
+
+  // Handling SignIn Button
 
   const handleSignIn = () =>{
     if (!email || !password){
@@ -48,6 +50,11 @@ const SignInScreen = () => {
           setUser(user)
           setSignedIn(true)
           setIsLoading(false)
+          setAuthStatus("loggedIn")
+          saveAuthStatus("isLoggedIn", "loggedIn")
+          saveUserDetails("CurrentUser", user)
+
+
 
         } else{console.log("Login Failed")}
   
@@ -91,8 +98,6 @@ const SignInScreen = () => {
               borderWidth: 2,
               width: "85%",
               marginLeft: 30,
-          
-         
               height: 60,
               padding: 10,
               borderRadius: 20,

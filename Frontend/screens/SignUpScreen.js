@@ -7,20 +7,23 @@ import {
   KeyboardAvoidingView,
   TextInput,
   Pressable,
+  ActivityIndicator
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Entypo from "@expo/vector-icons/Entypo";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import axios from "axios";
-import { navigate } from "expo-router/build/global-state/routing";
+import AuthContext from "../context/AuthContext";
 
 const SignUpScreen = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation("");
+  const {setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails} = useContext(AuthContext)
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSignUp = () =>{
     if (!email || !password){
@@ -31,22 +34,31 @@ const SignUpScreen = () => {
         "username": name,
         "email": email,
         "password": password
-      }
+      };
+      setIsLoading(true);
       console.log(credentials);
       axios.post(url, credentials)
       .then((response) =>{
-        const result = response.data
-        console.log(result)
-        const {message, user} = result
+        const result = response.data;
+        console.log(result);
+        const {message, user} = result;
   
         if(message === "User registered successfully. Please check your email to verify your account."){
-          navigation.navigate("Main Page", {...user})
+          navigation.navigate("Main Page")
+          setUser(user);
+          setSignedIn(true);
+          setIsLoading(false);
+          setAuthStatus("loggedIn");
+          saveAuthStatus("isLoggedIn", "loggedIn");
+          saveUserDetails("CurrentUser", user);
+
         } else{console.log("Login Failed")}
   
       })
       .catch((error) =>{
         console.log(error);
         alert("Check your Internet connection")
+        setIsLoading(false)
       })
     }
 
@@ -73,7 +85,7 @@ const SignUpScreen = () => {
       </KeyboardAvoidingView>
 
       <KeyboardAvoidingView>
-        <View style={{ marginTop: 20 }}>
+        <View>
           <View
             style={{
               flexDirection: "row",
@@ -82,9 +94,8 @@ const SignUpScreen = () => {
               backgroundColor: "rgb(255,255,255)",
               borderColor:"rgb(233, 233, 233)",
               borderWidth:2,
-              width: "90%",
-              marginLeft: 20,
-              marginRight: 30,
+              width: "87%",
+              marginLeft: 25,
               height: 60,
               padding: 10,
               borderRadius: 20,
@@ -113,9 +124,8 @@ const SignUpScreen = () => {
               backgroundColor: "rgb(255,255,255)",
               borderColor:"rgb(233, 233, 233)",
               borderWidth:2,
-              width: "90%",
-              marginLeft: 20,
-              marginRight: 30,
+              width: "87%",
+              marginLeft: 25,
               height: 60,
               padding: 10,
               borderRadius: 20,
@@ -145,9 +155,8 @@ const SignUpScreen = () => {
               backgroundColor: "rgb(255,255,255)",
               borderColor:"rgb(233, 233, 233)",
               borderWidth:2,
-              width: "90%",
-              marginLeft: 20,
-              marginRight: 30,
+              width: "87%",
+              marginLeft: 25,
               height: 60,
               padding: 10,
               borderRadius: 20,
@@ -176,11 +185,10 @@ const SignUpScreen = () => {
           style={{
             flexDirection: "row",
             marginTop: 15,
-            alignItems: "center",
+            
             justifyContent: "space-between",
             width: "90%",
-            marginLeft: 20,
-            marginRight: 30,
+            marginLeft: "8%",
             marginTop: 20
           }}
         >
@@ -189,7 +197,7 @@ const SignUpScreen = () => {
             Forgot Password
           </Text>
         </View>
-        <View style={{ width: "90%", marginLeft: 20, marginRight: 30 }}>
+        <View style={{ width: "87%", marginLeft: "10%" }}>
           <Text style={{ marginTop: 20, textAlign:"center"}}>
             By Registaring you confirm that you accept our
             <Text style={{ color: "#1995AD" }}> Term of use</Text> and{" "}
@@ -200,15 +208,18 @@ const SignUpScreen = () => {
           <Pressable
             style={{
               backgroundColor: "#1995AD",
-              width: "90%",
+              width: "87%",
               borderRadius: 6,
               padding: 15,
               marginLeft: "auto",
               marginRight: "auto",
             }}
             onPress={handleSignUp}
+            disabled={isLoading}
           >
-            <Text style={{ textAlign: "center", fontSize: 16, color: "white", fontWeight:"bold" }}>Create Your Account</Text>
+            {isLoading ? <ActivityIndicator color={"white"} size={20} /> : <Text
+              style={{ textAlign: "center", fontSize: 16, fontWeight:"bold", color:"white" }}
+            >Create Your Account</Text>}
           </Pressable>
           <Pressable
             onPress={() => {
