@@ -13,7 +13,7 @@ import {
 import React, {useEffect} from "react";
 import { Feather } from "@expo/vector-icons";
 import styles from "../GlobalStyling";
-import TrendingArea from "../components/Trending";
+import TrendingArea from "../components/BestDeals";
 import Recommendations from "../components/Recommendations";
 import { LinearGradient } from "expo-linear-gradient";
 import LivePlaces from "../components/LivePlaces";
@@ -39,7 +39,7 @@ const HomeScreen = () => {
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
     'Inter': require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
   });
-  const {signedIn, loadAuthStatus, authStatus, setSignedIn} = useContext(AuthContext)
+  const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn} = useContext(AuthContext)
 
   useEffect(() => {
     if (loaded || error) {
@@ -72,7 +72,7 @@ const HomeScreen = () => {
     // UI Design
 
   if(!signedIn){
-    return <Modal visible={true} animationType="slide">
+    return <Modal visible={showLogIn} animationType="slide">
       <WelcomeScreen />
     </Modal>
   } else{ return (
@@ -159,7 +159,7 @@ const HomeScreen = () => {
               fontWeight: "500",
             }}
           >
-            Sponsored Hotels
+            For You
           </Text>
           <SponsoredPost />
           <Text

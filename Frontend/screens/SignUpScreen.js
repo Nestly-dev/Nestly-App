@@ -44,7 +44,6 @@ const SignUpScreen = () => {
         const {message, user} = result;
   
         if(message === "User registered successfully. Please check your email to verify your account."){
-          navigation.navigate("Main Page")
           setUser(user);
           setSignedIn(true);
           setIsLoading(false);

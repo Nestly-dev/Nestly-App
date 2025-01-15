@@ -24,8 +24,8 @@ const LivePlaces = () => {
       <FlatList
       
         horizontal={true}
+        autoplay={true}
         style={{ paddingVertical: 5 }}
-        pagingEnabled
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 50, paddingHorizontal: 12 }}
         data={livedata}

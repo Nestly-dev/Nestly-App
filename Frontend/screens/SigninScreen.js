@@ -46,7 +46,6 @@ const SignInScreen = () => {
         const {message, user} = result
   
         if(message === "Login successful"){
-          navigation.navigate("Main Page")
           setUser(user)
           setSignedIn(true)
           setIsLoading(false)
