@@ -2,11 +2,15 @@ import { config } from "dotenv";
 config();
 
 interface EnvironmentVariables {
+  AWS_BUCKET_NAME: string;
   ACCESS_TOKEN_SECRET: string;
   SALT_ROUNDS: number;
   PORT: number;
   NODE_ENV: "development" | "production";
   NEON_DATABASE_URL: string,
+  AWS_ACCESS_KEY_ID: string,
+  AWS_SECRET_ACCESS_KEY: string,
+  AWS_REGION: string
 }
 
 export enum HttpStatusCodes {
@@ -29,11 +33,15 @@ export enum HttpStatusCodes {
 }
 
 export const SECRETS: EnvironmentVariables = {
+  AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME as string,
   PORT: parseInt(process.env.PORT!),
   NODE_ENV: process.env.NODE_ENV as "development" | "production",
   NEON_DATABASE_URL: process.env.NEON_DATABASE_URL!,
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET!,
-  SALT_ROUNDS: parseInt(process.env.SALT_ROUNDS!)
+  SALT_ROUNDS: parseInt(process.env.SALT_ROUNDS!),
+  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
+  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string,
+  AWS_REGION: process.env.AWS_REGION as string
 }
 
 

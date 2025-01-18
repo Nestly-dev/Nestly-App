@@ -1,14 +1,15 @@
-import { profileRepository } from './../repository/profile';
+import { profileRepository } from '../repository/profile';
 import { Request, Response } from "express";
 import { profileDataTypes, updateProfileDataTypes } from "../utils/types";
 import { HttpStatusCodes } from "../utils/helpers";
+import { MulterRequest } from '../utils/config/multer';
 
 class ProfileService {
-  async registerProfile(req: Request, res: Response): Promise<Response> {
+  async registerProfile(req: MulterRequest, res: Response): Promise<Response> {
     try {
       const profileData: profileDataTypes = req.body;
       // send the data to profile Repository
-      const { data, status, message } = await profileRepository.registerProfile(req, res, profileData);
+      const { data, status, message } = await profileRepository.registerProfile(req as MulterRequest, res, profileData);
 
       if (status as number === HttpStatusCodes.OK) {
         return res.status(status).json({

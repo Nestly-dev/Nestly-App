@@ -1,0 +1,13 @@
+1. People can create wishlists
+2. People can like content
+
+All these should go in engagement Database.
+
+1. When a user books a room, make it unavailable.
+2. User can't update Booking details otherwise the prices increase
+3. Make sure that each hotel can have their own reviews displayed on their page
+
+Other Functionalities
+1. Emailing Functionality
+2. Payment Functionality: IremboPay.
+

@@ -2,8 +2,10 @@ import { Request, Response } from "express";
 import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
 import { DataResponse, existingUserTypes, profileDataTypes, updateProfileDataTypes } from "../utils/types";
+import { MulterRequest } from "../utils/config/multer";
 import { userProfiles, userTable } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
+import fileUpload from "./file.upload";
 
 
 export class profileRepo {
@@ -25,7 +27,7 @@ export class profileRepo {
   }
 
   async registerProfile(
-    req: Request,
+    req: MulterRequest,
     res: Response,
     profileData: profileDataTypes
   ): Promise<DataResponse> {
@@ -42,13 +44,35 @@ export class profileRepo {
         };
       }
 
+      // Upload the profile Image
+      const profilePicture = req.file;  // Changed from req.files?.profilePicture?.[0]
+      if (!profilePicture) {
+        return {
+          message: "Profile picture is required",
+          data: '',
+          status: HttpStatusCodes.BAD_REQUEST
+        };
+      }
+
+      const profilePictureURL = await fileUpload.uploadFileToS3(profilePicture);
+
+      if (typeof profilePictureURL !== 'string') {
+        return {
+          message: "Failed to upload profile picture",
+          data: '',
+          status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+        };
+      }
+
+      profileData.profilePicture = profilePictureURL as string;
+
       const data = {
         user_id: user_ID,
         first_name: profileData.first_name,
         last_name: profileData.last_name,
         phone_number: profileData.phone_number,
         date_of_birth: profileData.date_of_birth,
-        avatar_url: profileData.avatar_url,
+        avatar_url: profileData.profilePicture,
         preferred_language: profileData.preferred_language || 'en',
         preferred_currency: profileData.preferred_currency || 'USD'
       };
@@ -57,7 +81,6 @@ export class profileRepo {
         .insert(userProfiles)
         .values(data)
         .returning();
-
       return {
         data: createProfile[0],
         status: HttpStatusCodes.CREATED,
