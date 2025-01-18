@@ -5,7 +5,7 @@ config();
 
 export default defineConfig({
   schema: "./src/utils/config/schema.ts",
-  out: "./src/utils/migrations",
+  out: "./src/utils/config/migrations",
   dbCredentials: {
     url: process.env.NEON_DATABASE_URL!,
   },

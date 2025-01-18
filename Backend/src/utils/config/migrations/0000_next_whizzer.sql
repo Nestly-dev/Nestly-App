@@ -1,10 +1,34 @@
+DO $$ BEGIN
+ CREATE TYPE "public"."hotel_status" AS ENUM('active', 'inactive');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."media_type" AS ENUM('photo', 'video');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."media_type_categories" AS ENUM('landscape', 'portrait', 'profile', 'room', 'gallery', 'sponsored', 'virtualTours');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ CREATE TYPE "public"."payment_options" AS ENUM('Visa', 'MasterCard', 'Momo', 'Irembo');
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "bookings" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"hotel_id" uuid NOT NULL,
-	"room_type_id" uuid NOT NULL,
-	"check_in_date" date NOT NULL,
-	"check_out_date" date NOT NULL,
+	"room_id" uuid NOT NULL,
+	"check_in_date" timestamp NOT NULL,
+	"check_out_date" timestamp NOT NULL,
 	"num_guests" integer NOT NULL,
 	"total_price" numeric(10, 2) NOT NULL,
 	"currency" varchar(3) DEFAULT 'USD' NOT NULL,
@@ -18,6 +42,7 @@ CREATE TABLE IF NOT EXISTS "bookings" (
 CREATE TABLE IF NOT EXISTS "deals" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"hotel_id" uuid NOT NULL,
+	"destination_id" uuid NOT NULL,
 	"title" varchar(255) NOT NULL,
 	"description" text,
 	"original_price" numeric(10, 2) NOT NULL,
@@ -37,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "destinations" (
 	"name" varchar(255) NOT NULL,
 	"description" text,
 	"cover_image_url" text,
-	"location_data" jsonb,
+	"location_data" text,
 	"featured" boolean DEFAULT false,
 	"display_order" integer,
 	"season_recommendations" text[],
@@ -56,27 +81,12 @@ CREATE TABLE IF NOT EXISTS "help_articles" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "hotel_locations" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"hotel_id" uuid NOT NULL,
-	"street_address" text NOT NULL,
-	"city" varchar(100) NOT NULL,
-	"state" varchar(100) NOT NULL,
-	"country" varchar(100) NOT NULL,
-	"postal_code" varchar(20),
-	"latitude" numeric(10, 7),
-	"longitude" numeric(10, 7),
-	"map_url" text,
-	"neighborhood_info" text,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "hotel_media" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"hotel_id" uuid NOT NULL,
-	"media_type" varchar(20) NOT NULL,
-	"url" text NOT NULL,
+	"media_type" "media_type" NOT NULL,
+	"media_type_categories" "media_type_categories" NOT NULL,
+	"media_url" varchar NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -86,16 +96,26 @@ CREATE TABLE IF NOT EXISTS "hotels" (
 	"name" varchar(255) NOT NULL,
 	"short_description" text,
 	"long_description" text,
-	"star_rating" integer NOT NULL,
+	"star_rating" numeric NOT NULL,
 	"property_type" varchar(50) NOT NULL,
 	"built_year" integer,
 	"last_renovation_year" integer,
 	"chain_affiliation" varchar(100),
-	"check_in_time" time NOT NULL,
-	"check_out_time" time NOT NULL,
+	"street_address" text NOT NULL,
+	"city" varchar(100) NOT NULL,
+	"state" varchar(100) NOT NULL,
+	"province" varchar(100),
+	"country" varchar(100) NOT NULL,
+	"postal_code" varchar(20),
+	"latitude" numeric(10, 7),
+	"longitude" numeric(10, 7),
+	"map_url" text,
+	"total_rooms" integer NOT NULL,
 	"cancellation_policy" text,
-	"payment_options" text[],
-	"status" varchar(20) DEFAULT 'active' NOT NULL,
+	"payment_options" payment_options[],
+	"menu_download_url" text,
+	"sponsored" boolean DEFAULT false,
+	"hotel_status" "hotel_status" DEFAULT 'active' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -113,11 +133,11 @@ CREATE TABLE IF NOT EXISTS "notifications" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "price_modifiers" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"room_type_id" uuid NOT NULL,
+	"room_id" uuid NOT NULL,
 	"modifier_type" varchar(50) NOT NULL,
 	"percentage" numeric(5, 2) NOT NULL,
-	"start_date" date NOT NULL,
-	"end_date" date NOT NULL,
+	"start_date" timestamp NOT NULL,
+	"end_date" timestamp NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -132,80 +152,50 @@ CREATE TABLE IF NOT EXISTS "recommended_places" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "review_media" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"review_id" uuid NOT NULL,
-	"urls" text[],
-	"created_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "reviews" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,
 	"hotel_id" uuid NOT NULL,
 	"booking_id" uuid NOT NULL,
-	"rating" integer NOT NULL,
+	"rating" numeric NOT NULL,
+	"media_url" text,
 	"review_text" text,
-	"stay_date" date NOT NULL,
+	"stay_date" timestamp NOT NULL,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "room" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"hotel_id" uuid NOT NULL,
+	"room_types" varchar NOT NULL,
+	"description" text,
+	"max_occupancy" integer NOT NULL,
+	"num_beds" integer NOT NULL,
+	"room_size" numeric(10, 2),
+	"floor_level" integer,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS "room_availability" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"room_id" uuid NOT NULL,
+	"available" boolean DEFAULT true NOT NULL,
+	"date" date NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "room_pricing" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"room_type_id" uuid NOT NULL,
+	"room_id" uuid NOT NULL,
 	"base_price" numeric(10, 2) NOT NULL,
 	"currency" varchar(3) DEFAULT 'USD' NOT NULL,
 	"tax_percentage" numeric(5, 2) NOT NULL,
 	"child_policy" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "room_types" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"hotel_id" uuid NOT NULL,
-	"name" varchar(100) NOT NULL,
-	"description" text,
-	"max_occupancy" integer NOT NULL,
-	"num_beds" integer NOT NULL,
-	"bed_types" text[],
-	"room_size" numeric(10, 2),
-	"floor_level" integer,
-	"total_rooms" integer NOT NULL,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "search_history" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" uuid NOT NULL,
-	"search_query" text NOT NULL,
-	"filters" jsonb,
-	"results_count" integer,
-	"created_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "sponsorships" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"campaign_name" varchar(255) NOT NULL,
-	"content_type" varchar(50) NOT NULL,
-	"featured_item_id" uuid NOT NULL,
-	"start_date" date NOT NULL,
-	"end_date" date NOT NULL,
-	"target_audience" jsonb,
-	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "user_activity" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-	"user_id" uuid NOT NULL,
-	"activity_type" varchar(50) NOT NULL,
-	"target_id" uuid,
-	"device_info" jsonb,
-	"ip_address" "inet",
-	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user_profiles" (
@@ -237,6 +227,7 @@ CREATE TABLE IF NOT EXISTS "user_table" (
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "videos" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"hotel_id" uuid NOT NULL,
 	"title" varchar(255) NOT NULL,
 	"video_url" text NOT NULL,
 	"thumbnail_url" text,
@@ -269,7 +260,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "bookings" ADD CONSTRAINT "bookings_room_type_id_room_types_id_fk" FOREIGN KEY ("room_type_id") REFERENCES "public"."room_types"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "bookings" ADD CONSTRAINT "bookings_room_id_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."room"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -281,7 +272,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "hotel_locations" ADD CONSTRAINT "hotel_locations_hotel_id_hotels_id_fk" FOREIGN KEY ("hotel_id") REFERENCES "public"."hotels"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "deals" ADD CONSTRAINT "deals_destination_id_destinations_id_fk" FOREIGN KEY ("destination_id") REFERENCES "public"."destinations"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -299,13 +290,7 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "price_modifiers" ADD CONSTRAINT "price_modifiers_room_type_id_room_types_id_fk" FOREIGN KEY ("room_type_id") REFERENCES "public"."room_types"("id") ON DELETE cascade ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "review_media" ADD CONSTRAINT "review_media_review_id_reviews_id_fk" FOREIGN KEY ("review_id") REFERENCES "public"."reviews"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "price_modifiers" ADD CONSTRAINT "price_modifiers_room_id_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."room"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
@@ -329,31 +314,31 @@ EXCEPTION
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "room_pricing" ADD CONSTRAINT "room_pricing_room_type_id_room_types_id_fk" FOREIGN KEY ("room_type_id") REFERENCES "public"."room_types"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "room" ADD CONSTRAINT "room_hotel_id_hotels_id_fk" FOREIGN KEY ("hotel_id") REFERENCES "public"."hotels"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "room_types" ADD CONSTRAINT "room_types_hotel_id_hotels_id_fk" FOREIGN KEY ("hotel_id") REFERENCES "public"."hotels"("id") ON DELETE cascade ON UPDATE no action;
+ ALTER TABLE "room_availability" ADD CONSTRAINT "room_availability_room_id_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."room"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
- ALTER TABLE "search_history" ADD CONSTRAINT "search_history_user_id_user_table_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user_table"("id") ON DELETE no action ON UPDATE no action;
-EXCEPTION
- WHEN duplicate_object THEN null;
-END $$;
---> statement-breakpoint
-DO $$ BEGIN
- ALTER TABLE "user_activity" ADD CONSTRAINT "user_activity_user_id_user_table_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user_table"("id") ON DELETE no action ON UPDATE no action;
+ ALTER TABLE "room_pricing" ADD CONSTRAINT "room_pricing_room_id_room_id_fk" FOREIGN KEY ("room_id") REFERENCES "public"."room"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_user_id_user_table_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user_table"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "videos" ADD CONSTRAINT "videos_hotel_id_hotels_id_fk" FOREIGN KEY ("hotel_id") REFERENCES "public"."hotels"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;

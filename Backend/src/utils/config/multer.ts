@@ -2,7 +2,9 @@ import { Request } from "express";
 import multer from "multer";
 
 export interface MulterRequest extends Request {
-  files: {
+  file?: Express.Multer.File;  // Add this for single file uploads
+
+  files?: {
     [fieldname: string]: Express.Multer.File[];
   }
 }
