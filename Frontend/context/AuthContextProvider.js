@@ -4,9 +4,10 @@ import * as SecureStore from "expo-secure-store";
 
 const UserContexProvider = ({ children }) => {
   const [user, setUser] = useState();
-  const [signedIn, setSignedIn] = useState(false);
+  const [signedIn, setSignedIn] = useState(true);
   const [authStatus, setAuthStatus] = useState("notLoggedIn");
   const [showLogIn, setShowLogIn] = useState(true)
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
 
 // initialising the app
@@ -98,7 +99,9 @@ useEffect(() =>{
     saveAuthStatus,
     loadAuthStatus,
     saveUserDetails,
-    loadUserDetails
+    loadUserDetails,
+    showConfirmation,
+    setShowConfirmation
   };
 
   return (

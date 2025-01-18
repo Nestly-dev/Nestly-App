@@ -24,6 +24,8 @@ const TrendingPlaces = ({item}) => {
         </Text>
       </View>
 
+      <Text style={{marginLeft: 10, fontSize: 30, marginTop: 10, color:"red", fontWeight: 500, textDecorationLine:"line-through"}}>$389</Text>
+
       <View style={styles.price}>
         <View>
           <Text>Start From</Text>
@@ -38,7 +40,7 @@ const TrendingPlaces = ({item}) => {
             marginRight: 10,
           }}
         >
-          <Text style={{ color: "white", padding: 10 }}>EDSF</Text>
+          <Text style={{ color: "white", padding: 10, fontSize:18, fontWeight: "bold" }}>Visit</Text>
         </View>
       </View>
     </View>
@@ -68,7 +70,7 @@ const styles = StyleSheet.create({
   price: {
     marginLeft: 10,
     marginBottom: 20,
-    marginTop: 40,
+    marginTop: 20,
     justifyContent: "space-between",
     alignItems: "center",
     flexDirection: "row",

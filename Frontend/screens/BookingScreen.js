@@ -4,26 +4,29 @@ import {
   View,
   SafeAreaView,
   Image,
-  TextInput,
   Modal,
   TouchableOpacity,
   ScrollView,
   Button,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
+import "react-native-gesture-handler";
+
+import Payment from "../components/Payment";
+import AuthContext from "../context/AuthContext";
 
 const BookingScreen = () => {
   const [adults, setAdults] = useState(0);
   const [children, setChildren] = useState(0);
   const [room, setRoom] = useState("Default");
   const [singles, setSingles] = useState(0);
-  const [doubles, setDoubles] = useState(0)
+  const [doubles, setDoubles] = useState(0);
   const [checkInDate, setCheckInDate] = useState(new Date());
   const [checkOutDate, setCheckOutDate] = useState(new Date());
-  const [showConfirmation, setShowConfirmation] = useState(false)
+  const { showConfirmation, setShowConfirmation } = useContext(AuthContext);
 
   const onChangeCheckIn = (e, selectedDate) => {
     setCheckInDate(selectedDate);
@@ -34,29 +37,71 @@ const BookingScreen = () => {
     console.log(checkOutDate);
   };
 
+  const onConfirm = () => {
+    console.log(adults);
+    console.log(children);
+    console.log(room);
+    console.log(checkInDate.toLocaleDateString());
+    console.log(checkOutDate.toLocaleDateString());
+    console.log(`you have booked (${singles}) Single rooms`);
+    console.log(`you have booked (${doubles}) Double rooms`);
+    setShowConfirmation(true);
+  };
+
   return (
     <SafeAreaView>
       <ScrollView>
         <View>
           {/* Hotels Name Box */}
 
-          <View style={{
-          width: "100%",
-          borderRadius: 10,
-          marginBottom: 25,
-          height: 240,
-        }}>
-          <View style={{ width: "100%", height: "100%",position:"absolute"}}>
-            <Image
-              source={require("../assets/images/banner2.jpg")}
-              style={{ width: "100%", height: 250 }}
-            />
-            
+          <View
+            style={{
+              width: "100%",
+              borderRadius: 10,
+              marginBottom: 25,
+              height: 240,
+            }}
+          >
+            <View
+              style={{ width: "100%", height: "100%", position: "absolute" }}
+            >
+              <Image
+                source={require("../assets/images/banner2.jpg")}
+                style={{ width: "100%", height: 250 }}
+              />
+            </View>
+            <LinearGradient
+              colors={["rgba(0, 0, 0, 0.5)", "rgba(0,0,0, 0.4)"]}
+              style={{
+                width: "100%",
+                height: 80,
+                top: 170,
+                position: "absolute",
+              }}
+            ></LinearGradient>
+            <Text
+              style={{
+                fontSize: 25,
+                top: 170,
+                color: "white",
+                marginLeft: 20,
+                fontWeight: "bold",
+              }}
+            >
+              Hotel Grand Place
+            </Text>
+            <Text
+              style={{
+                fontSize: 20,
+                top: 180,
+                color: "white",
+                marginLeft: 20,
+                fontWeight: "bold",
+              }}
+            >
+              Kigali, Rwanda
+            </Text>
           </View>
-          <LinearGradient colors={["rgba(0, 0, 0, 0.5)", "rgba(0,0,0, 0.4)"]} style={{width: "100%", height: 80, top: 170, position:"absolute"}}></LinearGradient>
-          <Text style={{fontSize:25, top: 170, color:"white", marginLeft: 20, fontWeight: "bold"}}>Hotel Grand Place</Text>
-          <Text style={{fontSize:20, top: 180, color:"white", marginLeft: 20, fontWeight: "bold"}}>Kigali, Rwanda</Text>
-        </View>
 
           <View
             style={{
@@ -185,49 +230,51 @@ const BookingScreen = () => {
                 </View>
               </View>
               <View
-            style={{
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
-              marginLeft: 20,
-              marginTop: 20,
-              marginRight: 20,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: 500 }}>Number of Single Rooms</Text>
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity
-                style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                onPress={() => {
-                  setSingles(singles + 1);
-                }}
-              >
-                <Entypo name="plus" size={24} color="white" />
-              </TouchableOpacity>
-              <Text
                 style={{
-                  fontSize: 20,
-                  color: "gray",
-                  marginLeft: 10,
-                  marginRight: 10,
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexDirection: "row",
+                  marginLeft: 20,
+                  marginTop: 20,
+                  marginRight: 20,
                 }}
               >
-                {singles}
-              </Text>
-              <TouchableOpacity
-                style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                onPress={() => {
-                  if (singles > 0) {
-                    setSingles(singles - 1);
-                  } else {
-                    return adults;
-                  }
-                }}
-              >
-                <Entypo name="minus" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
+                <Text style={{ fontSize: 18, fontWeight: 500 }}>
+                  Number of Single Rooms
+                </Text>
+                <View style={{ flexDirection: "row" }}>
+                  <TouchableOpacity
+                    style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
+                    onPress={() => {
+                      setSingles(singles + 1);
+                    }}
+                  >
+                    <Entypo name="plus" size={24} color="white" />
+                  </TouchableOpacity>
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      color: "gray",
+                      marginLeft: 10,
+                      marginRight: 10,
+                    }}
+                  >
+                    {singles}
+                  </Text>
+                  <TouchableOpacity
+                    style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
+                    onPress={() => {
+                      if (singles > 0) {
+                        setSingles(singles - 1);
+                      } else {
+                        return adults;
+                      }
+                    }}
+                  >
+                    <Entypo name="minus" size={24} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
@@ -268,49 +315,51 @@ const BookingScreen = () => {
                 </View>
               </View>
               <View
-            style={{
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
-              marginLeft: 20,
-              marginTop: 20,
-              marginRight: 20,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: 500 }}>Number of Double Rooms</Text>
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity
-                style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                onPress={() => {
-                  setDoubles(doubles + 1);
-                }}
-              >
-                <Entypo name="plus" size={24} color="white" />
-              </TouchableOpacity>
-              <Text
                 style={{
-                  fontSize: 20,
-                  color: "gray",
-                  marginLeft: 10,
-                  marginRight: 10,
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexDirection: "row",
+                  marginLeft: 20,
+                  marginTop: 20,
+                  marginRight: 20,
                 }}
               >
-                {doubles}
-              </Text>
-              <TouchableOpacity
-                style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                onPress={() => {
-                  if (doubles > 0) {
-                    setDoubles(doubles - 1);
-                  } else {
-                    return doubles;
-                  }
-                }}
-              >
-                <Entypo name="minus" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
+                <Text style={{ fontSize: 18, fontWeight: 500 }}>
+                  Number of Double Rooms
+                </Text>
+                <View style={{ flexDirection: "row" }}>
+                  <TouchableOpacity
+                    style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
+                    onPress={() => {
+                      setDoubles(doubles + 1);
+                    }}
+                  >
+                    <Entypo name="plus" size={24} color="white" />
+                  </TouchableOpacity>
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      color: "gray",
+                      marginLeft: 10,
+                      marginRight: 10,
+                    }}
+                  >
+                    {doubles}
+                  </Text>
+                  <TouchableOpacity
+                    style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
+                    onPress={() => {
+                      if (doubles > 0) {
+                        setDoubles(doubles - 1);
+                      } else {
+                        return doubles;
+                      }
+                    }}
+                  >
+                    <Entypo name="minus" size={24} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -416,7 +465,6 @@ const BookingScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-          
 
           {/* price details */}
 
@@ -484,22 +532,16 @@ const BookingScreen = () => {
             marginBottom: 20,
           }}
         >
-          <Button title="Confirm" color="white" onPress={() =>{
-            console.log(adults)
-            console.log(children)
-            console.log(room)
-            console.log(checkInDate.toLocaleDateString())
-            console.log(checkOutDate.toLocaleDateString())
-            console.log(`you have booked (${singles}) Single rooms`)
-            console.log(`you have booked (${doubles}) Double rooms`)
-            setShowConfirmation(true)
-          }}/>
+          <Button title="Confirm" color="white" onPress={onConfirm} />
         </View>
+
+        <Modal visible={showConfirmation} animationType="slide">
+          return <Payment />
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
 };
-
 
 export default BookingScreen;
 

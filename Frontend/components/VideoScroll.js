@@ -34,13 +34,17 @@ const VideoItem = memo(({
         resizeMode={ResizeMode.COVER}
         shouldPlay={isActive}
       />
+      <Text style={{color: "white", alignItems:"center", justifyContent:"center", left:"40%", top:"6%", fontSize: 25, fontWeight:"bold"}}>Explore</Text>
       <Pressable onPress={() => onPress(index)} style={styles.content}>
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.9)"]}
           style={styles.content}
         >
+          
           <View style={styles.contentContainer}>
+            
             <View>
+              
               <View style={styles.profileContainer}>
                 <Image 
                   source={require("../assets/images/profile.webp")}

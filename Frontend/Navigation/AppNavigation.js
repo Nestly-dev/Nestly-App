@@ -77,7 +77,7 @@ const HomeStackNavigator = () => {
     <Stack.Navigator>
       <Stack.Screen
         name="Home"
-        component={HomeScreen}
+        component={BookingScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen

@@ -145,13 +145,13 @@ const Gallery = () => {
                   style={{
                     backgroundColor: "#1995AD",
                     marginTop: 10,
-                    borderRadius: 30,
+                    borderRadius: 10,
                     width: 100,
                     marginLeft: 30,
                     marginBottom: 15,
                   }}
                 >
-                  <Button title="Book" color="white" onPress={() => navigation.navigate("Hotel Profile")}/>
+                  <Button title="Details" color="white" onPress={() => navigation.navigate("Hotel Profile")}/>
                 </View>
               </View>
             </View>

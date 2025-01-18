@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, FlatList } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity} from "react-native";
 import React from "react";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -30,7 +30,7 @@ const SponsoredPost = () => {
           source={{uri:`${item.img}`}}
           style={{
             width: "100%",
-            height: 250,
+            height: 300,
             marginRight: 20,
             borderRadius: 5,
             marginBottom: 5,
@@ -66,12 +66,11 @@ const SponsoredPost = () => {
         </View>
         <View
           style={{
-            backgroundColor: "#1995AD",
             width: 80,
             height: 40,
             position: "absolute",
-            top: 240,
-            left: 30,
+            top: 20,
+            right:0,
             borderRadius: 50,
             padding: 5,
             alignItems: "center",
@@ -80,23 +79,22 @@ const SponsoredPost = () => {
         >
           <AntDesign name="hearto" size={24} color="white" />
         </View>
-        <View
+        {/* <View
           style={{
-            backgroundColor: "#1995AD",
             width: 50,
             height: 40,
             position: "absolute",
-            top: 240,
-            right: 30,
+            top: 310,
+            right: 0,
             borderRadius: 50,
             padding: 5,
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Feather name="bookmark" size={23} color="white" />
-        </View>
-        <View style={{ marginTop: 30, marginLeft: 10 }}>
+          <Feather name="bookmark" size={24} color="black" />
+        </View> */}
+        <View style={{ marginTop: 10, marginLeft: 10 }}>
           <View
             style={{ flexDirection: "row", justifyContent: "space-between" }}
           >
