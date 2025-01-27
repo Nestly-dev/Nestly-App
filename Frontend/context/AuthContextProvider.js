@@ -8,6 +8,7 @@ const UserContexProvider = ({ children }) => {
   const [authStatus, setAuthStatus] = useState("notLoggedIn");
   const [showLogIn, setShowLogIn] = useState(true)
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [hotelData, setHotelData] = useState()
 
 
 // initialising the app

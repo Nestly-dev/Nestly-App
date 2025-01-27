@@ -13,16 +13,16 @@ import { paymentMethods } from "../data/paymentMethod";
 import AuthContext from "../context/AuthContext";
 
 const Payment = () => {
-    const {setShowConfirmation} = useContext(AuthContext)
+  const { setShowConfirmation } = useContext(AuthContext);
   return (
     <SafeAreaView
       style={{ backgroundColor: "rgb(235, 238, 242)", height: "100%" }}
     >
       <View style={{ alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ fontSize: 25, fontWeight: 500 }}>Payment</Text>
+        <Text style={{ fontSize: 25, fontWeight: "500" }}>Payment</Text>
       </View>
       <View style={{ marginLeft: 20, marginTop: 40 }}>
-        <Text style={{ fontSize: 16, fontWeight: 400 }}>Total Price</Text>
+        <Text style={{ fontSize: 16, fontWeight: "400" }}>Total Price</Text>
         <Text
           style={{
             fontSize: 44,
@@ -86,11 +86,10 @@ const Payment = () => {
           <TextInput placeholder="Card Number" fontSize={18} />
         </View>
 
-        <View style={{ flexDirection: "row", justifyContent:"space-between" }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          {/* Valid Number */}
 
-            {/* Valid Number */}
-
-          <View style={{width:"50%"}}>
+          <View style={{ width: "50%" }}>
             <Text style={{ fontSize: 16, fontWeight: 400, marginTop: 30 }}>
               Valid until
             </Text>
@@ -109,9 +108,9 @@ const Payment = () => {
             </View>
           </View>
 
-              {/* CVV */}
+          {/* CVV */}
 
-          <View style={{marginRight: 20, width:"40%", marginLeft: 20}}>
+          <View style={{ marginRight: 20, width: "40%", marginLeft: 20 }}>
             <Text style={{ fontSize: 16, fontWeight: 400, marginTop: 30 }}>
               CVV
             </Text>
@@ -130,7 +129,6 @@ const Payment = () => {
               <TextInput placeholder="CVV" fontSize={18} />
             </View>
           </View>
-
         </View>
 
         {/* Card Name */}
@@ -155,18 +153,44 @@ const Payment = () => {
 
         {/* Button */}
 
-        <View style={{width:"95%", height: 70, backgroundColor:"#1995AD", marginTop: 30, borderRadius: 10, alignItems:"center", justifyContent:"center"}}>
-          <Text style={{fontSize: 25, fontWeight:"bold", color:"white"}}>Pay Now</Text>
+        <View
+          style={{
+            width: "95%",
+            height: 70,
+            backgroundColor: "#1995AD",
+            marginTop: 30,
+            borderRadius: 10,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Text style={{ fontSize: 25, fontWeight: "bold", color: "white" }}>
+            Pay Now
+          </Text>
         </View>
 
         {/* back button */}
 
-        <TouchableOpacity onPress={() =>{setShowConfirmation(false)}}>
-            <View style={{width:"95%", height: 50, marginTop: 10, borderRadius: 10, alignItems:"center", justifyContent:"center"}}>
-                <Text style={{fontSize: 20, fontWeight: 600, color:"black"}}>Back</Text>
-             </View>
+        <TouchableOpacity
+          onPress={() => {
+            setShowConfirmation(false);
+          }}
+        >
+          <View
+            style={{
+              width: "95%",
+              height: 50,
+              marginTop: 10,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ fontSize: 20, fontWeight: 600, color: "black" }}>
+              Back
+            </Text>
+          </View>
         </TouchableOpacity>
-
       </View>
     </SafeAreaView>
   );

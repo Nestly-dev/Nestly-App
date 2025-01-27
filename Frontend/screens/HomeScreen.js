@@ -29,12 +29,13 @@ import { useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import WelcomeScreen from "./WelcomeScreen";
 import TopHotels from "../components/TopHotels";
+import axios from "axios";
 
 SplashScreen.preventAutoHideAsync();
 
 const HomeScreen = () => {
 
-
+  const hotelURL = "http://127.0.0.1:8000/api/v1/hotels/all-hotels"
   const navigation = useNavigation()
   const [loaded, error] = useFonts({
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
@@ -64,11 +65,22 @@ const HomeScreen = () => {
     
     checkAuth();
     console.log("Current auth status:", authStatus); // Debug log
+
+    axios.get(hotelURL)
+    .then((response) =>{
+      const result = response.data
+      console.log(result);
+    }).catch((error) => {
+      console.log(`The Error we are facing is ${error}`);
+    })
+
   }, [authStatus]);
 
   if (!loaded && !error) {
     return null;
   }
+
+  
 
     // UI Design
 
