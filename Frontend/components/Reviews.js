@@ -8,15 +8,12 @@ const Reviews = () => {
       <View
         style={{
           marginBottom: 30,
-          borderColor: "gray",
+          borderColor: "rgb(200, 200, 200)",
           borderWidth: 0.5,
           padding: 4,
-          borderRadius: 20,
+          borderRadius: 10,
           marginRight: 10,
           backgroundColor: "#ededed",
-          shadowColor: "#000",
-          shadowOffset: {width: 0, height: 3},
-          shadowOpacity: 1
         }}
       >
         <View style={{ flexDirection: "row" }}>
@@ -50,15 +47,12 @@ const Reviews = () => {
 
       <View
         style={{
-          borderColor: "gray",
+          borderColor: "rgb(200, 200, 200)",
           borderWidth: 0.5,
           padding: 4,
-          borderRadius: 20,
+          borderRadius: 10,
           marginRight: 10,
           backgroundColor: "#ededed",
-          shadowColor: "#000",
-          shadowOffset: {width: 0, height: 3},
-          shadowOpacity: 1
         }}
       >
         <View style={{ flexDirection: "row" }}>
@@ -104,5 +98,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontSize: 16,
     width: "95%",
+    marginBottom: 20
   },
 });

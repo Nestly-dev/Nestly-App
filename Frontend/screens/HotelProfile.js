@@ -260,7 +260,7 @@ const HotelProfile = () => {
                     width: 200,
                     height: 200,
                     marginRight: 10,
-                    borderRadius: 20,
+                    borderRadius: 10,
                   }}
                 />
               )}
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 50,
-    marginTop: 50,
+    marginTop: 30,
     marginLeft: 20,
   },
 });

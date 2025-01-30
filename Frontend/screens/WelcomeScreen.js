@@ -1,11 +1,9 @@
-import { StyleSheet, Text, View, Image, Button, Modal } from "react-native";
+import { StyleSheet, Text, View, Image,  Modal, Pressable } from "react-native";
 import React, { useState } from "react";
-import { useNavigation } from "@react-navigation/native";
 import SignInScreen from "./SigninScreen";
 import SignUpScreen from "./SignUpScreen";
 
 const WelcomeScreen = () => {
-  const navigation = useNavigation();
   const [showSignIn, setShowSignIn] = useState(false)
   const [showSignUp, setShowSignUp] = useState(false)
   const OpenSignIn = () => {
@@ -47,36 +45,45 @@ const WelcomeScreen = () => {
         >
           Welcome To Nestly
         </Text>
+
+        
         <View style={{ flexDirection: "row" }}>
+        <Pressable onPress={OpenSignIn}>
           <View
             style={{
               backgroundColor: "#1995AD",
               padding: 10,
               width: 150,
               borderRadius: 10,
+              height: 60,
+              shadowColor: "#000",
+              shadowRadius: 2,
+              shadowOffset:{width: 0, height: 2},
+              shadowOpacity: 10
             }}
           >
-            <Button
-              title="SignIn"
-              color={"white"}
-              onPress={OpenSignIn}
-            />
+            <Text style={{textAlign:"center", top: "15%", fontSize: 20, fontWeight: 500, color:"white"}}>SignIn</Text>
           </View>
+        </Pressable>
+
+          <Pressable onPress={OpenSignUp}>
           <View
             style={{
               backgroundColor: "#1995AD",
-              padding: 10,
+              padding: 15,
               width: 150,
               marginLeft: 40,
               borderRadius: 10,
+              height: 60,
+              shadowColor: "#000",
+              shadowRadius: 2,
+              shadowOffset:{width: 0, height: 2},
+              shadowOpacity: 10
             }}
           >
-            <Button
-              title="SignUp"
-              color={"white"}
-              onPress={OpenSignUp}
-            />
+            <Text style={{textAlign:"center", fontSize: 20, fontWeight: 500, color:"white"}}>SignUp</Text>
           </View>
+          </Pressable>
         </View>
       </View>
     </View>

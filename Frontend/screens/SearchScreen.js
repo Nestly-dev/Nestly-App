@@ -5,16 +5,28 @@ import {
   SafeAreaView,
   ScrollView,
   Image,
-  TextInput
+  TextInput,
+  Modal
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import Octicons from '@expo/vector-icons/Octicons';
 import { Feather } from "@expo/vector-icons";
+import AuthContext from "../context/AuthContext";
+import WelcomeScreen from "./WelcomeScreen";
+
 
 const SearchScreen = () => {
 
 const [raw, setRaw]= useState([1,2,3,4,5])
+const {signedIn} = useContext(AuthContext)
 
+if(!signedIn){
+  return (
+    <Modal visible={true} animationType="slide">
+      <WelcomeScreen />
+    </Modal>
+  );
+} else{
   return (
     <View style={{backgroundColor: "rgb(247, 247, 247)"}}>
         <ScrollView>
@@ -76,6 +88,10 @@ const [raw, setRaw]= useState([1,2,3,4,5])
     </ScrollView>
     </View>
   );
+
+}
+
+ 
 };
 
 export default SearchScreen;

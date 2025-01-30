@@ -13,7 +13,7 @@ import {
 import React, {useEffect} from "react";
 import { Feather } from "@expo/vector-icons";
 import styles from "../GlobalStyling";
-import TrendingArea from "../components/Trending";
+import TrendingArea from "../components/BestDeals";
 import Recommendations from "../components/Recommendations";
 import { LinearGradient } from "expo-linear-gradient";
 import LivePlaces from "../components/LivePlaces";
@@ -26,34 +26,66 @@ import Entypo from '@expo/vector-icons/Entypo';
 import Categories from "../components/Categories";
 import { useNavigation } from "@react-navigation/native";
 import { useContext } from "react";
-import UserContext from "../context/UserContext";
+import AuthContext from "../context/AuthContext";
 import WelcomeScreen from "./WelcomeScreen";
+import TopHotels from "../components/TopHotels";
+import axios from "axios";
 
 SplashScreen.preventAutoHideAsync();
 
 const HomeScreen = () => {
 
-
+  const hotelURL = "http://127.0.0.1:8000/api/v1/hotels/all-hotels"
   const navigation = useNavigation()
   const [loaded, error] = useFonts({
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
     'Inter': require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
   });
-  const {signedIn} = useContext(UserContext)
+  const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn} = useContext(AuthContext)
 
   useEffect(() => {
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
+    
   }, [loaded, error]);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      await loadAuthStatus("isLoggedIn");
+      
+      console.log("The status of authStatus is", signedIn);
+
+      if (authStatus === "loggedIn") {
+        setSignedIn(true);
+      } else {
+        setSignedIn(false);
+      }
+    };
+    
+    checkAuth();
+    console.log("Current auth status:", authStatus); // Debug log
+
+    axios.get(hotelURL)
+    .then((response) =>{
+      const result = response.data
+      console.log(result);
+    }).catch((error) => {
+      console.log(`The Error we are facing is ${error}`);
+    })
+
+  }, [authStatus]);
 
   if (!loaded && !error) {
     return null;
   }
 
+  
+
+    // UI Design
 
   if(!signedIn){
-    return <Modal visible={true} animationType="slide">
+    return <Modal visible={showLogIn} animationType="slide">
       <WelcomeScreen />
     </Modal>
   } else{ return (
@@ -62,7 +94,7 @@ const HomeScreen = () => {
    i     colors={["rgb(247, 247, 247)", "rgb(247, 247, 247)"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.gradient}
+        
       >
         <ScrollView>
           <SafeAreaView>
@@ -118,11 +150,30 @@ const HomeScreen = () => {
                   padding: 10,
                   width: "80%",
                 }}
+                onPressIn={() =>{navigation.navigate("Search")}}
               />
               <Octicons name="sort-desc" size={24} color="black" />
             </View>
             
           </SafeAreaView>
+
+
+          {/* Top Listed */}
+
+          <Text
+            style={{
+              color: "black",
+              fontSize: 23,
+              marginTop: 30,
+              marginLeft: 15,
+              fontFamily: "Inter",
+              fontWeight: "500",
+            }}
+          >
+            Top Hotels
+          </Text>
+          <TopHotels />
+
 
           {/* categories part */}
           <Text style={{marginTop: 22, fontFamily:"Inter", fontSize: 18, marginLeft: 22, fontWeight: 500}}>Categories</Text>
@@ -140,9 +191,9 @@ const HomeScreen = () => {
               fontWeight: "500",
             }}
           >
-            Sponsored Hotels
+            Best Deals
           </Text>
-          <SponsoredPost />
+          <TrendingArea />
           <Text
             style={{
               fontSize: 23,
@@ -152,9 +203,10 @@ const HomeScreen = () => {
               fontFamily:"Inter"
             }}
           >
-            Best Deals
+            For You
           </Text>
-          <TrendingArea />
+
+          <SponsoredPost />
           <Text
             style={{
               marginTop: 20,

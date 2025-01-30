@@ -19,7 +19,7 @@ import NotificationScreen from "../screens/NotificationScreen"
 import ProfileScreen from "../screens/ProfileScreen";
 import SignInScreen from '../screens/SigninScreen';
 import SignUpScreen from '../screens/SignUpScreen'
-import WelcomeScreen from "../screens/WelcomeScreen";
+import PersonalDetails from "../components/PersonalDetails";
 
 // Screen names
 const HomeScreenName = "Home";
@@ -140,6 +140,9 @@ const ProfileNavigator = () =>{
     <Stack.Navigator>
       <Stack.Screen name={ProfileScreenName}
       component={ProfileScreen}
+      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen name="Personal Info"
+      component={PersonalDetails}
       options={{ headerTransparent: true, headerShown: true, title: "" }}/>
     </Stack.Navigator>
   )

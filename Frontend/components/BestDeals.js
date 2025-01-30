@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import React from "react";
 import { data } from "../data/data";
-import TrendingPlaces from "./TrendingPlaces";
+import TrendingPlaces from "./BestDealPlaces";
 import { useNavigation } from "@react-navigation/native";
 
 const Trending = () => {
