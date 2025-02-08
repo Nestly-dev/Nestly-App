@@ -2,6 +2,7 @@
 import { Request, Response, Router } from "express";
 import { reviewService } from "../services/Hotel.user-reviews";
 import { MulterRequest, upload } from "../utils/config/multer";
+import { authMiddleware } from "../middleware/authMiddleware";
 
 export const ReviewRoute = Router();
 
@@ -16,16 +17,16 @@ ReviewRoute.get('/:reviewId', (req: Request, res: Response) => {
 });
 
 // Create a review
-ReviewRoute.post('/create/:hotelId/:bookingId', upload.single('media'), (req: Request, res: Response) => {
+ReviewRoute.post('/create/:hotelId/:bookingId', authMiddleware, upload.single('media'), (req: Request, res: Response) => {
   return reviewService.createReview(req as MulterRequest, res);
 });
 
 // Update a review
-ReviewRoute.patch('/update/:reviewId', (req: Request, res: Response) => {
+ReviewRoute.patch('/update/:reviewId', authMiddleware, (req: Request, res: Response) => {
   return reviewService.updateReview(req, res);
 });
 
 // Delete a review
-ReviewRoute.delete('/delete/:reviewId', (req: Request, res: Response) => {
+ReviewRoute.delete('/delete/:reviewId', authMiddleware, (req: Request, res: Response) => {
   return reviewService.deleteReview(req, res);
 });

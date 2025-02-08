@@ -20,7 +20,6 @@ class ReviewService {
         booking_id: bookingId,
         rating: req.body.rating,
         review_text: req.body.review_text,
-        stay_date: new Date(req.body.stay_date)
       };
 
       const { data, status, message } = await reviewRepository.createReview(req, res, reviewData);

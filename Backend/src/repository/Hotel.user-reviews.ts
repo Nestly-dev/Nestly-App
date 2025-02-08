@@ -40,7 +40,6 @@ class ReviewRepo {
         rating: reviewData.rating,
         mediaUrl: mediaUrl,
         review_text: reviewData.review_text,
-        stay_date: reviewData.stay_date,
         created_at: new Date(),
         updated_at: new Date()
       };
@@ -109,7 +108,6 @@ class ReviewRepo {
           rating: reviews.rating,
           mediaUrl: reviews.mediaUrl,
           reviewText: reviews.review_text,
-          stayDate: reviews.stay_date,
           createdAt: reviews.created_at,
           updatedAt: reviews.updated_at
         })
@@ -144,7 +142,6 @@ class ReviewRepo {
           rating: reviews.rating,
           mediaUrl: reviews.mediaUrl,
           reviewText: reviews.review_text,
-          stayDate: reviews.stay_date,
           createdAt: reviews.created_at,
           updatedAt: reviews.updated_at
         })
