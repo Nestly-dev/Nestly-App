@@ -48,9 +48,6 @@ class VideoRepo {
         hotel_id: hotelId,
         video_url: videoUrl,
         title: req.body.title,
-        duration: req.body.duration,
-        category: req.body.category,
-        display_order: parseInt(req.body.display_order),
         thumbnail_url: thumbnailUrl,
         view_count: 0,
         created_at: new Date(),
@@ -79,7 +76,7 @@ class VideoRepo {
   async updateVideo(
     req: Request,
     res: Response,
-    videoData: Partial<Pick<Video, 'title' | 'category' | 'display_order'>>
+    videoData: Partial<Pick<Video, 'title'>>
   ): Promise<DataResponse> {
     const video_id = req.params.videoId;
     try {
@@ -137,8 +134,6 @@ class VideoRepo {
       const videosData = await database
         .select()
         .from(videos)
-        .orderBy(videos.display_order);
-
       return {
         data: videosData,
         status: HttpStatusCodes.OK,
@@ -153,6 +148,7 @@ class VideoRepo {
     }
   }
 
+  /*
   async getVideosByCategory(req: Request, res: Response): Promise<DataResponse> {
     try {
       const category = req.params.category;
@@ -160,7 +156,6 @@ class VideoRepo {
         .select()
         .from(videos)
         .where(eq(videos.category, category))
-        .orderBy(videos.display_order);
 
       return {
         data: videosData,
@@ -175,7 +170,7 @@ class VideoRepo {
       };
     }
   }
-
+*/
   async deleteVideo(req: Request, res: Response): Promise<DataResponse> {
     const video_id = req.params.videoId;
     try {

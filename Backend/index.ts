@@ -34,14 +34,14 @@ app.get('/api/v1/test', (req: Request, res: Response) => {
 });
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/profile', authMiddleware, ProfileRoute);
-app.use('/api/v1/hotels', authMiddleware, HotelBasicDataRoutes);
-app.use('/api/v1/hotels/rooms', authMiddleware, HotelRoomsRoutes);
-app.use('/api/v1/hotels/availability', authMiddleware, HotelPricingAvailabilityRoutes);
-app.use('/api/v1/hotels/discounts', authMiddleware, HotelPriceModifiersRoutes);
+app.use('/api/v1/hotels', HotelBasicDataRoutes);
+app.use('/api/v1/hotels/rooms', HotelRoomsRoutes);
+app.use('/api/v1/hotels/availability', HotelPricingAvailabilityRoutes);
+app.use('/api/v1/hotels/discounts', HotelPriceModifiersRoutes);
 app.use('/api/v1/hotels/booking', authMiddleware, BookingRoutes);
-app.use('/api/v1/hotels/reviews', authMiddleware, ReviewRoute);
-app.use('/api/v1/hotels/Media', authMiddleware, HotelMediaRoute);
-app.use('/api/v1/content/videos', authMiddleware, VideoRoute);
+app.use('/api/v1/hotels/reviews', ReviewRoute);
+app.use('/api/v1/hotels/Media', HotelMediaRoute);
+app.use('/api/v1/content/videos', VideoRoute);
 
 
 app.listen(port, () => {

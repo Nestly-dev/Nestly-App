@@ -121,7 +121,7 @@ export const roomAvailability = pgTable('room_availability', {
   id: uuid('id').defaultRandom().primaryKey(),
   room_id: uuid('room_id').references(() => room.id, { onDelete: 'cascade' }).notNull(),
   available: boolean('available').default(true).notNull(),
-  date: date('date').notNull(),
+  date: timestamp('date').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
@@ -130,7 +130,6 @@ export const roomAvailability = pgTable('room_availability', {
 export const priceModifiers = pgTable('price_modifiers', {
   id: uuid('id').defaultRandom().primaryKey(),
   room_id: uuid('room_id').references(() => room.id, { onDelete: 'cascade' }).notNull(),
-  modifier_type: varchar('modifier_type', { length: 50 }).notNull(), // Coupons
   percentage: decimal('percentage', { precision: 5, scale: 2 }).notNull(),
   start_date: timestamp('start_date').notNull(),
   end_date: timestamp('end_date').notNull(),
@@ -150,6 +149,7 @@ export const bookings = pgTable('bookings', {
   total_price: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('USD').notNull(),
   payment_status: varchar('payment_status', { length: 20 }).notNull(),
+  cancelled: boolean('cancelled_booking').default(false),
   cancellation_timestamp: timestamp('cancellation_timestamp'),
   cancellation_reason: text('cancellation_reason'),
   created_at: timestamp('created_at').defaultNow().notNull(),
@@ -165,11 +165,11 @@ export const reviews = pgTable('reviews', {
   rating: decimal('rating').notNull(),
   mediaUrl: text('media_url'),
   review_text: text('review_text'),
-  stay_date: timestamp('stay_date').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
 
+/*
 // Destinations
 export const destinations = pgTable('destinations', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -184,6 +184,8 @@ export const destinations = pgTable('destinations', {
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
 
+*/
+
 // Content Discovery
 export const videos = pgTable('videos', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -191,15 +193,13 @@ export const videos = pgTable('videos', {
   title: varchar('title', { length: 255 }).notNull(),
   video_url: text('video_url').notNull(),
   thumbnail_url: text('thumbnail_url'),
-  duration: interval('duration'),
-  category: varchar('category', { length: 50 }),
-  display_order: integer('display_order'),
   view_count: integer('view_count').default(0),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
 
 // Algorithm-based but can be added manually
+/*
 export const deals = pgTable('deals', {
   id: uuid('id').defaultRandom().primaryKey(),
   hotel_id: uuid('hotel_id').references(() => hotels.id).notNull(),
@@ -228,6 +228,7 @@ export const recommendedPlaces = pgTable('recommended_places', {
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
+*/
 
 // User Engagement
 export const wishlists = pgTable('wishlists', {
@@ -250,6 +251,7 @@ export const notifications = pgTable('notifications', {
   created_at: timestamp('created_at').defaultNow().notNull()
 });
 
+/*
 // Support System
 export const helpArticles = pgTable('help_articles', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -261,3 +263,4 @@ export const helpArticles = pgTable('help_articles', {
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
+*/

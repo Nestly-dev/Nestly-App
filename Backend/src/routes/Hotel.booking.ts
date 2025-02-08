@@ -24,10 +24,3 @@ BookingRoutes.patch('/cancel/:bookingId', (req: Request, res: Response) => {
   return BookingService.cancelBooking(req, res);
 });
 
-// Hotel Booking panel
-
-/*
-BookingRoutes.delete('/delete/:bookingId', (req: Request, res: Response) => {
-  return BookingService.deleteBooking(req, res);
-});
-*/

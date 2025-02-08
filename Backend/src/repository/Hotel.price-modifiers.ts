@@ -1,9 +1,9 @@
 import { Request } from "express";
 import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc, gte, sql } from "drizzle-orm";
 import { DataResponse } from "../utils/types";
-import { priceModifiers } from "../utils/config/schema";
+import { priceModifiers, room, hotels } from "../utils/config/schema";
 
 // Define types using Drizzle's type inference
 type NewPriceModifier = typeof priceModifiers.$inferInsert;
@@ -15,7 +15,6 @@ class PriceModifierOperations {
     try {
       const modifierData: NewPriceModifier = {
         room_id: roomId,
-        modifier_type: req.body.modifier_type,
         percentage: req.body.percentage,
         start_date: new Date(req.body.start_date),
         end_date: new Date(req.body.end_date)
@@ -51,6 +50,43 @@ class PriceModifierOperations {
 
       return {
         data: modifiers,
+        message: "Price modifiers fetched successfully",
+        status: HttpStatusCodes.OK
+      };
+    } catch (error) {
+      return {
+        data: null,
+        message: error instanceof Error ? error.message : 'An unknown error occurred',
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+      };
+    }
+  }
+
+  async getHotDeals(req: Request): Promise<DataResponse> {
+    try {
+      const [hotelDiscounts] = await database
+        .select({
+          hotelId: hotels.id,
+          hotelName: hotels.name,
+          hotelAddress: sql<string>`concat(${hotels.street_address}, ', ', ${hotels.city}, ', ', ${hotels.state}, ', ', ${hotels.country})`,
+          discountPercentage: priceModifiers.percentage,
+          discountStartDate: priceModifiers.start_date,
+          discountEndDate: priceModifiers.end_date,
+          shortDescription: hotels.short_description,
+          longDescription: hotels.long_description,
+        })
+        .from(hotels)
+        .innerJoin(room, eq(room.hotel_id, hotels.id))
+        .innerJoin(priceModifiers, eq(priceModifiers.room_id, room.id))
+        .where(
+          and(
+            gte(priceModifiers.end_date, new Date())
+          )
+        )
+        .orderBy(desc(priceModifiers.percentage))
+
+      return {
+        data: hotelDiscounts,
         message: "Price modifiers fetched successfully",
         status: HttpStatusCodes.OK
       };
