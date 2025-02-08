@@ -8,7 +8,7 @@ import {
   TextInput,
   Modal
 } from "react-native";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import Octicons from '@expo/vector-icons/Octicons';
 import { Feather } from "@expo/vector-icons";
 import AuthContext from "../context/AuthContext";
@@ -18,7 +18,11 @@ import WelcomeScreen from "./WelcomeScreen";
 const SearchScreen = () => {
 
 const [raw, setRaw]= useState([1,2,3,4,5])
-const {signedIn} = useContext(AuthContext)
+const {signedIn, hotelData} = useContext(AuthContext)
+
+useEffect(() =>{
+  console.log(hotelData);
+}, [])
 
 if(!signedIn){
   return (
@@ -74,12 +78,12 @@ if(!signedIn){
 
             {/* places */}
 
-            {raw.map((item) =>{
+            {hotelData.map((item) =>{
                 return <View style={{marginLeft: 20, marginTop: 20, flexDirection: "row"}} key={item.id}>
                 <Image source={require("../assets/images/hotel4.avif")} style={{width: 120, height: 100, borderRadius: 10}}/>
                 <View style={{justifyContent:"center"}}>
-                    <Text style={{fontSize: 18, fontWeight: 500, marginLeft: 20}}>Hotel Monde Du Roi</Text>
-                    <Text style={{fontSize: 15, fontWeight: 500, marginLeft: 20, marginTop: 10}}>Hotel Monde Du Roi</Text>
+                    <Text style={{fontSize: 18, fontWeight: 500, marginLeft: 20}}>{item.name}</Text>
+                    <Text style={{fontSize: 15, fontWeight: 500, marginLeft: 20, marginTop: 10}}>{item.street_address}</Text>
                 </View>
                 </View>
             })}

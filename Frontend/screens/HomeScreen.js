@@ -41,7 +41,7 @@ const HomeScreen = () => {
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
     'Inter': require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
   });
-  const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn} = useContext(AuthContext)
+  const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn, saveHotelData, setHotelData, hotelData} = useContext(AuthContext)
 
   useEffect(() => {
     if (loaded || error) {
@@ -66,10 +66,14 @@ const HomeScreen = () => {
     checkAuth();
     console.log("Current auth status:", authStatus); // Debug log
 
+    // GET the hotel details from the database
+
     axios.get(hotelURL)
     .then((response) =>{
       const result = response.data
-      console.log(result);
+      const hotels = result.data
+      saveHotelData("all-Hotels", hotels)
+      setHotelData(hotels)
     }).catch((error) => {
       console.log(`The Error we are facing is ${error}`);
     })
