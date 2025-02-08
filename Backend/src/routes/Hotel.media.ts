@@ -2,6 +2,7 @@
 import { Request, Response, Router } from "express";
 import { hotelMediaService } from "../services/Hotel.media";
 import { MulterRequest, upload } from "../utils/config/multer";
+import { authMiddleware } from "../middleware/authMiddleware";
 
 export const HotelMediaRoute = Router();
 
@@ -16,16 +17,16 @@ HotelMediaRoute.get('/hotel/:hotelId/category/:category', (req: Request, res: Re
 });
 
 // Upload media
-HotelMediaRoute.post('/upload', upload.single('media'), (req: Request, res: Response) => {
+HotelMediaRoute.post('/upload', upload.single('media'), authMiddleware, (req: Request, res: Response) => {
   return hotelMediaService.uploadMedia(req as MulterRequest, res);
 });
 
 // Update media details
-HotelMediaRoute.patch('/update/:mediaId', (req: Request, res: Response) => {
+HotelMediaRoute.patch('/update/:mediaId', authMiddleware, (req: Request, res: Response) => {
   return hotelMediaService.updateMedia(req, res);
 });
 
 // Delete media
-HotelMediaRoute.delete('/delete/:mediaId', (req: Request, res: Response) => {
+HotelMediaRoute.delete('/delete/:mediaId', authMiddleware, (req: Request, res: Response) => {
   return hotelMediaService.deleteMedia(req, res);
 });

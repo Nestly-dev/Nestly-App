@@ -35,10 +35,9 @@ class VideoService {
 
   async updateVideo(req: Request, res: Response): Promise<Response> {
     try {
-      const videoData: Partial<Pick<Video, 'title' | 'category' | 'display_order'>> = {
+      const videoData: Partial<Pick<Video, 'title'>> = {
         ...(req.body.title && { title: req.body.title }),
-        ...(req.body.category && { category: req.body.category }),
-        ...(req.body.display_order && { display_order: parseInt(req.body.display_order) })
+        ...(req.body.category && { category: req.body.category })
       };
 
       const { data, status, message } = await videoRepository.updateVideo(req, res, videoData);
@@ -84,6 +83,7 @@ class VideoService {
     }
   }
 
+  /*
   async getVideosByCategory(req: Request, res: Response): Promise<Response> {
     try {
       const { data, status, message } = await videoRepository.getVideosByCategory(req, res);
@@ -98,6 +98,7 @@ class VideoService {
       });
     }
   }
+  */
 
   async deleteVideo(req: Request, res: Response): Promise<Response> {
     try {

@@ -13,8 +13,7 @@
     "test:watch": "jest --watch",
     "validate": "npm run lint:fix",
     "dbGenerate": "drizzle-kit generate",
-    "dbMigrate": "drizzle-kit migrate",
-    "prepare": "husky install"
+    "dbMigrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.651.1",
@@ -47,7 +46,6 @@
     "drizzle-kit": "^0.24.2",
     "eslint": "^9.16.0",
     "eslint-config-prettier": "^9.1.0",
-    "husky": "^8.0.0",
     "jest": "^29.7.0",
     "lint-staged": "^15.2.10",
     "nodemon": "^3.1.4",

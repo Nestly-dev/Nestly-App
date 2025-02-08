@@ -1,9 +1,10 @@
 import { Request } from "express";
 import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { DataResponse } from "../utils/types";
 import { roomPricing, roomAvailability } from "../utils/config/schema";
+import { generateDateRange } from "../utils/dateRangeGenerator";
 
 // Define types using Drizzle's type inference
 type NewRoomPricing = typeof roomPricing.$inferInsert;
@@ -293,6 +294,77 @@ class RoomOperations {
         status: HttpStatusCodes.INTERNAL_SERVER_ERROR
       };
     }
+  }
+
+  async updateRoomAvailabilityForDateRange(
+    roomId: string,
+    startDate: Date,
+    endDate: Date,
+    available: boolean
+  ): Promise<void> {
+    const dateRange = generateDateRange(startDate, endDate);
+
+    for (const date of dateRange) {
+      // Check if availability record exists for this date
+      const [existingAvailability] = await database
+        .select()
+        .from(roomAvailability)
+        .where(
+          and(
+            eq(roomAvailability.room_id, roomId),
+            eq(roomAvailability.date, date)
+          )
+        );
+
+      if (existingAvailability) {
+        // Update existing record
+        await database
+          .update(roomAvailability)
+          .set({
+            available,
+            updated_at: new Date()
+          })
+          .where(
+            and(
+              eq(roomAvailability.room_id, roomId),
+              eq(roomAvailability.date, date)
+            )
+          );
+      } else {
+        // Create new record
+        await database
+          .insert(roomAvailability)
+          .values({
+            room_id: roomId,
+            date,
+            available: false,
+          });
+      }
+    }
+  }
+
+  async isRoomAvailableForPeriod(
+    roomId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<boolean> {
+    const dateRange = generateDateRange(startDate, endDate);
+
+    const unavailableDates = await database
+      .select()
+      .from(roomAvailability)
+      .where(
+        and(
+          eq(roomAvailability.room_id, roomId),
+          eq(roomAvailability.available, false),
+          inArray(
+            roomAvailability.date,
+            dateRange.map(date => date)
+          )
+        )
+      );
+
+    return unavailableDates.length === 0;
   }
 }
 

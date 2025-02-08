@@ -35,6 +35,21 @@ class HotelPriceModifiers {
     }
   }
 
+  async getHotDeals(req: Request, res: Response) {
+    try {
+      const { data, message, status } = await priceModifierOperation.getHotDeals(req);
+      return res.status(status).json({
+        message: message,
+        data: data
+      })
+
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: error
+      })
+    }
+  }
+
   async updatePriceModifier(req: Request, res: Response) {
     try {
       const { data, message, status } = await priceModifierOperation.updatePriceModifier(req);

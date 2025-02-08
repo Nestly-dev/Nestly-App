@@ -2,9 +2,10 @@
 import { Request } from "express";
 import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { DataResponse } from "../utils/types";
 import { bookings } from "../utils/config/schema";
+import { roomOperationsRepository } from "./Hotel.pricing-availability";
 
 // Define types using Drizzle's type inference
 type NewBooking = typeof bookings.$inferInsert;
@@ -12,7 +13,7 @@ type Booking = typeof bookings.$inferSelect;
 
 class BookingRepository {
   // Create - Create New Booking
-  async createBooking(req: Request): Promise<DataResponse> {
+  async createBookingOldVersion(req: Request): Promise<DataResponse> {
     const { hotelId, roomId } = req.params;
     const userId = req.user?.id
     try {
@@ -47,6 +48,73 @@ class BookingRepository {
     }
   }
 
+  // Create - Create New Booking
+  async createBooking(req: Request): Promise<DataResponse> {
+    const { hotelId, roomId } = req.params;
+    const userId = req.user?.id;
+    const checkInDate = new Date(req.body.check_in_date);
+    const checkOutDate = new Date(req.body.check_out_date);
+
+    try {
+      // Check if room is available for the requested period
+      const isAvailable = await roomOperationsRepository.isRoomAvailableForPeriod(
+        roomId,
+        checkInDate,
+        checkOutDate
+      );
+
+      if (!isAvailable) {
+        return {
+          data: null,
+          message: "Room is not available for the selected dates",
+          status: HttpStatusCodes.BAD_REQUEST
+        };
+      }
+
+      const bookingData: NewBooking = {
+        user_id: userId as string,
+        hotel_id: hotelId,
+        room_id: roomId,
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate,
+        num_guests: req.body.num_guests,
+        total_price: req.body.total_price,
+        currency: req.body.currency || 'USD',
+        payment_status: req.body.payment_status
+      };
+
+      // Payment Procedure, Stripe
+
+      
+
+      // Create booking in transaction
+        const [booking] = await database
+          .insert(bookings)
+          .values(bookingData)
+          .returning();
+
+        // Update room availability
+         await roomOperationsRepository.updateRoomAvailabilityForDateRange(
+          roomId,
+          checkInDate,
+          checkOutDate,
+          false // Set as unavailable
+        );
+
+      return {
+        data: booking,
+        message: "Booking created successfully",
+        status: HttpStatusCodes.CREATED
+      };
+    } catch (error) {
+      return {
+        data: null,
+        message: error instanceof Error ? error.message : 'An unknown error occurred',
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+      };
+    }
+  }
+
   // Read - Get All User Bookings
   async getUserBookings(req: Request): Promise<DataResponse> {
     const userId = req.params.userId;
@@ -55,8 +123,11 @@ class BookingRepository {
       const userBookings = await database
         .select()
         .from(bookings)
-        .where(eq(bookings.user_id, userId));
-
+        .where(
+          and(
+            eq(bookings.user_id, userId),
+            eq(bookings.cancelled, false)
+          ))
       return {
         data: userBookings,
         message: "User bookings fetched successfully",
@@ -147,8 +218,8 @@ class BookingRepository {
     }
   }
 
-  // Update - Cancel Booking
-  async cancelBooking(req: Request): Promise<DataResponse> {
+  // Update - Cancel Booking Old Version
+  async cancelBookingOldVersion(req: Request): Promise<DataResponse> {
     const bookingId = req.params.bookingId;
     const { cancellation_reason } = req.body;
 
@@ -169,6 +240,7 @@ class BookingRepository {
       const [cancelledBooking] = await database
         .update(bookings)
         .set({
+          cancelled: true,
           cancellation_timestamp: new Date(),
           cancellation_reason,
           updated_at: new Date()
@@ -190,17 +262,18 @@ class BookingRepository {
     }
   }
 
-  // Delete - Delete Booking
-  async deleteBooking(req: Request): Promise<DataResponse> {
+  // Update - Cancel Booking
+  async cancelBooking(req: Request): Promise<DataResponse> {
     const bookingId = req.params.bookingId;
+    const { cancellation_reason } = req.body;
 
     try {
-      const [deletedBooking] = await database
-        .delete(bookings)
-        .where(eq(bookings.id, bookingId))
-        .returning();
+      const [existingBooking] = await database
+        .select()
+        .from(bookings)
+        .where(eq(bookings.id, bookingId));
 
-      if (!deletedBooking) {
+      if (!existingBooking) {
         return {
           data: null,
           message: "Booking not found",
@@ -208,9 +281,29 @@ class BookingRepository {
         };
       }
 
+      // Cancel booking in transaction
+        const [cancelBooking] = await database
+          .update(bookings)
+          .set({
+            cancelled: true,
+            cancellation_timestamp: new Date(),
+            cancellation_reason,
+            updated_at: new Date()
+          })
+          .where(eq(bookings.id, bookingId))
+          .returning();
+
+        // Update room availability
+        await roomOperationsRepository.updateRoomAvailabilityForDateRange(
+          existingBooking.room_id,
+          existingBooking.check_in_date,
+          existingBooking.check_out_date,
+          true // Set as available
+        );
+
       return {
-        data: deletedBooking,
-        message: "Booking deleted successfully",
+        data: cancelBooking,
+        message: "Booking cancelled successfully",
         status: HttpStatusCodes.OK
       };
     } catch (error) {
@@ -221,6 +314,7 @@ class BookingRepository {
       };
     }
   }
+
 }
 
 export const bookingRepository = new BookingRepository();

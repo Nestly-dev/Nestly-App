@@ -3,7 +3,7 @@ import { HttpStatusCodes } from '../utils/helpers';
 import { database } from '../utils/config/database';
 import { eq } from 'drizzle-orm';
 import { DataResponse } from '../utils/types';
-import { hotels } from '../utils/config/schema';
+import { hotelMedia, hotels, room, roomPricing } from '../utils/config/schema';
 
 // Define types based on your schema
 type PaymentOption = 'Visa' | 'MasterCard' | 'Momo';
@@ -90,12 +90,76 @@ class Hotels {
   async getSpecificHotel(req: Request): Promise<DataResponse> {
     const hotelId = req.params.hotelId;
     try {
-      const [hotel] = await database
-        .select()
+      const HotelProfile = database
+        .select({
+          // Hotel Information
+          hotelId: hotels.id,
+          hotelName: hotels.name,
+          shortDescription: hotels.short_description,
+          longDescription: hotels.long_description,
+          starRating: hotels.star_rating,
+          propertyType: hotels.property_type,
+          builtYear: hotels.built_year,
+          lastRenovationYear: hotels.last_renovation_year,
+          category: hotels.category,
+
+          // Location Information
+          streetAddress: hotels.street_address,
+          city: hotels.city,
+          state: hotels.state,
+          province: hotels.province,
+          country: hotels.country,
+          postalCode: hotels.postal_code,
+          latitude: hotels.latitude,
+          longitude: hotels.longitude,
+          mapUrl: hotels.map_url,
+
+          // Hotel Services
+          totalRooms: hotels.total_rooms,
+          cancellationPolicy: hotels.cancellation_policy,
+          paymentOptions: hotels.payment_options,
+          menuDownloadUrl: hotels.menu_download_url,
+          sponsored: hotels.sponsored,
+          status: hotels.status,
+
+          // Media Information
+          media: {
+            id: hotelMedia.id,
+            mediaType: hotelMedia.media_type,
+            mediaCategory: hotelMedia.media_category,
+            url: hotelMedia.url,
+            createdAt: hotelMedia.created_at,
+          },
+
+          // Room Information
+          room: {
+            id: room.id,
+            type: room.type,
+            description: room.description,
+            maxOccupancy: room.max_occupancy,
+            numBeds: room.num_beds,
+            roomSize: room.room_size,
+            floorLevel: room.floor_level,
+            createdAt: room.created_at,
+          },
+
+          // Pricing Information
+          pricing: {
+            id: roomPricing.id,
+            basePrice: roomPricing.base_price,
+            currency: roomPricing.currency,
+            taxPercentage: roomPricing.tax_percentage,
+            childPolicy: roomPricing.child_policy,
+            createdAt: roomPricing.created_at,
+          },
+        })
         .from(hotels)
+        .leftJoin(hotelMedia, eq(hotels.id, hotelMedia.hotel_id))
+        .leftJoin(room, eq(hotels.id, room.hotel_id))
+        .leftJoin(roomPricing, eq(room.id, roomPricing.room_id))
         .where(eq(hotels.id, hotelId));
 
-      if (!hotel) {
+      if (!HotelProfile) {
         return {
           data: null,
           message: 'Hotel not found',
@@ -104,8 +168,8 @@ class Hotels {
       }
 
       return {
-        data: hotel,
-        message: 'Hotel fetched successfully',
+        data: HotelProfile,
+        message: 'Hotel Profile fetched successfully',
         status: HttpStatusCodes.OK,
       };
     } catch (error) {
