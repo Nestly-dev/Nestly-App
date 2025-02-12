@@ -4,8 +4,8 @@ import { MulterRequest } from "../utils/config/multer";
 import { authMiddleware } from "../middleware/authMiddleware";
 export const HotelRoomsRoutes = Router();
 
-HotelRoomsRoutes.get('/hotel-rooms', (req: Request, res: Response) => {
-  return HotelRoomService.getRoomByHotelId(req, res)
+HotelRoomsRoutes.get('/:hotelId', (req: Request, res: Response) => {
+  return HotelRoomService.getRoomByHotelId(req as MulterRequest, res)
 });
 
 HotelRoomsRoutes.get('/:hotelId/:roomId', (req: Request, res: Response) => {

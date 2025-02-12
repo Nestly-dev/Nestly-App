@@ -54,7 +54,7 @@ class Rooms {
 
       return {
         data: hotelRoomTypes,
-        message: "Room types fetched successfully",
+        message: "Hotel Rooms fetched successfully",
         status: HttpStatusCodes.OK
       };
     } catch (error) {
@@ -68,7 +68,7 @@ class Rooms {
 
   // Read - Get Specific Room Type
   async getSpecificRoomType(req: Request): Promise<DataResponse> {
-    const { hotelId, roomTypeId } = req.params;
+    const { hotelId, roomId } = req.params;
 
     try {
       const [roomType] = await database
@@ -77,7 +77,7 @@ class Rooms {
         .where(
           and(
             eq(room.hotel_id, hotelId),
-            eq(room.id, roomTypeId)
+            eq(room.id, roomId)
           )
         );
 
@@ -91,7 +91,7 @@ class Rooms {
 
       return {
         data: roomType,
-        message: "Room type fetched successfully",
+        message: "Rooms fetched successfully",
         status: HttpStatusCodes.OK
       };
     } catch (error) {
@@ -105,7 +105,7 @@ class Rooms {
 
   // Update - Update Room Type
   async updateRoomType(req: Request): Promise<DataResponse> {
-    const { hotelId, roomTypeId } = req.params;
+    const { hotelId, roomId } = req.params;
     const updateData = req.body;
 
     try {
@@ -116,14 +116,14 @@ class Rooms {
         .where(
           and(
             eq(room.hotel_id, hotelId),
-            eq(room.id, roomTypeId)
+            eq(room.id, roomId)
           )
         );
 
       if (!existingRoomType) {
         return {
           data: null,
-          message: "Room type not found",
+          message: "Rooms not found",
           status: HttpStatusCodes.NOT_FOUND
         };
       }
@@ -139,14 +139,14 @@ class Rooms {
         .where(
           and(
             eq(room.hotel_id, hotelId),
-            eq(room.id, roomTypeId)
+            eq(room.id, roomId)
           )
         )
         .returning();
 
       return {
         data: updatedRoomType,
-        message: "Room type updated successfully",
+        message: "Rooms updated successfully",
         status: HttpStatusCodes.OK
       };
     } catch (error) {
@@ -160,7 +160,7 @@ class Rooms {
 
   // Delete - Delete Room Type
   async deleteRoomType(req: Request): Promise<DataResponse> {
-    const { hotelId, roomTypeId } = req.params;
+    const { hotelId, roomId } = req.params;
 
     try {
       const [deletedRoomType] = await database
@@ -168,7 +168,7 @@ class Rooms {
         .where(
           and(
             eq(room.hotel_id, hotelId),
-            eq(room.id, roomTypeId)
+            eq(room.id, roomId)
           )
         )
         .returning();
@@ -176,14 +176,14 @@ class Rooms {
       if (!deletedRoomType) {
         return {
           data: null,
-          message: "Room type not found",
+          message: "Room not found",
           status: HttpStatusCodes.NOT_FOUND
         };
       }
 
       return {
         data: deletedRoomType,
-        message: "Room type deleted successfully",
+        message: "Rooms deleted successfully",
         status: HttpStatusCodes.OK
       };
     } catch (error) {
@@ -206,7 +206,7 @@ class Rooms {
 
       return {
         data: deletedRoomTypes,
-        message: "All room types deleted successfully",
+        message: "All rooms deleted successfully",
         status: HttpStatusCodes.OK
       };
     } catch (error) {

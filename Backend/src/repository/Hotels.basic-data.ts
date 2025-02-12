@@ -90,76 +90,14 @@ class Hotels {
   async getSpecificHotel(req: Request): Promise<DataResponse> {
     const hotelId = req.params.hotelId;
     try {
-      const HotelProfile = database
-        .select({
-          // Hotel Information
-          hotelId: hotels.id,
-          hotelName: hotels.name,
-          shortDescription: hotels.short_description,
-          longDescription: hotels.long_description,
-          starRating: hotels.star_rating,
-          propertyType: hotels.property_type,
-          builtYear: hotels.built_year,
-          lastRenovationYear: hotels.last_renovation_year,
-          category: hotels.category,
-
-          // Location Information
-          streetAddress: hotels.street_address,
-          city: hotels.city,
-          state: hotels.state,
-          province: hotels.province,
-          country: hotels.country,
-          postalCode: hotels.postal_code,
-          latitude: hotels.latitude,
-          longitude: hotels.longitude,
-          mapUrl: hotels.map_url,
-
-          // Hotel Services
-          totalRooms: hotels.total_rooms,
-          cancellationPolicy: hotels.cancellation_policy,
-          paymentOptions: hotels.payment_options,
-          menuDownloadUrl: hotels.menu_download_url,
-          sponsored: hotels.sponsored,
-          status: hotels.status,
-
-          // Media Information
-          media: {
-            id: hotelMedia.id,
-            mediaType: hotelMedia.media_type,
-            mediaCategory: hotelMedia.media_category,
-            url: hotelMedia.url,
-            createdAt: hotelMedia.created_at,
-          },
-
-          // Room Information
-          room: {
-            id: room.id,
-            type: room.type,
-            description: room.description,
-            maxOccupancy: room.max_occupancy,
-            numBeds: room.num_beds,
-            roomSize: room.room_size,
-            floorLevel: room.floor_level,
-            createdAt: room.created_at,
-          },
-
-          // Pricing Information
-          pricing: {
-            id: roomPricing.id,
-            basePrice: roomPricing.base_price,
-            currency: roomPricing.currency,
-            taxPercentage: roomPricing.tax_percentage,
-            childPolicy: roomPricing.child_policy,
-            createdAt: roomPricing.created_at,
-          },
-        })
+      // Fetch Hotel Base Information
+      const hotelBase = await database
+        .select()
         .from(hotels)
-        .leftJoin(hotelMedia, eq(hotels.id, hotelMedia.hotel_id))
-        .leftJoin(room, eq(hotels.id, room.hotel_id))
-        .leftJoin(roomPricing, eq(room.id, roomPricing.room_id))
-        .where(eq(hotels.id, hotelId));
+        .where(eq(hotels.id, hotelId))
+        .execute();
 
-      if (!HotelProfile) {
+      if (hotelBase.length === 0) {
         return {
           data: null,
           message: 'Hotel not found',
@@ -167,16 +105,48 @@ class Hotels {
         };
       }
 
+      // Fetch Media in a separate query
+      const mediaList = await database
+        .select({
+          id: hotelMedia.id,
+          mediaType: hotelMedia.media_type,
+          url: hotelMedia.url,
+        })
+        .from(hotelMedia)
+        .where(eq(hotelMedia.hotel_id, hotelId))
+        .execute();
+
+      // Fetch Rooms with Pricing
+      const roomsWithPricing = await database
+        .select({
+          roomId: room.id,
+          roomType: room.type,
+          maxOccupancy: room.max_occupancy,
+          basePrice: roomPricing.base_price,
+          currency: roomPricing.currency,
+        })
+        .from(room)
+        .leftJoin(roomPricing, eq(room.id, roomPricing.room_id))
+        .where(eq(room.hotel_id, hotelId))
+        .execute();
+
+      // Construct complete hotel profile
+      const hotelProfile = {
+        ...hotelBase[0],
+        media: mediaList,
+        rooms: roomsWithPricing,
+      };
+
       return {
-        data: HotelProfile,
+        data: hotelProfile,
         message: 'Hotel Profile fetched successfully',
         status: HttpStatusCodes.OK,
       };
     } catch (error) {
+      console.error('Hotel Profile Fetch Error:', error);
       return {
         data: null,
-        message:
-          error instanceof Error ? error.message : 'An unknown error occurred',
+        message: `Error retrieving hotel profile, ${error}`,
         status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
       };
     }

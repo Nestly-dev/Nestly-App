@@ -9,9 +9,8 @@ HotelBasicDataRoutes.get('/all-hotels', (req: Request, res: Response) => {
   return HotelService.getAllHotels(req, res)
 });
 
-
 // Get Specific Hotel Profile
-HotelBasicDataRoutes.get('/:hotelId', (req: Request, res: Response) => {
+HotelBasicDataRoutes.get('/profile/:hotelId', (req: Request, res: Response) => {
   return HotelService.getSpecificHotel(req, res)
 });
 
