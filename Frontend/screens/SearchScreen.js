@@ -6,7 +6,8 @@ import {
   ScrollView,
   Image,
   TextInput,
-  Modal
+  Modal,
+  TouchableOpacity
 } from "react-native";
 import React, { useState, useContext, useEffect } from "react";
 import Octicons from '@expo/vector-icons/Octicons';
@@ -21,7 +22,7 @@ const [raw, setRaw]= useState([1,2,3,4,5])
 const {signedIn, hotelData} = useContext(AuthContext)
 
 useEffect(() =>{
-  console.log(hotelData);
+  //console.log(hotelData);
 }, [])
 
 if(!signedIn){
@@ -79,13 +80,17 @@ if(!signedIn){
             {/* places */}
 
             {hotelData.map((item) =>{
-                return <View style={{marginLeft: 20, marginTop: 20, flexDirection: "row"}} key={item.id}>
+                return (
+                <TouchableOpacity key={item.id}>
+                <View style={{marginLeft: 20, marginTop: 20, flexDirection: "row"}} >
                 <Image source={require("../assets/images/hotel4.avif")} style={{width: 120, height: 100, borderRadius: 10}}/>
                 <View style={{justifyContent:"center"}}>
                     <Text style={{fontSize: 18, fontWeight: 500, marginLeft: 20}}>{item.name}</Text>
                     <Text style={{fontSize: 15, fontWeight: 500, marginLeft: 20, marginTop: 10}}>{item.street_address}</Text>
                 </View>
                 </View>
+                </TouchableOpacity>
+                )
             })}
       
     </SafeAreaView>

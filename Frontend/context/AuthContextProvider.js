@@ -4,7 +4,7 @@ import * as SecureStore from "expo-secure-store";
 
 const UserContexProvider = ({ children }) => {
   const [user, setUser] = useState();
-  const [signedIn, setSignedIn] = useState(true);
+  const [signedIn, setSignedIn] = useState(false);
   const [authStatus, setAuthStatus] = useState("notLoggedIn");
   const [showLogIn, setShowLogIn] = useState(true)
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -108,11 +108,11 @@ useEffect(() =>{
   const loadHotelData = async (key) =>{
     try {
         let result = await SecureStore.getItemAsync(key)
-        console.log("This is the hotels data that has been stored lately", result)
+        // console.log("This is the hotels data that has been stored lately", result)
         if (result){
           // Reversing the JSON string back to an object
           const hotelData = JSON.parse(result)
-          console.log("The parsed hotel data", hotelData);
+          //console.log("The parsed hotel data", hotelData);
           setHotelData(hotelData)
         }
     } catch (error) {
