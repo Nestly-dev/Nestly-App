@@ -28,6 +28,13 @@ const initializeAuth = async () => {
           setUser(userData);
         }
       }
+      // load hotel data
+      const storedHotelDetail = await SecureStore.getItemAsync("all-Hotels")
+      if (storedHotelDetail){
+        const hotelData = JSON.parse(storedHotelDetail)
+        setHotelData(hotelData)
+        console.log("Hotel Detail retreaved successfull 👍");
+      }
     } catch (error) {
       console.error("Error initializing auth:", error);
     }
@@ -35,7 +42,7 @@ const initializeAuth = async () => {
 
 useEffect(() =>{
     initializeAuth()
-})
+}, [])
 
 
 // all the savings
@@ -57,6 +64,16 @@ useEffect(() =>{
         console.log("The user details saved are,", valueToStore);
     } catch (error) {
         console.error("Error saving the user", error);
+    }
+  }
+
+  const saveHotelData = async (key, value) =>{
+    const valueToStore = typeof value == "string" ? value : JSON.stringify(value)
+    try {
+      await SecureStore.setItemAsync(key, valueToStore);
+      console.log("The hotel details saved successfully")
+    } catch (error) {
+      console.log("There is an Error which has occured", error)
     }
   }
 
@@ -88,6 +105,20 @@ useEffect(() =>{
         console.error("Error loading user details", error);
       }
   }
+  const loadHotelData = async (key) =>{
+    try {
+        let result = await SecureStore.getItemAsync(key)
+        console.log("This is the hotels data that has been stored lately", result)
+        if (result){
+          // Reversing the JSON string back to an object
+          const hotelData = JSON.parse(result)
+          console.log("The parsed hotel data", hotelData);
+          setHotelData(hotelData)
+        }
+    } catch (error) {
+      console.log("Error loading the hotel data", error);
+    }
+  }
 
 
   const value = {
@@ -102,7 +133,11 @@ useEffect(() =>{
     saveUserDetails,
     loadUserDetails,
     showConfirmation,
-    setShowConfirmation
+    setShowConfirmation,
+    hotelData,
+    setHotelData,
+    saveHotelData,
+    loadHotelData
   };
 
   return (
