@@ -14,12 +14,16 @@ import Octicons from '@expo/vector-icons/Octicons';
 import { Feather } from "@expo/vector-icons";
 import AuthContext from "../context/AuthContext";
 import WelcomeScreen from "./WelcomeScreen";
+import { useNavigation } from "@react-navigation/native";
+
 
 
 const SearchScreen = () => {
 
 const [raw, setRaw]= useState([1,2,3,4,5])
-const {signedIn, hotelData} = useContext(AuthContext)
+const {signedIn, hotelData, setCurrentID} = useContext(AuthContext)
+const navigation = useNavigation()
+const {hotelID, setHotelID} = useState()
 
 useEffect(() =>{
   //console.log(hotelData);
@@ -81,7 +85,12 @@ if(!signedIn){
 
             {hotelData.map((item) =>{
                 return (
-                <TouchableOpacity key={item.id}>
+                <TouchableOpacity key={item.id}
+                onPress={() =>{
+                  navigation.navigate("Hotel Profile")
+                  setCurrentID(item.id)
+                }}
+                >
                 <View style={{marginLeft: 20, marginTop: 20, flexDirection: "row"}} >
                 <Image source={require("../assets/images/hotel4.avif")} style={{width: 120, height: 100, borderRadius: 10}}/>
                 <View style={{justifyContent:"center"}}>

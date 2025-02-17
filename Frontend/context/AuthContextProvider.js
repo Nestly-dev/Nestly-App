@@ -9,6 +9,7 @@ const UserContexProvider = ({ children }) => {
   const [showLogIn, setShowLogIn] = useState(true)
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [hotelData, setHotelData] = useState()
+  const [currentID, setCurrentID] = useState()
 
 
 // initialising the app
@@ -137,7 +138,9 @@ useEffect(() =>{
     hotelData,
     setHotelData,
     saveHotelData,
-    loadHotelData
+    loadHotelData,
+    currentID, 
+    setCurrentID
   };
 
   return (
