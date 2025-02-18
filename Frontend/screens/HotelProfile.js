@@ -12,7 +12,7 @@ import {
   Pressable,
   TouchableOpacity,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, {
   interpolate,
@@ -26,12 +26,74 @@ import * as Progress from "react-native-progress";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Reviews from "../components/Reviews";
 import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import AuthContext from "../context/AuthContext";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import RoomComponent from "../components/RoomComponent";
+import MapLocation from "../components/MapLocation"
+
+
 
 const { width } = Dimensions.get("window");
 const IMG_HEIGHT = 300;
 
 
+
 const HotelProfile = () => {
+  const { currentID } = useContext(AuthContext)
+  const [hotelName, setHotelName] = useState()
+  const [adresse, setAdresse] = useState()
+  const [summary, setSummary] = useState("")
+  const [rate, setRate] = useState(0)
+  const [room, setRoom] = useState();
+  const [latitude ,setLatitude] = useState(0)
+  const [longitude, setLongitude] = useState(0)
+  const [location, setLocation ]= useState({
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02
+    })
+
+  
+
+
+//API Calls
+useEffect(() =>{
+  const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`
+
+  axios.get(url)
+  .then((response) =>{
+    const result = response.data
+    const hotelDetails = result.data
+    setHotelName(hotelDetails.name)
+    setAdresse(hotelDetails.street_address)
+    setSummary(hotelDetails.long_description)
+    setRate(hotelDetails.star_rating)
+    setRoom(hotelDetails.total_rooms)
+    // Convert coordinates to numbers
+    const lat = Number(hotelDetails.latitude)
+    const lng = Number(hotelDetails.longitude)
+    
+    // Set individual state values if you need them elsewhere
+    setLatitude(lat)
+    setLongitude(lng)
+    
+    // Set location state using the values directly from the API
+    setLocation({
+      latitude: lat,
+      longitude: lng,
+      longitudeDelta: 0.02,
+      latitudeDelta: 0.02,
+    })
+  }).catch(error =>{
+    console.log("We are facinig an error", error)
+  })
+  
+}, [])
+
+
+
 
   //Navigation
 
@@ -62,8 +124,7 @@ const HotelProfile = () => {
   });
 
   // Rating states
-  const [rate, setRate] = useState(8.4);
-  const [room, setRoom] = useState();
+  ;
   const [service, setService] = useState();
   const [price, setPrice] = useState();
   const [star, setStar] = useState([1, 2, 3, 4]);
@@ -82,7 +143,7 @@ const HotelProfile = () => {
 
         {/* Detaills Section */}
 
-        <View style={{ backgroundColor: "#fff", width, height: 1350, flex: 1 }}>
+        <View style={{ backgroundColor: "#fff", width,  flex: 1 }}>
           <View
             style={{
               flexDirection: "row",
@@ -91,7 +152,7 @@ const HotelProfile = () => {
               marginTop: 10
             }}
           >
-            <Text style={styles.text}>Grand Royale Hotel Park</Text>
+            <Text style={styles.text}>{hotelName}</Text>
             <View>
               <Text style={styles.price}>$230</Text>
               <Text style={{ marginTop: 10, fontSize: 20 }}>per night</Text>
@@ -104,7 +165,7 @@ const HotelProfile = () => {
               color="#1995AD"
               style={{ marginLeft: 20 }}
             />
-            <Text style={styles.subtext}>{rsdata[0].adresse}</Text>
+            <Text style={styles.subtext}>{adresse}</Text>
           </View>
           <View
             style={{
@@ -121,11 +182,10 @@ const HotelProfile = () => {
           <View>
             <Text style={[styles.summary, { color: "gray" }]}>Summary</Text>
             <Text style={styles.summary}>
-              Kigali, city and capital of Rwanda. It is located in the centre of
-              the country on the Ruganwa River. Butare also known as Huye and
-              formerly known as Astrida, is a city with a population of 62,823
+              {summary}
             </Text>
           </View>
+
           <View
             style={{
               width: "90%",
@@ -215,6 +275,7 @@ const HotelProfile = () => {
               <Progress.Bar progress={34} width={250} color="#007A8C" />
             </View>
           </View>
+
           <View
             style={{
               width: "90%",
@@ -235,7 +296,7 @@ const HotelProfile = () => {
                 flexDirection: "row",
               }}
             >
-              <Text style={{ fontSize: 20, marginBottom: 20 }}>Photos</Text>
+              <Text style={{ fontSize: 20, marginBottom: 20, fontWeight: 500 }}>Photos</Text>
               <TouchableOpacity onPress={() => navigation.navigate("Gallery")}>
               <Text
                 style={{
@@ -267,11 +328,38 @@ const HotelProfile = () => {
             />
           </View>
 
+          {/* Available Rooms */}
+          <View>
+          <Text style={{ fontSize: 20, 
+            marginBottom: 20, 
+            marginTop: 20, 
+            marginLeft: 20,
+            fontWeight: 500 }}>
+              Room Available ({room})
+              <MaterialCommunityIcons name="sticker-check" size={24} color="#4cbf04"/>
+          </Text>
+          <RoomComponent />
+          <RoomComponent />
+          </View>
+
+          {/* The map and direction */}
+
+            <Text style={{ fontSize: 20, 
+            marginBottom: 20, 
+            marginTop: 20, 
+            marginLeft: 20,
+            fontWeight: 500
+            }}>
+              Maps Location
+          </Text>
+         
+            <MapLocation location = {location} name={hotelName}/>
+
           {/* Reviews Sections */}
 
           <View style={{ marginTop: 30, marginLeft: 20 }}>
             <View style={{flexDirection:"row", justifyContent: "space-between"}}>
-            <Text style={{ fontSize: 20, marginBottom: 20 }}>Reviews</Text>
+            <Text style={{ fontSize: 20, marginBottom: 20, fontWeight: 500 }}>Reviews</Text>
             <Text onPress={() =>{navigation.navigate('Reviews')}} style={{ fontSize: 15, marginBottom: 20, marginRight: 20, color: "#1995AD" }}>See all</Text>
             </View>
             <Reviews />

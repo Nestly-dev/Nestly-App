@@ -121,7 +121,7 @@ export const roomAvailability = pgTable('room_availability', {
   id: uuid('id').defaultRandom().primaryKey(),
   room_id: uuid('room_id').references(() => room.id, { onDelete: 'cascade' }).notNull(),
   available: boolean('available').default(true).notNull(),
-  date: timestamp('date').notNull(),
+  date: timestamp('date').defaultNow().notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });

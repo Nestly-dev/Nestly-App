@@ -19,7 +19,7 @@ class HotelMediaService {
       }
 
       const mediaData: Omit<NewHotelMedia, 'id' | 'url' | 'created_at' | 'updated_at'> = {
-        hotel_id: req.body.hotel_id,
+        hotel_id: req.params.hotelId,
         media_type: req.body.media_type,
         media_category: req.body.media_category,
       };

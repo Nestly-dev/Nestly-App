@@ -1,13 +1,22 @@
 import { Text, View, Image, TouchableOpacity, Pressable } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { rcdata } from "../data/rcdata";
 import styles from "../GlobalStyling";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { useNavigation } from "@react-navigation/native";
+import AuthContext from "../context/AuthContext";
 
 const Recommendations = () => {
-  const [data, setData] = useState(rcdata);
+  ;
   const navigation = useNavigation();
+  const { hotelData, loadHotelData } = useContext(AuthContext)
+  const [data, setData] = useState(rcdata)
+
+  useEffect(() =>{
+    loadHotelData("all-Hotels")
+    console.log(hotelData);
+  }, [])
+
   return (
     <View>
       {data.map((item) => {
@@ -31,7 +40,7 @@ const Recommendations = () => {
                 {item.name}
               </Text>
               <Text style={{ marginTop: 10, marginLeft: 15, fontSize: 16 }}>
-                Rwanda.Kigali.Bugesera
+                {item.street_address}
               </Text>
               <View
                 style={{
@@ -52,7 +61,7 @@ const Recommendations = () => {
                 >
                   <MaterialIcons name="star-rate" size={24} color="#C5630C" />
                   <Text marginTop={5} marginLeft={5}>
-                    4-Star hotel
+                    {item.star_rating}-Star Rating
                   </Text>
                 </View>
                 <Pressable>

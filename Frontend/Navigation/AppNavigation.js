@@ -63,7 +63,7 @@ const TabNavigator = () => {
       })}
     >
       <Tab.Screen name={HomeScreenName} component={HomeStackNavigator} />
-      <Tab.Screen name={SearchScreenName} component={SearchScreen} />
+      <Tab.Screen name={SearchScreenName} component={SearchNavigator} />
       <Tab.Screen name={ExploreScreenName} component={ExploreScreen} />
       <Tab.Screen name={ReservationScreenName} component={MyTripsStackNavigator2} />
       <Tab.Screen name={ProfileScreenName} component={ProfileNavigator} />
@@ -116,6 +116,31 @@ const HomeStackNavigator = () => {
     </Stack.Navigator>
   );
 };
+
+const SearchNavigator = () =>{
+  return(
+    <Stack.Navigator initialRouteName={SearchScreenName}>
+      <Stack.Screen 
+      name={SearchScreenName} 
+      component={SearchScreen} 
+      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen 
+      name="Hotel Profile" 
+      component={HotelProfile} 
+      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen
+        name="Booking"
+        component={BookingScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "Booking Details" }}
+      />
+      <Stack.Screen
+        name="Reviews"
+        component={ReviewsScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
+    </Stack.Navigator>
+  )
+}
 
 const MyTripsStackNavigator2 = () => {
   return (

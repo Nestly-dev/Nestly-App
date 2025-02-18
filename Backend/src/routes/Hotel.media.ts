@@ -11,13 +11,8 @@ HotelMediaRoute.get('/hotel/:hotelId', (req: Request, res: Response) => {
   return hotelMediaService.getHotelMedia(req, res);
 });
 
-// Get media by category
-HotelMediaRoute.get('/hotel/:hotelId/category/:category', (req: Request, res: Response) => {
-  return hotelMediaService.getHotelMedia(req, res);
-});
-
 // Upload media
-HotelMediaRoute.post('/upload', upload.single('media'), authMiddleware, (req: Request, res: Response) => {
+HotelMediaRoute.post('/upload/:hotelId', upload.single('media'), authMiddleware, (req: Request, res: Response) => {
   return hotelMediaService.uploadMedia(req as MulterRequest, res);
 });
 
