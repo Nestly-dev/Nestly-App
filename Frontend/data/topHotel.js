@@ -1,3 +1,7 @@
+import axios from "axios";
+import React, {useEffect} from "react";
+
+
 export const tops =[
     {id: 1, district: "In Musanze", hotel: "Hotel Saint Quentin", img: require("../assets/images/samplePng.png"), gradient: ["#2E3192", "#1BFFFF"]},
     {id: 2, district: "In Kigali", hotel: "Hotel Marriot", img: require("../assets/images/samplePng2.png"), gradient: ["#D4145A", "#FBB03B"]},
