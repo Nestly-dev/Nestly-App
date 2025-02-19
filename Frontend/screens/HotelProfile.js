@@ -54,6 +54,7 @@ const HotelProfile = () => {
     latitudeDelta: 0.02,
     longitudeDelta: 0.02
     })
+    const [bg, setBg] = useState()
 
   
 
@@ -71,6 +72,7 @@ useEffect(() =>{
     setSummary(hotelDetails.long_description)
     setRate(hotelDetails.star_rating)
     setRoom(hotelDetails.total_rooms)
+
     // Convert coordinates to numbers
     const lat = Number(hotelDetails.latitude)
     const lng = Number(hotelDetails.longitude)
@@ -86,6 +88,8 @@ useEffect(() =>{
       longitudeDelta: 0.02,
       latitudeDelta: 0.02,
     })
+
+    setBg(hotelDetails.media[0].url)
   }).catch(error =>{
     console.log("We are facinig an error", error)
   })
@@ -133,7 +137,7 @@ useEffect(() =>{
     <View style={styles.container}>
       <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16}>
         <Animated.Image
-          source={require("../assets/images/hotel1 2.jpg")}
+          source={{uri: `${bg}`}}
           style={[styles.image, ImageAnimatedStyle]}
         />
         <LinearGradient

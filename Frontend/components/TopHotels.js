@@ -1,11 +1,16 @@
 import { StyleSheet, Text, View, Image, FlatList } from "react-native";
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useContext, useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { tops } from "../data/topHotel";
+import AuthContext from "../context/AuthContext";
 
 const TopHotels = () => {
+  const {hotelData} = useContext(AuthContext)
+  const [top5, setTop5] = useState()
   const flatListRef = useRef(null);
-  
+
+
+
   useEffect(() => {
     let currentIndex = 0;
     
