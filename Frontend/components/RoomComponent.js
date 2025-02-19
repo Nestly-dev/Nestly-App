@@ -1,8 +1,28 @@
-import { View, Text, TouchableOpacity, Image } from 'react-native'
-import React from 'react'
+import { View, Text, TouchableOpacity, Image, FlatList } from 'react-native'
+import React, { useContext, useEffect, useState } from 'react'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import axios from "axios"
+import AuthContext from '../context/AuthContext';
 
 const RoomComponent = () => {
+
+  const {currentID} = useContext(AuthContext)
+  const [room, setRoom] = useState()
+
+  
+useEffect(() =>{
+  const url = `http://127.0.0.1:8000/api/v1/hotels/rooms/${currentID}`
+  axios.get(url)
+  .then((response) =>{
+    const results = response.data
+    const roomDetail = results.data
+    console.log(roomDetail);
+  })
+  .catch((error) =>{
+    console.log("This is the error ",error);
+  })
+}, [])
+ 
   return (
     <TouchableOpacity>
               <View
