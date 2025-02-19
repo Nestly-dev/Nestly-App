@@ -66,13 +66,43 @@ class Hotels {
   // Read - Get All Hotels
   async getAllHotels(): Promise<DataResponse> {
     try {
-      const allHotels = await database
-        .select()
+      const hotelsWithMedia = await database
+        .select({
+          // Hotel details
+          id: hotels.id,
+          name: hotels.name,
+          shortDescription: hotels.short_description,
+          longDescription: hotels.long_description,
+          starRating: hotels.star_rating,
+          propertyType: hotels.property_type,
+          builtYear: hotels.built_year,
+          lastRenovationYear: hotels.last_renovation_year,
+          category: hotels.category,
+          // Location details
+          streetAddress: hotels.street_address,
+          city: hotels.city,
+          state: hotels.state,
+          province: hotels.province,
+          country: hotels.country,
+          postalCode: hotels.postal_code,
+          latitude: hotels.latitude,
+          longitude: hotels.longitude,
+          mapUrl: hotels.map_url,
+          // Services
+          totalRooms: hotels.total_rooms,
+          cancellationPolicy: hotels.cancellation_policy,
+          paymentOptions: hotels.payment_options,
+          menuDownloadUrl: hotels.menu_download_url,
+          sponsored: hotels.sponsored,
+          status: hotels.status,
+          // Media details
+          media: hotelMedia
+        })
         .from(hotels)
+        .leftJoin(hotelMedia, eq(hotels.id, hotelMedia.hotel_id))
         .where(eq(hotels.status, 'active'));
-
       return {
-        data: allHotels,
+        data: hotelsWithMedia,
         message: 'Hotels fetched successfully',
         status: HttpStatusCodes.OK,
       };
