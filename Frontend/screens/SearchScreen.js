@@ -24,6 +24,7 @@ const [raw, setRaw]= useState([1,2,3,4,5])
 const {signedIn, hotelData, setCurrentID} = useContext(AuthContext)
 const navigation = useNavigation()
 const {hotelID, setHotelID} = useState()
+const {picture, setPicture} = useState()
 
 useEffect(() =>{
   //console.log(hotelData);
@@ -85,17 +86,17 @@ if(!signedIn){
 
             {hotelData.map((item) =>{
                 return (
-                <TouchableOpacity key={item.id}
+                <TouchableOpacity key={item.hotel_id}
                 onPress={() =>{
                   navigation.navigate("Hotel Profile")
                   setCurrentID(item.id)
                 }}
                 >
                 <View style={{marginLeft: 20, marginTop: 20, flexDirection: "row"}} >
-                <Image source={require("../assets/images/hotel4.avif")} style={{width: 120, height: 100, borderRadius: 10}}/>
+                <Image source={{uri: `${item.media.url}`}} style={{width: 120, height: 100, borderRadius: 10}}/>
                 <View style={{justifyContent:"center"}}>
                     <Text style={{fontSize: 18, fontWeight: 500, marginLeft: 20}}>{item.name}</Text>
-                    <Text style={{fontSize: 15, fontWeight: 500, marginLeft: 20, marginTop: 10}}>{item.street_address}</Text>
+                    <Text style={{fontSize: 15, fontWeight: 500, marginLeft: 20, marginTop: 10}}>{item.streetAddress}</Text>
                 </View>
                 </View>
                 </TouchableOpacity>

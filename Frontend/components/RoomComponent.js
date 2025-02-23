@@ -6,25 +6,38 @@ import AuthContext from '../context/AuthContext';
 
 const RoomComponent = () => {
 
-  const {currentID} = useContext(AuthContext)
+  const {currentID, currentRoomId, setCurrentRoomId} = useContext(AuthContext)
   const [room, setRoom] = useState()
 
   
 useEffect(() =>{
+  // Getting The Room
+
   const url = `http://127.0.0.1:8000/api/v1/hotels/rooms/${currentID}`
   axios.get(url)
   .then((response) =>{
     const results = response.data
     const roomDetail = results.data
-    console.log(roomDetail);
+    setRoom(roomDetail)
+    
   })
   .catch((error) =>{
     console.log("This is the error ",error);
   })
+
 }, [])
- 
+
   return (
-    <TouchableOpacity>
+    <FlatList 
+    data={room}
+    renderItem={({item}) =>{
+    return <TouchableOpacity key={item.id}
+    onPress={() =>{ 
+      setCurrentRoomId(item.id)
+      console.log("Current Room Id is", {currentID});
+    }}
+    >
+
               <View
                 style={{
                   marginLeft: 20,
@@ -40,10 +53,30 @@ useEffect(() =>{
                   style={{ width: 120, height: 100, borderRadius: 10 }}
                 />
                 <View style={{ justifyContent: "center" }}>
+                  <View style={{flexDirection:"row", justifyContent:"space-between"}}>
                   <Text
                     style={{ fontSize: 18, fontWeight: 500, marginLeft: 20 }}
                   >
-                    Signal Room
+                    {item.type}
+                  </Text>
+                  <Text
+                    style={{ fontSize: 18, fontWeight: 500, marginLeft: 20 }}
+                  >
+                    $
+                  </Text>
+
+                  </View>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 500,
+                      marginLeft: 20,
+                      marginTop: 10,
+                      width: "25%",
+                      textAlign:"justify"
+                    }}
+                  >
+                    {item.description}
                   </Text>
                   <Text
                     style={{
@@ -51,9 +84,11 @@ useEffect(() =>{
                       fontWeight: 500,
                       marginLeft: 20,
                       marginTop: 10,
+                      width: "25%",
+                      textAlign:"justify"
                     }}
                   >
-                    Served with Breakfast
+                    Max Occupancy: <Text style={{fontWeight: "bold"}}>{item.max_occupancy} People</Text>
                   </Text>
                 </View>
               </View>
@@ -67,7 +102,7 @@ useEffect(() =>{
                   marginRight: 20,
                 }}
               >
-                <Text style={{ fontSize: 18, fontWeight: 500 }}>
+                <Text style={{ fontSize: 18, fontWeight: 500, color: "#4cbf04" }}>
                 Available
                 </Text>
                 <View style={{flexDirection: "row"}}>
@@ -77,7 +112,10 @@ useEffect(() =>{
                   </View>
                 </View>
               </View>
-            </TouchableOpacity>
+    </TouchableOpacity>
+    }}
+    />
+    
   )
 }
 

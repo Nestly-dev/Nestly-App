@@ -40,7 +40,7 @@ const IMG_HEIGHT = 300;
 
 
 const HotelProfile = () => {
-  const { currentID } = useContext(AuthContext)
+  const { currentID, currentRoomId } = useContext(AuthContext)
   const [hotelName, setHotelName] = useState()
   const [adresse, setAdresse] = useState()
   const [summary, setSummary] = useState("")
@@ -95,9 +95,6 @@ useEffect(() =>{
   })
   
 }, [])
-
-
-
 
   //Navigation
 
@@ -342,7 +339,6 @@ useEffect(() =>{
               Room Available ({room})
               <MaterialCommunityIcons name="sticker-check" size={24} color="#4cbf04"/>
           </Text>
-          <RoomComponent />
           <RoomComponent />
           </View>
 

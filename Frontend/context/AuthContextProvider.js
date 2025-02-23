@@ -10,6 +10,7 @@ const UserContexProvider = ({ children }) => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [hotelData, setHotelData] = useState()
   const [currentID, setCurrentID] = useState()
+  const [currentRoomId, setCurrentRoomId] = useState()
 
 
 // initialising the app
@@ -123,6 +124,7 @@ useEffect(() =>{
 
 
   const value = {
+    // User's Details
     user,
     setUser,
     setSignedIn,
@@ -135,12 +137,16 @@ useEffect(() =>{
     loadUserDetails,
     showConfirmation,
     setShowConfirmation,
+
+    //Hotel's details
     hotelData,
     setHotelData,
     saveHotelData,
     loadHotelData,
     currentID, 
-    setCurrentID
+    setCurrentID,
+    currentRoomId, 
+    setCurrentRoomId
   };
 
   return (

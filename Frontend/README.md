@@ -1,3 +1,4 @@
 # Nestly
 Nestly
-#1995AD
+The Blue: #1995AD
+The Green: #4cbf04
