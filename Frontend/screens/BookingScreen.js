@@ -9,7 +9,7 @@ import {
   ScrollView,
   Button,
 } from "react-native";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -17,8 +17,12 @@ import "react-native-gesture-handler";
 
 import Payment from "../components/Payment";
 import AuthContext from "../context/AuthContext";
+import axios from "axios";
 
 const BookingScreen = () => {
+  const [name, setName] = useState()
+  const [province, setProvince] = useState()
+  const [country, setCountry] = useState()
   const [adults, setAdults] = useState(0);
   const [children, setChildren] = useState(0);
   const [room, setRoom] = useState("Default");
@@ -26,7 +30,7 @@ const BookingScreen = () => {
   const [doubles, setDoubles] = useState(0);
   const [checkInDate, setCheckInDate] = useState(new Date());
   const [checkOutDate, setCheckOutDate] = useState(new Date());
-  const { showConfirmation, setShowConfirmation } = useContext(AuthContext);
+  const { showConfirmation, setShowConfirmation, currentID } = useContext(AuthContext);
 
   const onChangeCheckIn = (e, selectedDate) => {
     setCheckInDate(selectedDate);
@@ -47,6 +51,22 @@ const BookingScreen = () => {
     console.log(`you have booked (${doubles}) Double rooms`);
     setShowConfirmation(true);
   };
+
+  useEffect(() =>{
+    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`
+    axios.get(url)
+    .then((response) =>{
+      const result = response.data
+      const hotelInfo = result.data
+      setName(hotelInfo.name)
+      setProvince(hotelInfo.province);
+      setCountry(hotelInfo.country)
+      console.log(hotelInfo.province);
+    })
+    .catch((error) =>{
+      console.log(error);
+    })
+  }, [])
 
   return (
     <SafeAreaView>
@@ -88,7 +108,7 @@ const BookingScreen = () => {
                 fontWeight: "bold",
               }}
             >
-              Hotel Grand Place
+              {name}
             </Text>
             <Text
               style={{
@@ -99,7 +119,7 @@ const BookingScreen = () => {
                 fontWeight: "bold",
               }}
             >
-              Kigali, Rwanda
+              {province}, {country}
             </Text>
           </View>
 
