@@ -55,6 +55,7 @@ const HotelProfile = () => {
     longitudeDelta: 0.02
     })
     const [bg, setBg] = useState()
+    const [media, setMedia] = useState()
 
   
 
@@ -72,6 +73,7 @@ useEffect(() =>{
     setSummary(hotelDetails.long_description)
     setRate(hotelDetails.star_rating)
     setRoom(hotelDetails.total_rooms)
+    setMedia(hotelDetails.media)
 
     // Convert coordinates to numbers
     const lat = Number(hotelDetails.latitude)
@@ -312,12 +314,13 @@ useEffect(() =>{
               </TouchableOpacity>
             </View>
             <FlatList
-              data={rsdata}
+              data={media}
               horizontal={true}
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => (
                 <Image
-                  source={item.img}
+                  source={{uri: `${item.url}`}}
+
                   style={{
                     width: 200,
                     height: 200,

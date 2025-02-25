@@ -138,6 +138,11 @@ const SearchNavigator = () =>{
         component={ReviewsScreen}
         options={{ headerTransparent: true, headerShown: true, title: "" }}
       />
+      <Stack.Screen
+        name="Gallery"
+        component={Gallery}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
     </Stack.Navigator>
   )
 }

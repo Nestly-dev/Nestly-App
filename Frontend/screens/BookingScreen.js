@@ -23,6 +23,7 @@ const BookingScreen = () => {
   const [name, setName] = useState()
   const [province, setProvince] = useState()
   const [country, setCountry] = useState()
+  const [bg, setBg] = useState()
   const [adults, setAdults] = useState(0);
   const [children, setChildren] = useState(0);
   const [room, setRoom] = useState("Default");
@@ -40,7 +41,6 @@ const BookingScreen = () => {
     setCheckOutDate(selectedDate);
     console.log(checkOutDate);
   };
-
   const onConfirm = () => {
     console.log(adults);
     console.log(children);
@@ -61,7 +61,7 @@ const BookingScreen = () => {
       setName(hotelInfo.name)
       setProvince(hotelInfo.province);
       setCountry(hotelInfo.country)
-      console.log(hotelInfo.province);
+      setBg(hotelInfo.media[1].url)
     })
     .catch((error) =>{
       console.log(error);
@@ -86,7 +86,7 @@ const BookingScreen = () => {
               style={{ width: "100%", height: "100%", position: "absolute" }}
             >
               <Image
-                source={require("../assets/images/banner2.jpg")}
+                source={{uri: `${bg}`}}
                 style={{ width: "100%", height: 250 }}
               />
             </View>
