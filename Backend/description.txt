@@ -1,0 +1,269 @@
+Here is the Neon Postgresql Database schema table, I'm using DrizzleORM.
+export const hotelPosts = pgTable('hotel_posts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  hotel_id: uuid('hotel_id').references(() => hotels.id, { onDelete: 'cascade' }).notNull(),
+  caption: varchar('caption').notNull(),
+  postDescription: varchar('caption').notNull(),
+  url: varchar('media_url').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull()
+});
+
+Task: I want you to recreate the repository and service file and make it focused to hotel posts. Remember that I wanted to reuse hotel media upload functionality for the hotel posts, so if you see typos referencing hotel media fix it and rename it and mainly focus on hotel Posts. I want you to rebrand it according to the schema table:
+
+Here is the hotelPost service:
+
+// services/hotelMedia.ts
+import { hotelMediaRepository } from '../repository/Hotel.media';
+import { Request, Response } from "express";
+import { HttpStatusCodes } from "../utils/helpers";
+import { MulterRequest } from '../utils/config/multer';
+import { hotelMedia } from '../utils/config/schema';
+
+// Define types using Drizzle's type inference
+type NewHotelMedia = typeof hotelMedia.$inferInsert;
+type HotelMedia = typeof hotelMedia.$inferSelect;
+
+class HotelPostService {
+  async uploadPost(req: MulterRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.file) {
+        return res.status(HttpStatusCodes.BAD_REQUEST).json({
+          message: "No media file provided"
+        });
+      }
+
+      const mediaData: Omit<NewHotelMedia, 'id' | 'url' | 'created_at' | 'updated_at'> = {
+        hotel_id: req.params.hotelId,
+        media_type: req.body.media_type,
+        media_category: req.body.media_category,
+      };
+
+      const { data, status, message } = await hotelMediaRepository.uploadMedia(req, res, mediaData);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
+  async updatePost(req: Request, res: Response): Promise<Response> {
+    try {
+      const mediaData: Partial<Pick<HotelMedia, 'media_type' | 'media_category'>> = {
+        ...(req.body.media_type && { media_type: req.body.media_type }),
+        ...(req.body.media_category && { media_category: req.body.media_category })
+      };
+
+      const { data, status, message } = await hotelMediaRepository.updateMedia(req, res, mediaData);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
+  async getHotelPost(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await hotelMediaRepository.getHotelMedia(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
+  async deleteHotelPost(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await hotelMediaRepository.deleteMedia(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+}
+
+export const hotelPostService = new HotelPostService();
+
+
+Here is the hotelPost repository:
+
+
+// repository/hotelpost.ts
+import { Request, Response } from "express";
+import { HttpStatusCodes } from "../utils/helpers";
+import { database } from "../utils/config/database";
+import { DataResponse } from "../utils/types";
+import { MulterRequest } from "../utils/config/multer";
+import { hotelPosts, hotels } from '../utils/config/schema';
+import { eq, and } from "drizzle-orm";
+import fileUpload from "./file.upload";
+
+// Define types using Drizzle's type inference
+
+class HotelpostRepo {
+  async uploadHotelPost(
+    req: MulterRequest,
+    res: Response
+  ): Promise<DataResponse> {
+    try {
+      if (!req.file) {
+        return {
+          message: "No post file provided",
+          data: '',
+          status: HttpStatusCodes.BAD_REQUEST
+        };
+      }
+
+      const postUrl = await fileUpload.uploadFileToS3(req.file);
+      if (typeof postUrl !== 'string') {
+        return {
+          message: "Failed to upload post",
+          data: '',
+          status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+        };
+      }
+
+      const data = {
+        url: postUrl,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      const createdpost = await database
+        .insert(hotelpost)
+        .values(data)
+        .returning();
+
+      return {
+        data: createdpost[0],
+        status: HttpStatusCodes.CREATED,
+        message: "Hotel post Uploaded Successfully"
+      };
+    } catch (error) {
+      return {
+        data: '',
+        message: error instanceof Error ? error.message : 'An unknown error occurred',
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+      };
+    }
+  }
+
+  async updateHotelPost(
+    req: Request,
+    res: Response
+  ): Promise<DataResponse> {
+    const post_id = req.params.postId;
+    try {
+      if (!req.file) {
+        return {
+          message: "No post file provided",
+          data: '',
+          status: HttpStatusCodes.BAD_REQUEST
+        };
+      }
+
+      const postUrl = await fileUpload.uploadFileToS3(req.file);
+      if (typeof postUrl !== 'string') {
+        return {
+          message: "Failed to upload post",
+          data: '',
+          status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+        };
+      }
+
+      const data = {
+        url: postUrl,
+        updated_at: new Date()
+      };
+
+      const updatedpost = await database
+        .update(hotelpost)
+        .set(data)
+        .where(eq(hotelpost.id, post_id))
+        .returning()
+        .then((rows) => rows[0]);
+
+      return {
+        data: updatedpost,
+        status: HttpStatusCodes.OK,
+        message: "Hotel post Updated Successfully"
+      };
+    } catch (error) {
+      return {
+        data: '',
+        message: error as string,
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+      };
+    }
+  }
+
+  async getHotelPosts(req: Request, res: Response): Promise<DataResponse> {
+    try {
+      const hotel_id = req.params.hotelId;
+      const postData = await database
+        .select()
+        .from(hotelpost)
+        .where(eq(hotelpost.hotel_id, hotel_id))
+        .innerJoin(hotels, eq(hotelpost.hotel_id, hotels.id));
+
+      return {
+        data: postData,
+        status: HttpStatusCodes.OK,
+        message: "Hotel post Retrieved Successfully"
+      };
+    } catch (error) {
+      return {
+        data: '',
+        message: error as string,
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+      };
+    }
+  }
+
+  async deleteHotelPost(req: Request, res: Response): Promise<DataResponse> {
+    const post_id = req.params.postId;
+    try {
+      const deletedpost = await database
+        .delete(hotelpost)
+        .where(eq(hotelpost.id, post_id))
+        .returning()
+        .then((rows) => rows[0]);
+
+      return {
+        data: deletedpost,
+        status: HttpStatusCodes.OK,
+        message: "Hotel post Deleted Successfully"
+      };
+    } catch (error) {
+      return {
+        data: '',
+        message: error as string,
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+      };
+    }
+  }
+}
+
+export const hotelpostRepository = new HotelpostRepo();
+

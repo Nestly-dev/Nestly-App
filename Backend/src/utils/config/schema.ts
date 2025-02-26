@@ -90,6 +90,16 @@ export const hotelMedia = pgTable('hotel_media', {
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
 
+export const hotelPosts = pgTable('hotel_posts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  hotel_id: uuid('hotel_id').references(() => hotels.id, { onDelete: 'cascade' }).notNull(),
+  caption: varchar('caption').notNull(),
+  postDescription: varchar('caption').notNull(),
+  url: varchar('media_url').notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull()
+});
+
 // Room types
 export const room = pgTable('room', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -108,7 +118,8 @@ export const room = pgTable('room', {
 export const roomPricing = pgTable('room_pricing', {
   id: uuid('id').defaultRandom().primaryKey(),
   room_id: uuid('room_id').references(() => room.id, { onDelete: 'cascade' }).notNull(),
-  base_price: decimal('base_price', { precision: 10, scale: 2 }).notNull(),
+  roomFee: decimal('room_fee', { precision: 10, scale: 2 }).notNull(),
+  serviceFee: decimal('service_fee', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('USD').notNull(),
   tax_percentage: decimal('tax_percentage', { precision: 5, scale: 2 }).notNull(),
   child_policy: text('child_policy'),
