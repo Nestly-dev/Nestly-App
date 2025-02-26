@@ -1,9 +1,11 @@
 import { StyleSheet, Text, View, FlatList, Dimensions, Image, useWindowDimensions, TouchableOpacity } from 'react-native'
-import React, { useRef, useState } from 'react'
-import { photos } from '../data/gallerydata'
+import React, { useContext, useEffect, useRef, useState } from 'react'
+import AuthContext from '../context/AuthContext'
+import axios from 'axios'
 
 const Gallery = () => {
-
+    const [media, setMedia] = useState()
+    const {currentID} = useContext(AuthContext)
     const {width, height} = useWindowDimensions();
     const IMG_SIZE = 150;
     const SPACING = 10;
@@ -24,10 +26,20 @@ const Gallery = () => {
         }
     }
 
+  useEffect(() =>{
+    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`
+    axios.get(url)
+    .then((response) => {
+      const result = response.data
+      const photos = result.data.media
+      setMedia(photos)
+    })
+  })
+
   return (
     <View style={{width, height}}>
       <FlatList 
-      data={photos}
+      data={media}
       ref={topRef}
       onMomentumScrollEnd={e =>{
         scrollToActiveIndex(Math.floor(e.nativeEvent.contentOffset.x / width))
@@ -36,7 +48,7 @@ const Gallery = () => {
       horizontal={true}
       renderItem={({item}) =>(
         <View>
-            <Image source={item.img}
+            <Image source={{uri: `${item.url}`}}
             style={{width, height: "100%"}}
             />
         </View>
@@ -44,14 +56,14 @@ const Gallery = () => {
       />
       <FlatList 
       ref={bottomRef}
-      data={photos}
+      data={media}
       pagingEnabled
       horizontal={true}
       contentContainerStyle={{paddingHorizontal: 20}}
       style={{position: "absolute", bottom: 100}}
       renderItem={({item, index}) =>(
         <TouchableOpacity onPress={() =>{scrollToActiveIndex(index)}}>
-            <Image source={item.img}
+            <Image source={{uri: `${item.url}`}}
             style={{width: IMG_SIZE, 
                 height: 200, 
                 borderRadius: 10, 
