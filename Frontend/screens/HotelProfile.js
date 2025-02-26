@@ -30,14 +30,13 @@ import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import RoomComponent from "../components/RoomComponent";
-import MapLocation from "../components/MapLocation"
+import MapLocation from "../components/MapLocation";
+
 
 
 
 const { width } = Dimensions.get("window");
 const IMG_HEIGHT = 300;
-
-
 
 const HotelProfile = () => {
   const { currentID, currentRoomId } = useContext(AuthContext)
@@ -56,6 +55,8 @@ const HotelProfile = () => {
     })
     const [bg, setBg] = useState()
     const [media, setMedia] = useState()
+    const [roomInfo, setRoomInfo] = useState()
+    const [basePrice, setBaseprice] = useState()
 
   
 
@@ -74,6 +75,8 @@ useEffect(() =>{
     setRate(hotelDetails.star_rating)
     setRoom(hotelDetails.total_rooms)
     setMedia(hotelDetails.media)
+    setRoomInfo(hotelDetails.rooms)
+    setBaseprice(hotelDetails.rooms[0].basePrice)
 
     // Convert coordinates to numbers
     const lat = Number(hotelDetails.latitude)
@@ -157,7 +160,7 @@ useEffect(() =>{
           >
             <Text style={styles.text}>{hotelName}</Text>
             <View>
-              <Text style={styles.price}>$230</Text>
+              <Text style={styles.price}>${basePrice}</Text>
               <Text style={{ marginTop: 10, fontSize: 20 }}>per night</Text>
             </View>
           </View>
@@ -342,7 +345,7 @@ useEffect(() =>{
               Room Available ({room})
               <MaterialCommunityIcons name="sticker-check" size={24} color="#4cbf04"/>
           </Text>
-          <RoomComponent />
+          <RoomComponent roomInfo={roomInfo}/>
           </View>
 
           {/* The map and direction */}
@@ -366,6 +369,21 @@ useEffect(() =>{
             <Text onPress={() =>{navigation.navigate('Reviews')}} style={{ fontSize: 15, marginBottom: 20, marginRight: 20, color: "#1995AD" }}>See all</Text>
             </View>
             <Reviews />
+          </View>
+
+          {/* The menu */}
+
+          <View>
+          <Text style={{ fontSize: 20, 
+            marginBottom: 20, 
+            marginTop: 20, 
+            marginLeft: 20,
+            fontWeight: 500
+            }}>
+              Hotel Menu
+          </Text>
+          
+
           </View>
 
           {/* Booking Button */}

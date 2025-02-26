@@ -4,7 +4,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import axios from "axios"
 import AuthContext from '../context/AuthContext';
 
-const RoomComponent = () => {
+const RoomComponent = ({roomInfo}) => {
 
   const {currentID, currentRoomId, setCurrentRoomId} = useContext(AuthContext)
   const [room, setRoom] = useState()
@@ -29,7 +29,7 @@ useEffect(() =>{
 
   return (
     <FlatList 
-    data={room}
+    data={roomInfo}
     renderItem={({item}) =>{
     return <TouchableOpacity key={item.id}
     onPress={() =>{ 
@@ -57,12 +57,12 @@ useEffect(() =>{
                   <Text
                     style={{ fontSize: 18, fontWeight: 500, marginLeft: 20 }}
                   >
-                    {item.type}
+                    {item.roomType}
                   </Text>
                   <Text
-                    style={{ fontSize: 18, fontWeight: 500, marginLeft: 20 }}
+                    style={{ fontSize: 18, fontWeight: 500, right: "-30%" }}
                   >
-                    $
+                    ${item.basePrice}
                   </Text>
 
                   </View>
@@ -84,11 +84,11 @@ useEffect(() =>{
                       fontWeight: 500,
                       marginLeft: 20,
                       marginTop: 10,
-                      width: "25%",
+                      width: "100%",
                       textAlign:"justify"
                     }}
                   >
-                    Max Occupancy: <Text style={{fontWeight: "bold"}}>{item.max_occupancy} People</Text>
+                    Max Occupancy: <Text style={{fontWeight: "bold"}}>{item.maxOccupancy} People</Text>
                   </Text>
                 </View>
               </View>
