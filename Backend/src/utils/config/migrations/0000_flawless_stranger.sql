@@ -34,6 +34,7 @@ CREATE TABLE "hotel_posts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"hotel_id" uuid NOT NULL,
 	"caption" varchar NOT NULL,
+	"postDescription" varchar NOT NULL,
 	"media_url" varchar NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL

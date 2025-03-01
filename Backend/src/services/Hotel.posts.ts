@@ -57,9 +57,10 @@ class HotelPostService {
     }
   }
 
-  async getHotelPosts(req: Request, res: Response): Promise<Response> {
+
+  async getAllHotelPosts(req: Request, res: Response): Promise<Response> {
     try {
-      const { data, status, message } = await hotelPostRepository.getHotelPosts(req, res);
+      const { data, status, message } = await hotelPostRepository.getAllHotelPosts(req, res);
 
       return res.status(status).json({
         message,
@@ -72,9 +73,9 @@ class HotelPostService {
     }
   }
 
-  async getAllHotelPosts(req: Request, res: Response): Promise<Response> {
+  async getHotelPostById(req: Request, res: Response): Promise<Response> {
     try {
-      const { data, status, message } = await hotelPostRepository.getAllHotelPosts(req, res);
+      const { data, status, message } = await hotelPostRepository.getHotelPostById(req, res);
 
       return res.status(status).json({
         message,

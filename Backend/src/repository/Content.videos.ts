@@ -5,7 +5,7 @@ import { DataResponse } from "../utils/types";
 import { MulterRequest } from "../utils/config/multer";
 import { videos } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
-import fileUpload from "./file.upload";
+import fileUpload from "./File.upload";
 import { sql } from "drizzle-orm";
 
 // Define types using Drizzle's type inference

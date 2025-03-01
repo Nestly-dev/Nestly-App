@@ -6,7 +6,7 @@ import { DataResponse } from "../utils/types";
 import { MulterRequest } from "../utils/config/multer";
 import { reviews, userTable, hotels, bookings } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
-import fileUpload from "./file.upload";
+import fileUpload from "./File.upload";
 
 // Define types using Drizzle's type inference
 type NewReview = typeof reviews.$inferInsert;

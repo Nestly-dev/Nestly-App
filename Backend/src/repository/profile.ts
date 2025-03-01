@@ -5,7 +5,7 @@ import { DataResponse, existingUserTypes, profileDataTypes, updateProfileDataTyp
 import { MulterRequest } from "../utils/config/multer";
 import { userProfiles, userTable } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
-import fileUpload from "./file.upload";
+import fileUpload from "./File.upload";
 
 
 export class profileRepo {

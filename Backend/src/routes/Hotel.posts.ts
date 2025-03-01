@@ -8,11 +8,12 @@ export const HotelPostRoute = Router();
 
 // Get all posts for a hotel
 HotelPostRoute.get('/All-hotels', (req: Request, res: Response) => {
-  return hotelPostService.getHotelPosts(req, res)
+  return hotelPostService.getAllHotelPosts(req, res)
 });
 
-HotelPostRoute.get('/hotel/:hotelId', (req: Request, res: Response) => {
-  return hotelPostService.getHotelPosts(req, res)
+// Get all posts for a hotel
+HotelPostRoute.get('/:hotelId', (req: Request, res: Response) => {
+  return hotelPostService.getHotelPostById(req, res)
 });
 
 // Upload Hotel Post

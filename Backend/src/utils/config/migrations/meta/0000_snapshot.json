@@ -1,5 +1,5 @@
 {
-  "id": "32ad7b6c-8fcb-40b7-b769-08b1927d697f",
+  "id": "17f309c5-5474-430e-91f6-a544fa2d728e",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -245,6 +245,12 @@
         },
         "caption": {
           "name": "caption",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "postDescription": {
+          "name": "postDescription",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true

@@ -94,7 +94,7 @@ export const hotelPosts = pgTable('hotel_posts', {
   id: uuid('id').defaultRandom().primaryKey(),
   hotel_id: uuid('hotel_id').references(() => hotels.id, { onDelete: 'cascade' }).notNull(),
   caption: varchar('caption').notNull(),
-  postDescription: varchar('caption').notNull(),
+  postDescription: varchar('postDescription').notNull(),
   url: varchar('media_url').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()

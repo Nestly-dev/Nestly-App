@@ -7,7 +7,7 @@ import { DataResponse } from "../utils/types";
 import { MulterRequest } from "../utils/config/multer";
 import { hotelMedia, hotels } from '../utils/config/schema';
 import { eq, and } from "drizzle-orm";
-import fileUpload from "./file.upload";
+import fileUpload from "./File.upload";
 
 // Define types using Drizzle's type inference
 type NewHotelMedia = typeof hotelMedia.$inferInsert;

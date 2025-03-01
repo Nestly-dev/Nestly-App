@@ -19,7 +19,8 @@ class RoomOperations {
     try {
       const pricingData: NewRoomPricing = {
         room_id: roomId,
-        base_price: req.body.base_price,
+        roomFee: req.body.roomFee,
+        serviceFee: req.body.serviceFee,
         currency: req.body.currency || 'USD',
         tax_percentage: req.body.tax_percentage,
         child_policy: req.body.child_policy
