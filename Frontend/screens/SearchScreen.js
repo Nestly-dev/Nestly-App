@@ -71,7 +71,8 @@ if(!signedIn){
               <Octicons name="sort-desc" size={24} color="black" />
             </View>
         </View>
-    <SafeAreaView>
+
+  
       
         <Text style={{
               color: "black",
@@ -83,7 +84,7 @@ if(!signedIn){
             }}>Suggested Places</Text>
 
             {/* places */}
-
+            <View key="1" style={{width:"70%"}}>
             {hotelData.map((item) =>{
                 return (
                 <TouchableOpacity key={item.hotel_id}
@@ -93,7 +94,7 @@ if(!signedIn){
                 }}
                 >
                 <View style={{marginLeft: 20, marginTop: 20, flexDirection: "row"}} >
-                <Image source={{uri: `${item.media.url}`}} style={{width: 120, height: 100, borderRadius: 10}}/>
+                <Image source={{uri: `${item.media[0].url}`}} style={{width: 120, height: 100, borderRadius: 10}}/>
                 <View style={{justifyContent:"center"}}>
                     <Text style={{fontSize: 18, fontWeight: 500, marginLeft: 20}}>{item.name}</Text>
                     <Text style={{fontSize: 15, fontWeight: 500, marginLeft: 20, marginTop: 10}}>{item.streetAddress}</Text>
@@ -102,8 +103,8 @@ if(!signedIn){
                 </TouchableOpacity>
                 )
             })}
-      
-    </SafeAreaView>
+          </View>
+
     </ScrollView>
     </View>
   );

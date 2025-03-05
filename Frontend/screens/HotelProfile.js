@@ -94,7 +94,7 @@ useEffect(() =>{
       latitudeDelta: 0.02,
     })
 
-    setBg(hotelDetails.media[0].url)
+    setBg(hotelDetails.media[1].url)
   }).catch(error =>{
     console.log("We are facinig an error", error)
   })
@@ -350,7 +350,7 @@ useEffect(() =>{
 
           {/* The map and direction */}
 
-            <Text style={{ fontSize: 20, 
+          <Text style={{ fontSize: 20, 
             marginBottom: 20, 
             marginTop: 20, 
             marginLeft: 20,
@@ -358,8 +358,7 @@ useEffect(() =>{
             }}>
               Maps Location
           </Text>
-         
-            <MapLocation location = {location} name={hotelName}/>
+          <MapLocation location = {location} name={hotelName}/>
 
           {/* Reviews Sections */}
 
