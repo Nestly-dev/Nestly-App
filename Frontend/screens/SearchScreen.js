@@ -84,7 +84,7 @@ if(!signedIn){
             }}>Suggested Places</Text>
 
             {/* places */}
-            <View key="1" style={{width:"70%"}}>
+            <View key={5} style={{width:"70%"}}>
             {hotelData.map((item) =>{
                 return (
                 <TouchableOpacity key={item.hotel_id}

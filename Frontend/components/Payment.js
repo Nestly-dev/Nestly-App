@@ -12,7 +12,7 @@ import React, { useContext } from "react";
 import { paymentMethods } from "../data/paymentMethod";
 import AuthContext from "../context/AuthContext";
 
-const Payment = () => {
+const Payment = ({grandTotal}) => {
   const { setShowConfirmation } = useContext(AuthContext);
   return (
     <SafeAreaView
@@ -32,7 +32,7 @@ const Payment = () => {
             color: "#1995AD",
           }}
         >
-          $2,450.00
+          ${grandTotal}
         </Text>
         <Text style={{ fontSize: 16, fontWeight: 400, marginTop: 40 }}>
           Payment Method

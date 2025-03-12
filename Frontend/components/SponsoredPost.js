@@ -1,17 +1,23 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity} from "react-native";
-import React from "react";
+import { StyleSheet, Text, View, Image, TouchableOpacity, FlatList} from "react-native";
+import React, { useContext } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { posts } from "../data/postes";
+import { useNavigation } from "@react-navigation/native";
+import AuthContext from "../context/AuthContext";
 
-const SponsoredPost = () => {
+
+const SponsoredPost = ({posts}) => {
+  const navigation = useNavigation()
+  const {setCurrentID} = useContext(AuthContext)
   return (
     <>
-      {/* First Sponsorship */}
-     {posts.map(item => {
-      return (
-        <View
+      {/* Sponsorship */}
+
+     <FlatList 
+     data={posts}
+     renderItem={({item}) =>(
+      <View
         key={item.id}
         style={{
           width: "98%",
@@ -27,7 +33,7 @@ const SponsoredPost = () => {
         }}
       >
         <Image
-          source={{uri:`${item.img}`}}
+          source={{uri:`${item.url}`}}
           style={{
             width: "100%",
             height: 300,
@@ -61,7 +67,7 @@ const SponsoredPost = () => {
               marginRight: 30,
             }}
           >
-            {item.title}
+            {item.hotel_name}
           </Text>
         </View>
         <View
@@ -102,7 +108,7 @@ const SponsoredPost = () => {
               numberOfLines={3}
               style={{ fontWeight: 400, fontSize: 15, fontStyle: "italic", textAlign:"justify" }}
             >
-              {item.caption}
+              {item.postDescription}
             </Text>
           </View>
           <View style={{ flexDirection: "row", marginTop: 20 }}>
@@ -116,16 +122,20 @@ const SponsoredPost = () => {
             <Text>Start from</Text>
             <Text style={{fontSize: 20, marginTop: 5, color:"#03045E", fontWeight: 500}}>$100/per night</Text>
           </View>
-          
+          <TouchableOpacity onPress={() =>{
+            navigation.navigate("Hotel Profile")
+            setCurrentID(item.hotel_id)
+          }}>
           <View style={{backgroundColor: "#1995AD", width: 100, height:40, marginTop: 25, borderRadius: 10}}>
           <Text style={{color:"white", fontWeight:"bold", fontSize: 15, padding: 10}}>See Details</Text>
           </View>
+          </TouchableOpacity>
 
           </View>
         </View>
       </View>
-      )
-     })}
+  )}
+     />
       
       
     </>

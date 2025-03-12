@@ -34,7 +34,7 @@ const Gallery = () => {
       const photos = result.data.media
       setMedia(photos)
     })
-  })
+  }, [])
 
   return (
     <View style={{width, height}}>

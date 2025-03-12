@@ -31,13 +31,7 @@ useEffect(() =>{
     <FlatList 
     data={roomInfo}
     renderItem={({item}) =>{
-    return <TouchableOpacity key={item.id}
-    onPress={() =>{ 
-      setCurrentRoomId(item.id)
-      console.log("Current Room Id is", {currentID});
-    }}
-    >
-
+    return <TouchableOpacity key={item.id}>
               <View
                 style={{
                   marginLeft: 20,
@@ -62,7 +56,7 @@ useEffect(() =>{
                   <Text
                     style={{ fontSize: 18, fontWeight: 500, right: "-30%" }}
                   >
-                    ${item.basePrice}
+                    ${item.roomFee}
                   </Text>
 
                   </View>

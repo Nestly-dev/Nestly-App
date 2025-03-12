@@ -31,7 +31,7 @@ import AuthContext from "../context/AuthContext";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import RoomComponent from "../components/RoomComponent";
 import MapLocation from "../components/MapLocation";
-
+import FastImage from 'react-native-fast-image';
 
 
 
@@ -94,7 +94,9 @@ useEffect(() =>{
       latitudeDelta: 0.02,
     })
 
-    setBg(hotelDetails.media[1].url)
+    setBg(hotelDetails.media[0].url)
+    setBaseprice(hotelDetails.rooms[0].roomFee)
+    console.log(basePrice)
   }).catch(error =>{
     console.log("We are facinig an error", error)
   })
