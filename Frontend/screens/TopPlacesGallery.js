@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   Button,
 } from "react-native";
-import React, { useRef, useState } from "react";
-import { rcdata } from "../data/rcdata";
+import React, { useRef, useState, useContext } from "react";
 import { useNavigation } from "@react-navigation/native";
+import AuthContext from "../context/AuthContext";
 
-const Gallery = () => {
+const Gallery = ({route}) => {
+  const {hotels} = route.params
+  const {setCurrentID} = useContext(AuthContext)
   const { width, height } = useWindowDimensions();
   const IMG_SIZE = 350;
   const SPACING = 10;
@@ -37,7 +39,7 @@ const Gallery = () => {
   return (
     <View style={{ width, height }}>
       <FlatList
-        data={rcdata}
+        data={hotels}
         ref={topRef}
         onMomentumScrollEnd={(e) => {
           scrollToActiveIndex(
@@ -48,13 +50,13 @@ const Gallery = () => {
         horizontal={true}
         renderItem={({ item }) => (
           <View>
-            <Image source={item.img} style={{ width, height: "100%" }} />
+            <Image source={item.media} style={{ width, height: "100%" }} />
           </View>
         )}
       />
       <FlatList
         ref={bottomRef}
-        data={rcdata}
+        data={hotels}
         pagingEnabled
         horizontal={true}
         showsHorizontalScrollIndicator={false}
@@ -80,7 +82,7 @@ const Gallery = () => {
               }}
             >
               <Image
-                source={item.img}
+                source={item.media}
                 style={{
                   width: 150,
                   height: 150,
@@ -109,7 +111,7 @@ const Gallery = () => {
                     fontWeight: 500,
                   }}
                 >
-                  Kigali.Rwanda
+                  {item.streetAddress}
                 </Text>
                 <View
                   style={{
@@ -151,7 +153,11 @@ const Gallery = () => {
                     marginBottom: 15,
                   }}
                 >
-                  <Button title="Details" color="white" onPress={() => navigation.navigate("Hotel Profile")}/>
+                  <Button title="Details" color="white" 
+                  onPress={() =>{ 
+                    navigation.navigate("Hotel Profile")
+                    setCurrentID(item.id)
+                    }}/>
                 </View>
               </View>
             </View>

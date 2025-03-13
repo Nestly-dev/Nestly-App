@@ -20,6 +20,7 @@ import ProfileScreen from "../screens/ProfileScreen";
 import SignInScreen from '../screens/SigninScreen';
 import SignUpScreen from '../screens/SignUpScreen'
 import PersonalDetails from "../components/PersonalDetails";
+import loading from "../screens/LoadingScreen";
 
 // Screen names
 const HomeScreenName = "Home";

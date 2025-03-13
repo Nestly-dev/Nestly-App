@@ -23,7 +23,7 @@ const PersonalDetails = () => {
   const [avatar, setAvatar] = useState("");
   const [language, setLanguage] = useState("");
   const [currency, setCurrency] = useState("");
-  const [isFirstTime, setIsFirstTime] = useState(false)
+  const [isFirstTime, setIsFirstTime] = useState(true)
   const {user} = useContext(AuthContext)
   const onChangeBirthdate = (e, selectedDate) => {
     setBirthDate(selectedDate);

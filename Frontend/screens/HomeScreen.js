@@ -191,8 +191,8 @@ const HomeScreen = () => {
 
 
           {/* categories part */}
-          <Text style={{marginTop: 22, fontFamily:"Inter", fontSize: 18, marginLeft: 22, fontWeight: 500}}>Categories</Text>
-          <Categories font={loaded}/>
+          {/* <Text style={{marginTop: 22, fontFamily:"Inter", fontSize: 18, marginLeft: 22, fontWeight: 500}}>Categories</Text>
+          <Categories font={loaded}/> */}
 
 
           <LivePlaces />
