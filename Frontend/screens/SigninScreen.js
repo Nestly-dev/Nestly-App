@@ -15,6 +15,7 @@ import React, { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import {BASEURL} from "@env"
 
 
 
@@ -32,7 +33,7 @@ const SignInScreen = () => {
     if (!email || !password){
       alert("Please fill up all the details")
     } else{
-      const url = "http://127.0.0.1:8000/api/v1/auth/login"
+      const url = `http://172.20.10.4:8000/api/v1/auth/login`
       const credentials ={
         "email": email,
         "password": password

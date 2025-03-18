@@ -30,13 +30,13 @@ import AuthContext from "../context/AuthContext";
 import WelcomeScreen from "./WelcomeScreen";
 import TopHotels from "../components/TopHotels";
 import axios from "axios";
+import {BASEURL} from "@env"
 
 SplashScreen.preventAutoHideAsync();
 
 const HomeScreen = () => {
-
-  const hotelURL = "http://127.0.0.1:8000/api/v1/hotels/all-hotels"
-  const postUrl = "http://127.0.0.1:8000/api/v1/hotels/posts/All-hotels"
+  const hotelURL = `http://172.20.10.4:8000/api/v1/hotels/all-hotels`
+  const postUrl = `http://172.20.10.4:8000/api/v1/hotels/posts/All-hotels`
   const navigation = useNavigation()
   const [loaded, error] = useFonts({
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
@@ -95,13 +95,11 @@ const HomeScreen = () => {
     return null;
   }
 
-  
-
     // UI Design
 
   if(!signedIn){
     return <Modal visible={showLogIn} animationType="slide">
-      <WelcomeScreen />
+      <WelcomeScreen/>
     </Modal>
   } else{ return (
     <View style={styles.container}>
@@ -188,12 +186,6 @@ const HomeScreen = () => {
             Top Hotels
           </Text>
           <TopHotels />
-
-
-          {/* categories part */}
-          {/* <Text style={{marginTop: 22, fontFamily:"Inter", fontSize: 18, marginLeft: 22, fontWeight: 500}}>Categories</Text>
-          <Categories font={loaded}/> */}
-
 
           <LivePlaces />
           <Text

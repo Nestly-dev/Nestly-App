@@ -13,7 +13,7 @@ const RoomComponent = ({roomInfo}) => {
 useEffect(() =>{
   // Getting The Room
 
-  const url = `http://127.0.0.1:8000/api/v1/hotels/rooms/${currentID}`
+  const url = `http://172.20.10.4:8000/api/v1/hotels/rooms/${currentID}`
   axios.get(url)
   .then((response) =>{
     const results = response.data
@@ -39,7 +39,8 @@ useEffect(() =>{
                   borderColor: "rgb(233, 233, 233)",
                   borderWidth: 2,
                   marginRight: 10,
-                  marginTop: 10
+                  marginTop: 10,
+                  width: "90%"
                 }}
               >
                 <Image
@@ -54,7 +55,7 @@ useEffect(() =>{
                     {item.roomType}
                   </Text>
                   <Text
-                    style={{ fontSize: 18, fontWeight: 500, right: "-30%" }}
+                    style={{ fontSize: 18, fontWeight: 500, right: "-10%", fontWeight:"bold" }}
                   >
                     ${item.roomFee}
                   </Text>

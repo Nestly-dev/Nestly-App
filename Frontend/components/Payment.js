@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
+  ScrollView
 } from "react-native";
 import React, { useContext } from "react";
 import { paymentMethods } from "../data/paymentMethod";
@@ -18,6 +19,7 @@ const Payment = ({grandTotal}) => {
     <SafeAreaView
       style={{ backgroundColor: "rgb(235, 238, 242)", height: "100%" }}
     >
+      <ScrollView>
       <View style={{ alignItems: "center", justifyContent: "center" }}>
         <Text style={{ fontSize: 25, fontWeight: "500" }}>Payment</Text>
       </View>
@@ -192,6 +194,7 @@ const Payment = ({grandTotal}) => {
           </View>
         </TouchableOpacity>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

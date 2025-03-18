@@ -21,6 +21,7 @@ import AuthContext from "../context/AuthContext";
 import axios from "axios";
 import RoomDetailComponent from "../components/RoomDetailComponent";
 import RoomItem from "../components/RoomItem";
+import {BASEURL} from "@env"
 
 const BookingScreen = () => {
   const [name, setName] = useState();
@@ -76,7 +77,7 @@ const BookingScreen = () => {
   };
 
   useEffect(() => {
-    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`;
+    const url = `http://172.20.10.4:8000/api/v1/hotels/profile/${currentID}`;
     axios
       .get(url)
       .then((response) => {

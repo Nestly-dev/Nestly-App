@@ -2,9 +2,6 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
   Image,
   Dimensions,
   FlatList,
@@ -32,8 +29,8 @@ import AuthContext from "../context/AuthContext";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import RoomComponent from "../components/RoomComponent";
 import MapLocation from "../components/MapLocation";
-import FastImage from "react-native-fast-image";
 import Loading from "./LoadingScreen";
+import {BASEURL} from "@env"
 
 const { width } = Dimensions.get("window");
 const IMG_HEIGHT = 300;
@@ -61,7 +58,7 @@ const HotelProfile = () => {
 
   //API Calls
   useEffect(() => {
-    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`;
+    const url = `http://172.20.10.4:8000/api/v1/hotels/profile/${currentID}`;
 
     axios
       .get(url)
@@ -75,7 +72,7 @@ const HotelProfile = () => {
         setRoom(hotelDetails.total_rooms);
         setMedia(hotelDetails.media);
         setRoomInfo(hotelDetails.rooms);
-        setBaseprice(hotelDetails.rooms[0].basePrice);
+        // setBaseprice(hotelDetails.rooms[0].basePrice);
 
         // Convert coordinates to numbers
         const lat = Number(hotelDetails.latitude);
@@ -95,7 +92,6 @@ const HotelProfile = () => {
 
         setBg(hotelDetails.media[0].url);
         setBaseprice(hotelDetails.rooms[0].roomFee);
-        console.log(basePrice);
         setIsLoading(false)
       })
       .catch((error) => {
