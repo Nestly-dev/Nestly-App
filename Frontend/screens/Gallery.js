@@ -28,7 +28,7 @@ const Gallery = () => {
     }
 
   useEffect(() =>{
-    const url = `http://172.20.10.4:8000/api/v1/hotels/profile/${currentID}`
+    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`
     axios.get(url)
     .then((response) => {
       const result = response.data

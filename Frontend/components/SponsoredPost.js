@@ -77,7 +77,7 @@ const SponsoredPost = ({ posts }) => {
               {/* Hotel Badge */}
               <View style={styles.expandedHotelBadge}>
                 <Image
-                  source={require("../assets/images/me.jpg")}
+                  source={{uri: `${expandedPost.url}`}}
                   style={styles.expandedHotelAvatar}
                 />
                 <Text style={styles.expandedHotelName}>{expandedPost.hotel_name}</Text>
@@ -184,7 +184,7 @@ const SponsoredPost = ({ posts }) => {
         {/* Hotel Profile Badge */}
         <View style={styles.hotelBadge}>
           <Image
-            source={require("../assets/images/me.jpg")}
+            source={require("../assets/images/logo.png")}
             style={styles.hotelAvatar}
           />
           <Text style={styles.hotelName}>{item.hotel_name}</Text>

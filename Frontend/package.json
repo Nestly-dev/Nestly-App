@@ -25,7 +25,7 @@
     "cocoapods": "^0.0.0",
     "core-js": "^3.39.0",
     "dotenv": "^16.4.7",
-    "expo": "~52.0.38",
+    "expo": "^52.0.39",
     "expo-av": "~15.0.2",
     "expo-blur": "~14.0.3",
     "expo-constants": "~17.0.8",
@@ -74,7 +74,8 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-video-player": "^0.15.0",
     "react-native-webview": "13.12.5",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "expo-updates": "~0.27.4"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

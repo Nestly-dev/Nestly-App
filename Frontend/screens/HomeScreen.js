@@ -35,8 +35,8 @@ import {BASEURL} from "@env"
 SplashScreen.preventAutoHideAsync();
 
 const HomeScreen = () => {
-  const hotelURL = `http://172.20.10.4:8000/api/v1/hotels/all-hotels`
-  const postUrl = `http://172.20.10.4:8000/api/v1/hotels/posts/All-hotels`
+  const hotelURL = `http://127.0.0.1:8000/api/v1/hotels/all-hotels`
+  const postUrl = `http://127.0.0.1:8000/api/v1/hotels/posts/All-hotels`
   const navigation = useNavigation()
   const [loaded, error] = useFonts({
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
