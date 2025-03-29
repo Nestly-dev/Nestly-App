@@ -54,7 +54,7 @@ export class profileRepo {
           status: HttpStatusCodes.BAD_REQUEST
         };
       }
-      const ImageBuffer = await ImageOptimisation(profilePicture, 50, 50);
+      const ImageBuffer = await ImageOptimisation(profilePicture, 150, 150);
       const profilePictureURL = await fileUpload.uploadFileToS3(ImageBuffer);
 
       if (typeof profilePictureURL !== 'string') {

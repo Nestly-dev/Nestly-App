@@ -7,6 +7,7 @@ import { MulterRequest } from "../utils/config/multer";
 import { hotelPosts, hotels } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
 import fileUpload from "./File.upload";
+import { ImageOptimisation } from "../utils/imageOptimisation";
 
 // Define types using Drizzle's type inference
 type NewHotelPost = typeof hotelPosts.$inferInsert;
@@ -26,7 +27,8 @@ class HotelPostRepo {
         };
       }
 
-      const postUrl = await fileUpload.uploadFileToS3(req.file);
+      const postFile = await ImageOptimisation(req.file, 600, 600)
+      const postUrl = await fileUpload.uploadFileToS3(postFile);
       if (typeof postUrl !== 'string') {
         return {
           message: "Failed to upload post",
@@ -78,7 +80,8 @@ class HotelPostRepo {
 
       // Handle file upload if there is one
       if (req.file) {
-        const postUrl = await fileUpload.uploadFileToS3(req.file);
+        const postFile = await ImageOptimisation(req.file, 600, 600)
+        const postUrl = await fileUpload.uploadFileToS3(postFile);
         if (typeof postUrl !== 'string') {
           return {
             message: "Failed to upload post image",
