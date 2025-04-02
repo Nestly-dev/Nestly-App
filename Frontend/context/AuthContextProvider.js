@@ -63,7 +63,7 @@ useEffect(() =>{
     const valueToStore = typeof value === "string" ? value : JSON.stringify(value)
     try {
         await SecureStore.setItemAsync(key, valueToStore);
-        console.log("The user details saved are,", valueToStore);
+        console.log("The user details saved are successfully loaded");
     } catch (error) {
         console.error("Error saving the user", error);
     }

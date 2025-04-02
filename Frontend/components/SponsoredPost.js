@@ -13,6 +13,7 @@ const SponsoredPost = ({ posts }) => {
   const { setCurrentID } = useContext(AuthContext);
   const [expandedPost, setExpandedPost] = useState(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  
 
   if (!posts || posts.length === 0) {
     return (

@@ -30,7 +30,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import RoomComponent from "../components/RoomComponent";
 import MapLocation from "../components/MapLocation";
 import Loading from "./LoadingScreen";
-import {BASEURL} from "@env"
+import { WebView } from 'react-native-webview';
 
 const { width } = Dimensions.get("window");
 const IMG_HEIGHT = 300;
@@ -55,10 +55,11 @@ const HotelProfile = () => {
   const [media, setMedia] = useState();
   const [roomInfo, setRoomInfo] = useState();
   const [basePrice, setBaseprice] = useState();
+  const [menu, setMenu] = useState()
 
   //API Calls
   useEffect(() => {
-    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`;
+    const url = `http://172.20.10.4:8000/api/v1/hotels/profile/${currentID}`;
 
     axios
       .get(url)
@@ -92,6 +93,7 @@ const HotelProfile = () => {
 
         setBg(hotelDetails.media[0].url);
         setBaseprice(hotelDetails.rooms[0].roomFee);
+        setMenu(hotelDetails.menu_download_url)
         setIsLoading(false)
       })
       .catch((error) => {
@@ -188,6 +190,10 @@ const HotelProfile = () => {
           <View>
             <Text style={[styles.summary, { color: "gray" }]}>Summary</Text>
             <Text style={styles.summary}>{summary}</Text>
+            <View style={{marginLeft: 20, marginTop: 20}}>
+            <Text style={{fontSize: 17, fontWeight: 500, color:"#1995AD"}}>Email: <Text style={{fontSize: 17, color:"black"}}> ialainquentin@gmail.com </Text></Text>
+            <Text style={{fontSize: 17, fontWeight: 500, color:"#1995AD", marginTop: 10}}>Telephone: <Text style={{fontSize: 17, color:"black"}}>+250783520488</Text></Text>
+            </View>
           </View>
 
           <View
@@ -413,6 +419,12 @@ const HotelProfile = () => {
             >
               Hotel Menu
             </Text>
+            <View style={styles.Menucontainer}>
+              <WebView
+                source={{ uri: `${menu}` }}
+                style={styles.webview}
+              />
+            </View>
           </View>
 
           {/* Booking Button */}
@@ -485,5 +497,14 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginTop: 30,
     marginLeft: 20,
+  },
+  Menucontainer: {
+    flex: 1,
+    width: "100%",
+    height: 500,
+  },
+  webview: {
+    flex: 1,
+    
   },
 });

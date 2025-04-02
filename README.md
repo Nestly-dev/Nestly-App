@@ -10,8 +10,16 @@ The Nest is a revolutionary platform blending the inspiration of Pinterest with 
 - 🛏️ **Booking Made Easy:** Book accommodations directly through the platform.  
 - 🌟 **For Creators:** A space for creators to share content and gain visibility.  
 
-## Why Choose The Nest?  
+## Why Choose Via?  
 Unlike anything else in the market, The Nest bridges the gap between content creation and booking services, offering a seamless experience for users and empowering local creators.  
+
+## Installation of the Simalator
+
+On your computer search for Xcode and download the application. Xcode provides a virtual Iphone that can be used to preview a React Native application using expo. 
+
+For android user you will need to download Android Studio to be able to preview the application itself.
+
+``` We highly encourage you to use Xcode Simulator because the application was first built for IOS User and first hand. In any case, feel free to use any other simulator of your desire! ```
 
 ## Installation  
 1. Clone the repository:  
@@ -26,11 +34,29 @@ Unlike anything else in the market, The Nest bridges the gap between content cre
    ```bash  
    npm install  
    ```  
-4. Start the development server:  
+4. Install the Frontend dependencies
+   ```bash
+   cd Frontend
+   npm install
+   ```
+4. Install the Backend dependencies
+   ```bash
+   cd Backend
+   npm install
+   ```
+5. Start the development server:  
    ```bash  
-   npm start  
+   cd Backend
+   npm run dev 
    ```  
-
+5. Start the Expo Go server:  
+   ```bash  
+   cd Frontend
+   npm start
+   press i or a to run on IOS or Android Simulator
+   ```  
+6. In case you want to run it on your phone
+      ```Dowload Expo Go on your phone and after the completion of step 5, scan the QR code with your phone. Make sure that your phone is connected to same Wi-fi as your computer.```
 ## Usage  
 - Browse the homepage for inspiration.  
 - Use the search bar to find specific destinations or experiences.  

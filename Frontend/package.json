@@ -75,7 +75,9 @@
     "react-native-video-player": "^0.15.0",
     "react-native-webview": "13.12.5",
     "uuid": "^11.0.3",
-    "expo-updates": "~0.27.4"
+    "expo-updates": "~0.27.4",
+    "expo-document-picker": "~13.0.3",
+    "expo-file-system": "~18.0.12"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
