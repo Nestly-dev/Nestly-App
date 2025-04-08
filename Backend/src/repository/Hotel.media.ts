@@ -8,6 +8,7 @@ import { MulterRequest } from "../utils/config/multer";
 import { hotelMedia, hotels } from '../utils/config/schema';
 import { eq, and } from "drizzle-orm";
 import fileUpload from "./File.upload";
+import { ImageOptimisation } from "../utils/imageOptimisation";
 
 // Define types using Drizzle's type inference
 type NewHotelMedia = typeof hotelMedia.$inferInsert;
@@ -27,8 +28,8 @@ class HotelMediaRepo {
           status: HttpStatusCodes.BAD_REQUEST
         };
       }
-
-      const mediaUrl = await fileUpload.uploadFileToS3(req.file);
+      const postFile = await ImageOptimisation(req.file, 600, 600);
+      const mediaUrl = await fileUpload.uploadFileToS3(postFile);
       if (typeof mediaUrl !== 'string') {
         return {
           message: "Failed to upload media",
@@ -78,7 +79,8 @@ class HotelMediaRepo {
         };
       }
 
-      const mediaUrl = await fileUpload.uploadFileToS3(req.file);
+      const postFile = await ImageOptimisation(req.file, 600, 600);
+      const mediaUrl = await fileUpload.uploadFileToS3(postFile);
       if (typeof mediaUrl !== 'string') {
         return {
           message: "Failed to upload media",
