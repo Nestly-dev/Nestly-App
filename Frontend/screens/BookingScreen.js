@@ -8,22 +8,26 @@ import {
   TouchableOpacity,
   ScrollView,
   Button,
+  FlatList,
+  TextInput
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LinearGradient } from "expo-linear-gradient";
 import "react-native-gesture-handler";
-
 import Payment from "../components/Payment";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
+import RoomDetailComponent from "../components/RoomDetailComponent";
+import RoomItem from "../components/RoomItem";
+import {BASEURL} from "@env"
 
 const BookingScreen = () => {
-  const [name, setName] = useState()
-  const [province, setProvince] = useState()
-  const [country, setCountry] = useState()
-  const [bg, setBg] = useState()
+  const [name, setName] = useState();
+  const [province, setProvince] = useState();
+  const [country, setCountry] = useState();
+  const [bg, setBg] = useState();
   const [adults, setAdults] = useState(0);
   const [children, setChildren] = useState(0);
   const [room, setRoom] = useState("Default");
@@ -31,16 +35,23 @@ const BookingScreen = () => {
   const [doubles, setDoubles] = useState(0);
   const [checkInDate, setCheckInDate] = useState(new Date());
   const [checkOutDate, setCheckOutDate] = useState(new Date());
-  const { showConfirmation, setShowConfirmation, currentID } = useContext(AuthContext);
+  const { showConfirmation, setShowConfirmation, currentID } =
+    useContext(AuthContext);
+  const [roomInfo, setRoomInfo] = useState();
+  const [roomPrices, setRoomPrices] = useState({});
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [serviceFee] = useState(10);
 
   const onChangeCheckIn = (e, selectedDate) => {
     setCheckInDate(selectedDate);
     console.log(checkInDate);
   };
+  
   const onChangeCheckOut = (e, selectedDate) => {
     setCheckOutDate(selectedDate);
     console.log(checkOutDate);
   };
+  
   const onConfirm = () => {
     console.log(adults);
     console.log(children);
@@ -52,21 +63,39 @@ const BookingScreen = () => {
     setShowConfirmation(true);
   };
 
-  useEffect(() =>{
-    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`
-    axios.get(url)
-    .then((response) =>{
-      const result = response.data
-      const hotelInfo = result.data
-      setName(hotelInfo.name)
-      setProvince(hotelInfo.province);
-      setCountry(hotelInfo.country)
-      setBg(hotelInfo.media[1].url)
-    })
-    .catch((error) =>{
-      console.log(error);
-    })
-  }, [])
+  // Function to update individual room prices and recalculate total
+  const updateRoomPrice = (roomType, price) => {
+    setRoomPrices(prevPrices => {
+      const newPrices = { ...prevPrices, [roomType]: price };
+      
+      // Calculate new total price from all room prices
+      const newTotal = Object.values(newPrices).reduce((sum, price) => sum + price, 0);
+      setTotalPrice(newTotal);
+      
+      return newPrices;
+    });
+  };
+
+  useEffect(() => {
+    const url = `http://172.20.10.4:8000/api/v1/hotels/profile/${currentID}`;
+    axios
+      .get(url)
+      .then((response) => {
+        const result = response.data;
+        const hotelInfo = result.data;
+        setName(hotelInfo.name);
+        setProvince(hotelInfo.province);
+        setCountry(hotelInfo.country);
+        setBg(hotelInfo.media[1].url);
+        setRoomInfo(hotelInfo.rooms);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
+
+  // Calculate the grand total including service fee
+  const grandTotal = totalPrice + serviceFee;
 
   return (
     <SafeAreaView>
@@ -86,7 +115,7 @@ const BookingScreen = () => {
               style={{ width: "100%", height: "100%", position: "absolute" }}
             >
               <Image
-                source={{uri: `${bg}`}}
+                source={{ uri: `${bg}` }}
                 style={{ width: "100%", height: 250 }}
               />
             </View>
@@ -210,178 +239,20 @@ const BookingScreen = () => {
             >
               Room Detail
             </Text>
-
-            <TouchableOpacity
-              onPress={() => {
-                setRoom("Single Room");
-                console.log(room);
-              }}
-            >
-              <View
-                style={{
-                  marginLeft: 20,
-                  marginTop: 20,
-                  flexDirection: "row",
-                  borderColor: "rgb(233, 233, 233)",
-                  borderWidth: 2,
-                  marginRight: 10,
-                }}
-              >
-                <Image
-                  source={require("../assets/images/singel.jpeg")}
-                  style={{ width: 120, height: 100, borderRadius: 10 }}
-                />
-                <View style={{ justifyContent: "center" }}>
-                  <Text
-                    style={{ fontSize: 18, fontWeight: 500, marginLeft: 20 }}
-                  >
-                    Signal Room
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 500,
-                      marginLeft: 20,
-                      marginTop: 10,
-                    }}
-                  >
-                    Served with Breakfast
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexDirection: "row",
-                  marginLeft: 20,
-                  marginTop: 20,
-                  marginRight: 20,
-                }}
-              >
-                <Text style={{ fontSize: 18, fontWeight: 500 }}>
-                  Number of Single Rooms
-                </Text>
-                <View style={{ flexDirection: "row" }}>
-                  <TouchableOpacity
-                    style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                    onPress={() => {
-                      setSingles(singles + 1);
-                    }}
-                  >
-                    <Entypo name="plus" size={24} color="white" />
-                  </TouchableOpacity>
-                  <Text
-                    style={{
-                      fontSize: 20,
-                      color: "gray",
-                      marginLeft: 10,
-                      marginRight: 10,
-                    }}
-                  >
-                    {singles}
-                  </Text>
-                  <TouchableOpacity
-                    style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                    onPress={() => {
-                      if (singles > 0) {
-                        setSingles(singles - 1);
-                      } else {
-                        return adults;
-                      }
-                    }}
-                  >
-                    <Entypo name="minus" size={24} color="white" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                setRoom("Double Room");
-                console.log(room);
-              }}
-            >
-              <View
-                style={{
-                  marginLeft: 20,
-                  marginTop: 20,
-                  flexDirection: "row",
-                  borderColor: "rgb(233, 233, 233)",
-                  borderWidth: 2,
-                  marginRight: 10,
-                }}
-              >
-                <Image
-                  source={require("../assets/images/double room.jpg")}
-                  style={{ width: 120, height: 100, borderRadius: 10 }}
-                />
-                <View style={{ justifyContent: "center" }}>
-                  <Text
-                    style={{ fontSize: 18, fontWeight: 500, marginLeft: 20 }}
-                  >
-                    Double Room
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 500,
-                      marginLeft: 20,
-                      marginTop: 10,
-                    }}
-                  >
-                    Served with Breakfast
-                  </Text>
-                </View>
-              </View>
-              <View
-                style={{
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  flexDirection: "row",
-                  marginLeft: 20,
-                  marginTop: 20,
-                  marginRight: 20,
-                }}
-              >
-                <Text style={{ fontSize: 18, fontWeight: 500 }}>
-                  Number of Double Rooms
-                </Text>
-                <View style={{ flexDirection: "row" }}>
-                  <TouchableOpacity
-                    style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                    onPress={() => {
-                      setDoubles(doubles + 1);
-                    }}
-                  >
-                    <Entypo name="plus" size={24} color="white" />
-                  </TouchableOpacity>
-                  <Text
-                    style={{
-                      fontSize: 20,
-                      color: "gray",
-                      marginLeft: 10,
-                      marginRight: 10,
-                    }}
-                  >
-                    {doubles}
-                  </Text>
-                  <TouchableOpacity
-                    style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                    onPress={() => {
-                      if (doubles > 0) {
-                        setDoubles(doubles - 1);
-                      } else {
-                        return doubles;
-                      }
-                    }}
-                  >
-                    <Entypo name="minus" size={24} color="white" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableOpacity>
-          </View>
+            {roomInfo && (
+              <FlatList 
+                data={roomInfo}
+                keyExtractor={(item) => item.roomType}
+                renderItem={({item}) => (
+                  <RoomItem 
+                    item={item} 
+                    updateRoomPrice={updateRoomPrice} 
+                  />
+                )}
+              />
+            )}
+           </View>
+        
 
           {/* Guest Details */}
 
@@ -483,6 +354,7 @@ const BookingScreen = () => {
               >
                 <Entypo name="minus" size={24} color="white" />
               </TouchableOpacity>
+              
             </View>
           </View>
 
@@ -512,7 +384,7 @@ const BookingScreen = () => {
           }}
         >
           <Text style={{ fontSize: 18, fontWeight: 500 }}>Room Fee</Text>
-          <Text style={{ fontSize: 18, color: "gray" }}>$247</Text>
+          <Text style={{ fontSize: 18, color: "gray" }}>${totalPrice}</Text>
         </View>
         <View
           style={{
@@ -525,7 +397,7 @@ const BookingScreen = () => {
           }}
         >
           <Text style={{ fontSize: 18, fontWeight: 500 }}>Service Fee</Text>
-          <Text style={{ fontSize: 18, color: "gray" }}>$10</Text>
+          <Text style={{ fontSize: 18, color: "gray" }}>${serviceFee}</Text>
         </View>
         <View
           style={{
@@ -538,7 +410,7 @@ const BookingScreen = () => {
           }}
         >
           <Text style={{ fontSize: 20, fontWeight: 500 }}>Total Price</Text>
-          <Text style={{ fontSize: 18, color: "gray" }}>$257</Text>
+          <Text style={{ fontSize: 18, color: "gray" }}>${grandTotal}</Text>
         </View>
         <View
           style={{
@@ -556,7 +428,7 @@ const BookingScreen = () => {
         </View>
 
         <Modal visible={showConfirmation} animationType="slide">
-          return <Payment />
+          return <Payment grandTotal={grandTotal}/>
         </Modal>
       </ScrollView>
     </SafeAreaView>

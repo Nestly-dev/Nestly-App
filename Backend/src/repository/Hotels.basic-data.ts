@@ -66,7 +66,7 @@ class Hotels {
   // Read - Get All Hotels
   async getAllHotels(): Promise<DataResponse> {
     try {
-      const hotelsWithMedia = await database
+      const rawResults = await database
         .select({
           // Hotel details
           id: hotels.id,
@@ -101,6 +101,22 @@ class Hotels {
         .from(hotels)
         .leftJoin(hotelMedia, eq(hotels.id, hotelMedia.hotel_id))
         .where(eq(hotels.status, 'active'));
+
+      // Process results to group by hotel
+      const hotelsMap = new Map();
+      rawResults.forEach(row => {
+        if (!hotelsMap.has(row.id)) {
+          hotelsMap.set(row.id, {
+            ...row,
+            media: row.media ? [row.media] : []
+          });
+        } else {
+          if (row.media) {
+            hotelsMap.get(row.id).media.push(row.media);
+          }
+        }
+      });
+      const hotelsWithMedia = Array.from(hotelsMap.values());
       return {
         data: hotelsWithMedia,
         message: 'Hotels fetched successfully',
@@ -152,7 +168,8 @@ class Hotels {
           roomId: room.id,
           roomType: room.type,
           maxOccupancy: room.max_occupancy,
-          basePrice: roomPricing.base_price,
+          roomFee: roomPricing.roomFee,
+          serviceFee: roomPricing.serviceFee,
           currency: roomPricing.currency,
         })
         .from(room)

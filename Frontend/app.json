@@ -4,11 +4,11 @@
     "slug": "Nestly",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/3.png",
+    "icon": "./assets/images/Nestly-Main.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/logo.png",
+      "image": "./assets/images/Nestly.png",
       "resizeMode": "contain",
       "backgroundColor": "#1995AD"
     },
@@ -26,7 +26,8 @@
     },
     "plugins": [
       "expo-video",
-      "expo-font"
+      "expo-font",
+      "expo-router"
     ]
   }
 }

@@ -2,6 +2,7 @@ import { SECRETS } from "../utils/helpers";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "../utils/config/aws.config";
 
+
 class FileUpload {
   async uploadFileToS3(file: Express.Multer.File): Promise<string | null> {
     if (!file) return null;

@@ -43,7 +43,7 @@ const WelcomeScreen = () => {
             color: "white",
           }}
         >
-          Welcome To Nestly
+          Welcome To Via
         </Text>
 
         

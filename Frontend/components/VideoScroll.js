@@ -5,7 +5,8 @@ import {
   FlatList,
   Pressable,
   useWindowDimensions,
-  Image
+  Image,
+  StatusBar
 } from "react-native";
 import { videodata } from "../data/data";
 import { Video, ResizeMode } from "expo-av";
@@ -34,17 +35,35 @@ const VideoItem = memo(({
         resizeMode={ResizeMode.COVER}
         shouldPlay={isActive}
       />
-      <Text style={{color: "white", alignItems:"center", justifyContent:"center", left:"40%", top:"6%", fontSize: 25, fontWeight:"bold"}}>Explore</Text>
+      
       <Pressable onPress={() => onPress(index)} style={styles.content}>
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.9)"]}
-          style={styles.content}
+          style={styles.gradientOverlay}
         >
+          {/* Top header */}
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Reels</Text>
+            <Feather name="camera" size={24} color="white" />
+          </View>
           
+          {/* Right sidebar with actions - removed share and comment buttons */}
+          <View style={styles.sidebar}>
+            <View style={styles.sidebarItem}>
+              <Feather name="heart" size={28} color="white" />
+              <Text style={styles.iconText}>12.5k</Text>
+            </View>
+            <View style={styles.sidebarItem}>
+              <Feather name="bookmark" size={28} color="white" />
+            </View>
+            <View style={styles.sidebarItem}>
+              <Feather name="more-vertical" size={28} color="white" />
+            </View>
+          </View>
+          
+          {/* Bottom content info */}
           <View style={styles.contentContainer}>
-            
-            <View>
-              
+            <View style={styles.userInfoContainer}>
               <View style={styles.profileContainer}>
                 <Image 
                   source={require("../assets/images/profile.webp")}
@@ -53,14 +72,19 @@ const VideoItem = memo(({
                 <Text style={styles.nameText}>
                   {item.name}
                 </Text>
+                <Pressable style={styles.followButton}>
+                  <Text style={styles.followText}>Follow</Text>
+                </Pressable>
               </View>
               <Text style={styles.captionText}>
                 {item.caption}
               </Text>
-            </View>
-            <View style={styles.iconContainer}>
-              <Feather name="heart" size={30} color="white" style={styles.icon}/>
-              <Feather name="bookmark" size={30} color="white" />
+              
+              {/* Music info */}
+              <View style={styles.musicContainer}>
+                <Feather name="music" size={16} color="white" />
+                <Text style={styles.musicText}>Original Audio</Text>
+              </View>
             </View>
           </View>
         </LinearGradient>
@@ -85,6 +109,16 @@ const VideoScroll = () => {
 
   // Memoize video data to prevent unnecessary re-renders
   const memoizedData = useCallback(() => videodata, []);
+
+  useEffect(() => {
+    // Hide status bar when component mounts
+    StatusBar.setHidden(true);
+    
+    return () => {
+      // Show status bar when component unmounts
+      StatusBar.setHidden(false);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isFocused) {
@@ -153,65 +187,124 @@ const VideoScroll = () => {
   }).current;
 
   return (
-    <FlatList
-      horizontal
-      pagingEnabled
-      data={memoizedData()}
-      viewabilityConfig={viewabilityConfig}
-      onViewableItemsChanged={onViewableItemsChanged}
-      renderItem={renderItem}
-      keyExtractor={keyExtractor}
-      removeClippedSubviews={true}
-      maxToRenderPerBatch={2}
-      windowSize={3}
-      initialNumToRender={1}
-    />
+    <View style={styles.container}>
+      <FlatList
+        vertical
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        data={memoizedData()}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
+        renderItem={renderItem}
+        keyExtractor={keyExtractor}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={2}
+        windowSize={3}
+        initialNumToRender={1}
+        snapToInterval={height}
+        decelerationRate="fast"
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
   video: {
     flex: 1,
   },
   content: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
+  },
+  gradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "space-between",
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 40,
+  },
+  headerText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  sidebar: {
+    position: 'absolute',
+    right: 12,
+    bottom: 120,
+    alignItems: 'center',
+  },
+  sidebarItem: {
+    alignItems: 'center',
+    marginVertical: 16, // Increased spacing between remaining buttons
+  },
+  iconText: {
+    color: 'white',
+    fontSize: 12,
+    marginTop: 4,
   },
   contentContainer: {
-    alignSelf: "baseline",
-    justifyContent: "space-between",
-    marginTop: 600,
-    marginLeft: 15,
-    flexDirection: "row"
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+    justifyContent: 'flex-end',
+  },
+  userInfoContainer: {
+    marginBottom: 16,
   },
   profileContainer: {
-    flexDirection: "row"
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
   },
   profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 100
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: 'white',
   },
   nameText: {
     color: "white",
-    fontSize: 20,
-    marginTop: 10,
-    marginLeft: 10
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 8,
+  },
+  followButton: {
+    borderColor: 'white',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginLeft: 10,
+  },
+  followText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   captionText: {
     color: "white",
-    width: 310,
-    fontSize: 15,
-    marginTop: 7,
-    fontWeight: "300"
+    fontSize: 14,
+    marginBottom: 10,
+    fontWeight: "400",
+    width: '90%',
   },
-  iconContainer: {
-    marginLeft: 60
+  musicContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  icon: {
-    marginBottom: 30
-  }
+  musicText: {
+    color: 'white',
+    fontSize: 14,
+    marginLeft: 6,
+  },
 });
 
 export default memo(VideoScroll);

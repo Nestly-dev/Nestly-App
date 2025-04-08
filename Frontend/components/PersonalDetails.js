@@ -14,6 +14,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import Toast from "react-native-toast-message";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import {BASEURL} from "@env"
 
 const PersonalDetails = () => {
   const [firstName, setFirstName] = useState("");
@@ -56,8 +57,9 @@ const PersonalDetails = () => {
 
 
   const handleSubmit = () =>{
+    
     if(isFirstTime){
-    const url = "http://127.0.0.1:8000/api/v1/profile/register"
+    const url = `http://127.0.0.1:8000/api/v1/profile/register`
     const info ={
     "first_name": firstName,
     "last_name": lastName,

@@ -5,7 +5,8 @@ import { DataResponse, existingUserTypes, profileDataTypes, updateProfileDataTyp
 import { MulterRequest } from "../utils/config/multer";
 import { userProfiles, userTable } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
-import fileUpload from "./file.upload";
+import fileUpload from "./File.upload";
+import { ImageOptimisation } from "../utils/imageOptimisation";
 
 
 export class profileRepo {
@@ -45,7 +46,7 @@ export class profileRepo {
       }
 
       // Upload the profile Image
-      const profilePicture = req.file;  // Changed from req.files?.profilePicture?.[0]
+      const profilePicture = req.file;
       if (!profilePicture) {
         return {
           message: "Profile picture is required",
@@ -53,8 +54,8 @@ export class profileRepo {
           status: HttpStatusCodes.BAD_REQUEST
         };
       }
-
-      const profilePictureURL = await fileUpload.uploadFileToS3(profilePicture);
+      const ImageBuffer = await ImageOptimisation(profilePicture, 150, 150);
+      const profilePictureURL = await fileUpload.uploadFileToS3(ImageBuffer);
 
       if (typeof profilePictureURL !== 'string') {
         return {
@@ -97,7 +98,6 @@ export class profileRepo {
       };
     }
   }
-
   async updateProfile(req: Request, res: Response, profileData: updateProfileDataTypes): Promise<DataResponse> {
     const profile_id = req.params.profileId
     try {

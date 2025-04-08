@@ -11,3 +11,7 @@ Other Functionalities
 1. Emailing Functionality
 2. Payment Functionality: IremboPay.
 
+New Functionalities
+
+1. All rooms are available until booked or checked out
+

@@ -7,17 +7,19 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
+  ScrollView
 } from "react-native";
 import React, { useContext } from "react";
 import { paymentMethods } from "../data/paymentMethod";
 import AuthContext from "../context/AuthContext";
 
-const Payment = () => {
+const Payment = ({grandTotal}) => {
   const { setShowConfirmation } = useContext(AuthContext);
   return (
     <SafeAreaView
       style={{ backgroundColor: "rgb(235, 238, 242)", height: "100%" }}
     >
+      <ScrollView>
       <View style={{ alignItems: "center", justifyContent: "center" }}>
         <Text style={{ fontSize: 25, fontWeight: "500" }}>Payment</Text>
       </View>
@@ -32,7 +34,7 @@ const Payment = () => {
             color: "#1995AD",
           }}
         >
-          $2,450.00
+          ${grandTotal}
         </Text>
         <Text style={{ fontSize: 16, fontWeight: 400, marginTop: 40 }}>
           Payment Method
@@ -192,6 +194,7 @@ const Payment = () => {
           </View>
         </TouchableOpacity>
       </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

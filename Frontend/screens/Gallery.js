@@ -2,6 +2,7 @@ import { StyleSheet, Text, View, FlatList, Dimensions, Image, useWindowDimension
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import AuthContext from '../context/AuthContext'
 import axios from 'axios'
+import {BASEURL} from "@env"
 
 const Gallery = () => {
     const [media, setMedia] = useState()
@@ -34,7 +35,7 @@ const Gallery = () => {
       const photos = result.data.media
       setMedia(photos)
     })
-  })
+  }, [])
 
   return (
     <View style={{width, height}}>

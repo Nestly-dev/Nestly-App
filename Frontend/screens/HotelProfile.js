@@ -2,15 +2,13 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
   Image,
   Dimensions,
   FlatList,
   Button,
   Pressable,
   TouchableOpacity,
+  Modal
 } from "react-native";
 import React, { useState, useContext, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
@@ -28,75 +26,80 @@ import Reviews from "../components/Reviews";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import RoomComponent from "../components/RoomComponent";
-import MapLocation from "../components/MapLocation"
-
-
+import MapLocation from "../components/MapLocation";
+import Loading from "./LoadingScreen";
+import { WebView } from 'react-native-webview';
 
 const { width } = Dimensions.get("window");
 const IMG_HEIGHT = 300;
 
-
-
 const HotelProfile = () => {
-  const { currentID, currentRoomId } = useContext(AuthContext)
-  const [hotelName, setHotelName] = useState()
-  const [adresse, setAdresse] = useState()
-  const [summary, setSummary] = useState("")
-  const [rate, setRate] = useState(0)
+  const [isloading, setIsLoading] = useState(true);
+  const { currentID, currentRoomId } = useContext(AuthContext);
+  const [hotelName, setHotelName] = useState();
+  const [adresse, setAdresse] = useState();
+  const [summary, setSummary] = useState("");
+  const [rate, setRate] = useState(0);
   const [room, setRoom] = useState();
-  const [latitude ,setLatitude] = useState(0)
-  const [longitude, setLongitude] = useState(0)
-  const [location, setLocation ]= useState({
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
+  const [location, setLocation] = useState({
     latitude: 0,
     longitude: 0,
     latitudeDelta: 0.02,
-    longitudeDelta: 0.02
-    })
-    const [bg, setBg] = useState()
-    const [media, setMedia] = useState()
+    longitudeDelta: 0.02,
+  });
+  const [bg, setBg] = useState();
+  const [media, setMedia] = useState();
+  const [roomInfo, setRoomInfo] = useState();
+  const [basePrice, setBaseprice] = useState();
+  const [menu, setMenu] = useState()
 
-  
+  //API Calls
+  useEffect(() => {
+    const url = `http://172.20.10.4:8000/api/v1/hotels/profile/${currentID}`;
 
+    axios
+      .get(url)
+      .then((response) => {
+        const result = response.data;
+        const hotelDetails = result.data;
+        setHotelName(hotelDetails.name);
+        setAdresse(hotelDetails.street_address);
+        setSummary(hotelDetails.long_description);
+        setRate(hotelDetails.star_rating);
+        setRoom(hotelDetails.total_rooms);
+        setMedia(hotelDetails.media);
+        setRoomInfo(hotelDetails.rooms);
+        // setBaseprice(hotelDetails.rooms[0].basePrice);
 
-//API Calls
-useEffect(() =>{
-  const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`
+        // Convert coordinates to numbers
+        const lat = Number(hotelDetails.latitude);
+        const lng = Number(hotelDetails.longitude);
 
-  axios.get(url)
-  .then((response) =>{
-    const result = response.data
-    const hotelDetails = result.data
-    setHotelName(hotelDetails.name)
-    setAdresse(hotelDetails.street_address)
-    setSummary(hotelDetails.long_description)
-    setRate(hotelDetails.star_rating)
-    setRoom(hotelDetails.total_rooms)
-    setMedia(hotelDetails.media)
+        // Set individual state values if you need them elsewhere
+        setLatitude(lat);
+        setLongitude(lng);
 
-    // Convert coordinates to numbers
-    const lat = Number(hotelDetails.latitude)
-    const lng = Number(hotelDetails.longitude)
-    
-    // Set individual state values if you need them elsewhere
-    setLatitude(lat)
-    setLongitude(lng)
-    
-    // Set location state using the values directly from the API
-    setLocation({
-      latitude: lat,
-      longitude: lng,
-      longitudeDelta: 0.02,
-      latitudeDelta: 0.02,
-    })
+        // Set location state using the values directly from the API
+        setLocation({
+          latitude: lat,
+          longitude: lng,
+          longitudeDelta: 0.02,
+          latitudeDelta: 0.02,
+        });
 
-    setBg(hotelDetails.media[0].url)
-  }).catch(error =>{
-    console.log("We are facinig an error", error)
-  })
-  
-}, [])
+        setBg(hotelDetails.media[0].url);
+        setBaseprice(hotelDetails.rooms[0].roomFee);
+        setMenu(hotelDetails.menu_download_url)
+        setIsLoading(false)
+      })
+      .catch((error) => {
+        console.log("We are facinig an error", error);
+      });
+  }, []);
 
   //Navigation
 
@@ -127,16 +130,18 @@ useEffect(() =>{
   });
 
   // Rating states
-  ;
   const [service, setService] = useState();
   const [price, setPrice] = useState();
   const [star, setStar] = useState([1, 2, 3, 4]);
 
   return (
     <View style={styles.container}>
+      <Modal visible={isloading} animationType="slide">
+        <Loading/>
+      </Modal>
       <Animated.ScrollView ref={scrollRef} scrollEventThrottle={16}>
         <Animated.Image
-          source={{uri: `${bg}`}}
+          source={{ uri: `${bg}` }}
           style={[styles.image, ImageAnimatedStyle]}
         />
         <LinearGradient
@@ -146,18 +151,18 @@ useEffect(() =>{
 
         {/* Detaills Section */}
 
-        <View style={{ backgroundColor: "#fff", width,  flex: 1 }}>
+        <View style={{ backgroundColor: "#fff", width, flex: 1 }}>
           <View
             style={{
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
-              marginTop: 10
+              marginTop: 10,
             }}
           >
             <Text style={styles.text}>{hotelName}</Text>
             <View>
-              <Text style={styles.price}>$230</Text>
+              <Text style={styles.price}>${basePrice}</Text>
               <Text style={{ marginTop: 10, fontSize: 20 }}>per night</Text>
             </View>
           </View>
@@ -184,9 +189,11 @@ useEffect(() =>{
 
           <View>
             <Text style={[styles.summary, { color: "gray" }]}>Summary</Text>
-            <Text style={styles.summary}>
-              {summary}
-            </Text>
+            <Text style={styles.summary}>{summary}</Text>
+            <View style={{marginLeft: 20, marginTop: 20}}>
+            <Text style={{fontSize: 17, fontWeight: 500, color:"#1995AD"}}>Email: <Text style={{fontSize: 17, color:"black"}}> ialainquentin@gmail.com </Text></Text>
+            <Text style={{fontSize: 17, fontWeight: 500, color:"#1995AD", marginTop: 10}}>Telephone: <Text style={{fontSize: 17, color:"black"}}>+250783520488</Text></Text>
+            </View>
           </View>
 
           <View
@@ -299,18 +306,20 @@ useEffect(() =>{
                 flexDirection: "row",
               }}
             >
-              <Text style={{ fontSize: 20, marginBottom: 20, fontWeight: 500 }}>Photos</Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Gallery")}>
-              <Text
-                style={{
-                  fontSize: 15,
-                  marginBottom: 20,
-                  marginRight: 20,
-                  color: "#1995AD",
-                }}
-              >
-                See all
+              <Text style={{ fontSize: 20, marginBottom: 20, fontWeight: 500 }}>
+                Photos
               </Text>
+              <TouchableOpacity onPress={() => navigation.navigate("Gallery")}>
+                <Text
+                  style={{
+                    fontSize: 15,
+                    marginBottom: 20,
+                    marginRight: 20,
+                    color: "#1995AD",
+                  }}
+                >
+                  See all
+                </Text>
               </TouchableOpacity>
             </View>
             <FlatList
@@ -319,8 +328,7 @@ useEffect(() =>{
               showsHorizontalScrollIndicator={false}
               renderItem={({ item }) => (
                 <Image
-                  source={{uri: `${item.url}`}}
-
+                  source={{ uri: `${item.url}` }}
                   style={{
                     width: 200,
                     height: 200,
@@ -334,44 +342,95 @@ useEffect(() =>{
 
           {/* Available Rooms */}
           <View>
-          <Text style={{ fontSize: 20, 
-            marginBottom: 20, 
-            marginTop: 20, 
-            marginLeft: 20,
-            fontWeight: 500 }}>
+            <Text
+              style={{
+                fontSize: 20,
+                marginBottom: 20,
+                marginTop: 20,
+                marginLeft: 20,
+                fontWeight: 500,
+              }}
+            >
               Room Available ({room})
-              <MaterialCommunityIcons name="sticker-check" size={24} color="#4cbf04"/>
-          </Text>
-          <RoomComponent />
+              <MaterialCommunityIcons
+                name="sticker-check"
+                size={24}
+                color="#4cbf04"
+              />
+            </Text>
+            <RoomComponent roomInfo={roomInfo} />
           </View>
 
           {/* The map and direction */}
 
-            <Text style={{ fontSize: 20, 
-            marginBottom: 20, 
-            marginTop: 20, 
-            marginLeft: 20,
-            fontWeight: 500
-            }}>
-              Maps Location
+          <Text
+            style={{
+              fontSize: 20,
+              marginBottom: 20,
+              marginTop: 20,
+              marginLeft: 20,
+              fontWeight: 500,
+            }}
+          >
+            Maps Location
           </Text>
-         
-            <MapLocation location = {location} name={hotelName}/>
+          <MapLocation location={location} name={hotelName} />
 
           {/* Reviews Sections */}
 
           <View style={{ marginTop: 30, marginLeft: 20 }}>
-            <View style={{flexDirection:"row", justifyContent: "space-between"}}>
-            <Text style={{ fontSize: 20, marginBottom: 20, fontWeight: 500 }}>Reviews</Text>
-            <Text onPress={() =>{navigation.navigate('Reviews')}} style={{ fontSize: 15, marginBottom: 20, marginRight: 20, color: "#1995AD" }}>See all</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text style={{ fontSize: 20, marginBottom: 20, fontWeight: 500 }}>
+                Reviews
+              </Text>
+              <Text
+                onPress={() => {
+                  navigation.navigate("Reviews");
+                }}
+                style={{
+                  fontSize: 15,
+                  marginBottom: 20,
+                  marginRight: 20,
+                  color: "#1995AD",
+                }}
+              >
+                See all
+              </Text>
             </View>
             <Reviews />
+          </View>
+
+          {/* The menu */}
+
+          <View>
+            <Text
+              style={{
+                fontSize: 20,
+                marginBottom: 20,
+                marginTop: 20,
+                marginLeft: 20,
+                fontWeight: 500,
+              }}
+            >
+              Hotel Menu
+            </Text>
+            <View style={styles.Menucontainer}>
+              <WebView
+                source={{ uri: `${menu}` }}
+                style={styles.webview}
+              />
+            </View>
           </View>
 
           {/* Booking Button */}
           <Pressable
             onPress={() => {
-              navigation.navigate('Booking');
+              navigation.navigate("Booking");
             }}
           >
             <View style={styles.book}>
@@ -379,7 +438,7 @@ useEffect(() =>{
                 title="Book Now"
                 color="white"
                 onPress={() => {
-                  navigation.navigate('Booking');
+                  navigation.navigate("Booking");
                 }}
               />
             </View>
@@ -438,5 +497,14 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginTop: 30,
     marginLeft: 20,
+  },
+  Menucontainer: {
+    flex: 1,
+    width: "100%",
+    height: 500,
+  },
+  webview: {
+    flex: 1,
+    
   },
 });

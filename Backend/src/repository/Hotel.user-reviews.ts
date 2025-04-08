@@ -6,7 +6,8 @@ import { DataResponse } from "../utils/types";
 import { MulterRequest } from "../utils/config/multer";
 import { reviews, userTable, hotels, bookings } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
-import fileUpload from "./file.upload";
+import fileUpload from "./File.upload";
+import { ImageOptimisation } from "../utils/imageOptimisation";
 
 // Define types using Drizzle's type inference
 type NewReview = typeof reviews.$inferInsert;
@@ -23,7 +24,8 @@ class ReviewRepo {
 
       let mediaUrl = null;
       if (req.file) {
-        mediaUrl = await fileUpload.uploadFileToS3(req.file);
+        const postFile = await ImageOptimisation(req.file, 600, 600)
+        const mediaUrl = await fileUpload.uploadFileToS3(postFile);
         if (typeof mediaUrl !== 'string') {
           return {
             message: "Failed to upload media",
