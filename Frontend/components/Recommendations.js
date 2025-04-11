@@ -9,22 +9,26 @@ import AuthContext from "../context/AuthContext";
 const Recommendations = () => {
   ;
   const navigation = useNavigation();
-  const { hotelData, loadHotelData } = useContext(AuthContext)
-  const [data, setData] = useState(rcdata)
-
-  useEffect(() =>{
-    loadHotelData("all-Hotels")
-    console.log(hotelData);
-  }, [])
+  const { hotelData } = useContext(AuthContext)
+  const [data, setData] = useState(hotelData)
 
   return (
     <View>
-      {data.map((item) => {
+      <Text
+            style={{
+              marginLeft: 15,
+              fontSize: 25,
+              fontWeight: 500,
+            }}
+          >
+            Journey Today
+          </Text>
+      {data && data.map((item) => {
         return (
           <View style={styles.list} key={item.id}>
             <View>
               <Image
-                source={item.img}
+                source={{uri: `${item.media[2].url}`}}
                 style={{ height: "100%", width: 130, borderRadius: 10 }}
               />
             </View>
@@ -40,7 +44,7 @@ const Recommendations = () => {
                 {item.name}
               </Text>
               <Text style={{ marginTop: 10, marginLeft: 15, fontSize: 16 }}>
-                {item.street_address}
+                {item.streetAddress}
               </Text>
               <View
                 style={{
@@ -61,7 +65,7 @@ const Recommendations = () => {
                 >
                   <MaterialIcons name="star-rate" size={24} color="#C5630C" />
                   <Text marginTop={5} marginLeft={5}>
-                    {item.star_rating}-Star Rating
+                    {item.starRating}-Star Rating
                   </Text>
                 </View>
                 <Pressable>

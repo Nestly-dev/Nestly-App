@@ -31,7 +31,7 @@ useEffect(() =>{
     <FlatList 
     data={roomInfo}
     renderItem={({item}) =>{
-    return <TouchableOpacity key={item.id}>
+    return <View key={item.id}>
               <View
                 style={{
                   marginLeft: 20,
@@ -107,7 +107,7 @@ useEffect(() =>{
                   </View>
                 </View>
               </View>
-    </TouchableOpacity>
+    </View>
     }}
     />
     

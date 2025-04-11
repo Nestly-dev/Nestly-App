@@ -59,7 +59,7 @@ const HotelProfile = () => {
 
   //API Calls
   useEffect(() => {
-    const url = `http://172.20.10.4:8000/api/v1/hotels/profile/${currentID}`;
+    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`;
 
     axios
       .get(url)
@@ -428,7 +428,7 @@ const HotelProfile = () => {
           </View>
 
           {/* Booking Button */}
-          <Pressable
+          <TouchableOpacity
             onPress={() => {
               navigation.navigate("Booking");
             }}
@@ -442,7 +442,7 @@ const HotelProfile = () => {
                 }}
               />
             </View>
-          </Pressable>
+          </TouchableOpacity>
         </View>
       </Animated.ScrollView>
     </View>
@@ -491,10 +491,10 @@ const styles = StyleSheet.create({
   book: {
     backgroundColor: "#1995AD",
     width: "90%",
-    height: 70,
+    height: 60,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 50,
+    borderRadius: 10,
     marginTop: 30,
     marginLeft: 20,
   },
