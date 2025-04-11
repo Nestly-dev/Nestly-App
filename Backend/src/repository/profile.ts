@@ -6,7 +6,6 @@ import { MulterRequest } from "../utils/config/multer";
 import { userProfiles, userTable } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
 import fileUpload from "./File.upload";
-import { ImageOptimisation } from "../utils/imageOptimisation";
 
 
 export class profileRepo {
@@ -54,8 +53,7 @@ export class profileRepo {
           status: HttpStatusCodes.BAD_REQUEST
         };
       }
-      const ImageBuffer = await ImageOptimisation(profilePicture, 150, 150);
-      const profilePictureURL = await fileUpload.uploadFileToS3(ImageBuffer);
+      const profilePictureURL = await fileUpload.uploadFileToS3(profilePicture);
 
       if (typeof profilePictureURL !== 'string') {
         return {

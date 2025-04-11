@@ -2,6 +2,7 @@ import { hotelPostService } from './../services/Hotel.posts';
 import { Request, Response, Router } from "express";
 import { MulterRequest, upload } from "../utils/config/multer";
 import { authMiddleware } from "../middleware/authMiddleware";
+import contentAwareImageMiddleware from '../middleware/contentAwareImageMiddleware';
 
 export const HotelPostRoute = Router();
 
@@ -17,7 +18,11 @@ HotelPostRoute.get('/:hotelId', (req: Request, res: Response) => {
 });
 
 // Upload Hotel Post
-HotelPostRoute.post('/upload/:hotelId', upload.single('media'), authMiddleware, (req: Request, res: Response) => {
+HotelPostRoute.post('/upload/:hotelId', upload.single('media'), contentAwareImageMiddleware({
+  maxWidth: 1200,
+  maxHeight: 1200,
+  quality: 85
+}),  authMiddleware, (req: Request, res: Response) => {
   return hotelPostService.uploadPost(req as MulterRequest, res)
 });
 

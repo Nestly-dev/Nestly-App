@@ -172,7 +172,6 @@ export const reviews = pgTable('reviews', {
   id: uuid('id').defaultRandom().primaryKey(),
   user_id: uuid('user_id').references(() => userTable.id).notNull(),
   hotel_id: uuid('hotel_id').references(() => hotels.id).notNull(),
-  booking_id: uuid('booking_id').references(() => bookings.id).notNull(),
   rating: decimal('rating').notNull(),
   mediaUrl: text('media_url'),
   review_text: text('review_text'),

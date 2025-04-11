@@ -17,7 +17,6 @@ class ReviewService {
       // Extract the review data from request body
       const reviewData: Omit<NewReview, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'mediaUrl'> = {
         hotel_id: hotelId,
-        booking_id: bookingId,
         rating: req.body.rating,
         review_text: req.body.review_text,
       };
