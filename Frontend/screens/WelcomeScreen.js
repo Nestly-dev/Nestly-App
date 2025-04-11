@@ -4,8 +4,8 @@ import SignInScreen from "./SigninScreen";
 import SignUpScreen from "./SignUpScreen";
 
 const WelcomeScreen = () => {
-  const [showSignIn, setShowSignIn] = useState(false)
-  const [showSignUp, setShowSignUp] = useState(false)
+  const [showSignIn, setShowSignIn] = useState()
+  const [showSignUp, setShowSignUp] = useState()
   const OpenSignIn = () => {
     setShowSignIn(true)
   };

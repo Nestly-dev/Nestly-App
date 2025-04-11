@@ -12,7 +12,7 @@ const RoomItem = ({ item, updateRoomPrice }) => {
     }, [roomCount, item.roomFee, item.roomType, updateRoomPrice]);
 
     return (
-        <TouchableOpacity>
+        <View>
             <View
                 style={{
                     marginLeft: 20,
@@ -110,7 +110,7 @@ const RoomItem = ({ item, updateRoomPrice }) => {
                     Subtotal: ${item.roomFee * roomCount}
                 </Text>
             </View>
-        </TouchableOpacity>
+        </View>
     )
 }
 
