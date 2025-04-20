@@ -6,14 +6,16 @@ import {
   Pressable,
   useWindowDimensions,
   Image,
-  StatusBar
+  StatusBar,
+  ActivityIndicator
 } from "react-native";
-import { videodata } from "../data/data";
 import { Video, ResizeMode } from "expo-av";
-import { useCallback, useState, useRef, useEffect, memo } from "react";
+import { useCallback, useState, useRef, useEffect, memo, useContext } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from '@expo/vector-icons/Feather';
 import { useIsFocused } from '@react-navigation/native';
+import axios from "axios";
+import AuthContext from "../context/AuthContext";
 
 // Memoized Video Item Component
 const VideoItem = memo(({ 
@@ -30,7 +32,7 @@ const VideoItem = memo(({
       <Video
         ref={videoRef}
         style={[StyleSheet.absoluteFill, styles.video]}
-        source={item.video}
+        source={{ uri: item.video_url }} // Updated to use URI from API
         isLooping={true}
         resizeMode={ResizeMode.COVER}
         shouldPlay={isActive}
@@ -47,11 +49,11 @@ const VideoItem = memo(({
             <Feather name="camera" size={24} color="white" />
           </View>
           
-          {/* Right sidebar with actions - removed share and comment buttons */}
+          {/* Right sidebar with actions */}
           <View style={styles.sidebar}>
             <View style={styles.sidebarItem}>
               <Feather name="heart" size={28} color="white" />
-              <Text style={styles.iconText}>12.5k</Text>
+              <Text style={styles.iconText}>{item.likes || "0"}</Text>
             </View>
             <View style={styles.sidebarItem}>
               <Feather name="bookmark" size={28} color="white" />
@@ -66,24 +68,24 @@ const VideoItem = memo(({
             <View style={styles.userInfoContainer}>
               <View style={styles.profileContainer}>
                 <Image 
-                  source={require("../assets/images/profile.webp")}
+                  source={item.profile_image ? { uri: item.profile_image } : require("../assets/images/profile.webp")}
                   style={styles.profileImage}
                 />
                 <Text style={styles.nameText}>
-                  {item.name}
+                  {item.username || "User"}
                 </Text>
                 <Pressable style={styles.followButton}>
                   <Text style={styles.followText}>Follow</Text>
                 </Pressable>
               </View>
               <Text style={styles.captionText}>
-                {item.caption}
+                {item.caption || ""}
               </Text>
               
               {/* Music info */}
               <View style={styles.musicContainer}>
                 <Feather name="music" size={16} color="white" />
-                <Text style={styles.musicText}>Original Audio</Text>
+                <Text style={styles.musicText}>{item.audio_title || "Original Audio"}</Text>
               </View>
             </View>
           </View>
@@ -106,9 +108,39 @@ const VideoScroll = () => {
   const isFocused = useIsFocused();
   const videoRefs = useRef([]);
   const [activePostId, setActivePostId] = useState(null);
+  const [videoFeed, setVideoFeed] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const {ip} = useContext(AuthContext)
 
-  // Memoize video data to prevent unnecessary re-renders
-  const memoizedData = useCallback(() => videodata, []);
+  // Fetch videos from API
+  useEffect(() => {
+    const fetchVideos = async () => {
+      setIsLoading(true);
+      try {
+        const videoSource = `http://127.0.0.1/api/v1/content/videos/all`;
+        const response = await axios.get(videoSource);
+        const result = response.data;
+        
+        if (result && result.data) {
+          setVideoFeed(result.data);
+          // Set first video as active once data is loaded
+          if (result.data.length > 0) {
+            setActivePostId(result.data[0].id);
+          }
+        } else {
+          setError("No videos found");
+        }
+      } catch (err) {
+        console.error("Error fetching videos:", err);
+        setError("Failed to load videos");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVideos();
+  }, []);
 
   useEffect(() => {
     // Hide status bar when component mounts
@@ -122,18 +154,28 @@ const VideoScroll = () => {
 
   useEffect(() => {
     if (!isFocused) {
+      // Pause all videos when screen is not focused
       videoRefs.current.forEach(async (video) => {
         if (video) {
-          await video.pauseAsync();
+          try {
+            await video.pauseAsync();
+          } catch (err) {
+            console.log("Error pausing video:", err);
+          }
         }
       });
-    } else if (activePostId !== null) {
-      const activeIndex = videodata.findIndex(item => item.id === activePostId);
+    } else if (activePostId !== null && videoFeed.length > 0) {
+      // Play active video when screen is focused
+      const activeIndex = videoFeed.findIndex(item => item.id === activePostId);
       if (activeIndex !== -1 && videoRefs.current[activeIndex]) {
-        videoRefs.current[activeIndex].playAsync();
+        try {
+          videoRefs.current[activeIndex].playAsync();
+        } catch (err) {
+          console.log("Error playing video:", err);
+        }
       }
     }
-  }, [isFocused, activePostId]);
+  }, [isFocused, activePostId, videoFeed]);
 
   const onPress = useCallback((index) => {
     const videoRef = videoRefs.current[index];
@@ -145,28 +187,34 @@ const VideoScroll = () => {
       } else {
         videoRef.playAsync();
       }
+    }).catch(err => {
+      console.log("Error getting video status:", err);
     });
   }, []);
 
   const onViewableItemsChanged = useCallback(({ viewableItems }) => {
-    if (viewableItems.length > 0) {
+    if (viewableItems.length > 0 && videoFeed.length > 0) {
       const currentActiveId = viewableItems[0].item.id;
       setActivePostId(currentActiveId);
 
       if (isFocused) {
         videoRefs.current.forEach(async (video, index) => {
           if (video) {
-            if (videodata[index].id === currentActiveId) {
-              await video.playAsync();
-            } else {
-              await video.pauseAsync();
-              await video.setPositionAsync(0);
+            try {
+              if (videoFeed[index] && videoFeed[index].id === currentActiveId) {
+                await video.playAsync();
+              } else {
+                await video.pauseAsync();
+                await video.setPositionAsync(0);
+              }
+            } catch (err) {
+              console.log("Error managing video playback:", err);
             }
           }
         });
       }
     }
-  }, [isFocused]);
+  }, [isFocused, videoFeed]);
 
   const renderItem = useCallback(({ item, index }) => (
     <VideoItem
@@ -186,13 +234,68 @@ const VideoScroll = () => {
     itemVisiblePercentThreshold: 50,
   }).current;
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text style={styles.loadingText}>Loading videos...</Text>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Feather name="alert-circle" size={50} color="#FFFFFF" />
+        <Text style={styles.errorText}>{error}</Text>
+        <Pressable 
+          style={styles.retryButton}
+          onPress={() => {
+            setError(null);
+            setIsLoading(true);
+            // Retry fetching videos
+            axios.get("http://127.0.0.1:8000/api/v1/content/videos/all")
+              .then(response => {
+                if (response.data && response.data.data) {
+                  setVideoFeed(response.data.data);
+                  if (response.data.data.length > 0) {
+                    setActivePostId(response.data.data[0].id);
+                  }
+                  setIsLoading(false);
+                }
+              })
+              .catch(err => {
+                console.error("Error retrying video fetch:", err);
+                setError("Failed to load videos");
+                setIsLoading(false);
+              });
+          }}
+        >
+          <Text style={styles.retryText}>Retry</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  // Empty state
+  if (videoFeed.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Feather name="video-off" size={50} color="#FFFFFF" />
+        <Text style={styles.emptyText}>No videos available</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlatList
         vertical
         pagingEnabled
         showsVerticalScrollIndicator={false}
-        data={memoizedData()}
+        data={videoFeed}
         viewabilityConfig={viewabilityConfig}
         onViewableItemsChanged={onViewableItemsChanged}
         renderItem={renderItem}
@@ -212,6 +315,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    marginTop: 16,
+    fontSize: 16,
+  },
+  errorContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: '#FFFFFF',
+    marginTop: 16,
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    backgroundColor: '#1995AD',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#FFFFFF',
+    marginTop: 16,
+    fontSize: 16,
   },
   video: {
     flex: 1,
@@ -243,7 +393,7 @@ const styles = StyleSheet.create({
   },
   sidebarItem: {
     alignItems: 'center',
-    marginVertical: 16, // Increased spacing between remaining buttons
+    marginVertical: 16,
   },
   iconText: {
     color: 'white',

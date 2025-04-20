@@ -46,7 +46,6 @@ useEffect(() =>{
     initializeAuth()
 }, [])
 
-
 // all the savings
 
   const saveAuthStatus = async (key, value) => {
@@ -146,7 +145,8 @@ useEffect(() =>{
     currentID, 
     setCurrentID,
     currentRoomId, 
-    setCurrentRoomId
+    setCurrentRoomId,
+
   };
 
   return (

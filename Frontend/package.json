@@ -21,7 +21,7 @@
     "@react-navigation/native-stack": "^7.1.14",
     "@types/react-native-snap-carousel": "^3.8.11",
     "async-storage": "^0.1.0",
-    "axios": "^1.7.9",
+    "axios": "^1.8.4",
     "cocoapods": "^0.0.0",
     "core-js": "^3.39.0",
     "dotenv": "^16.4.7",

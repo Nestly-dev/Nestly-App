@@ -1,3 +1,5 @@
+
+
 const hotel1 = require("../assets/images/hotel1.jpg");
 const hotel2 = require("../assets/images/Hotel2.jpeg");
 const hotel3 = require("../assets/images/hotel3.jpg");

@@ -30,7 +30,7 @@ const SignUpScreen = () => {
     if (!email || !password){
       alert("Please fill up all the details")
     } else{
-      const url = `http://127.0.0.1:8000/api/v1/auth/register`
+      const url = `http://127.0.0.1/api/v1/auth/register`
       const credentials ={
         "username": name,
         "email": email,

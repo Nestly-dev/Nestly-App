@@ -26,12 +26,12 @@ import {BASEURL} from "@env"
 
 const ProfileScreen = () => {
 
-  const { user, setSignedIn, signedIn, saveAuthStatus } = useContext(AuthContext);
+  const { user, setSignedIn, signedIn, saveAuthStatus, ip } = useContext(AuthContext);
   const navigation = useNavigation();
   
 
   const handleLogOut = () => {
-    const url = `http://127.0.0.1:8000/api/v1/auth/logout`;
+    const url = `http://${ip}/api/v1/auth/logout`;
     axios.post(url).then(() => {
       setSignedIn(false);
     });

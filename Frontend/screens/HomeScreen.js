@@ -30,20 +30,20 @@ import AuthContext from "../context/AuthContext";
 import WelcomeScreen from "./WelcomeScreen";
 import TopHotels from "../components/TopHotels";
 import axios from "axios";
-import {BASEURL} from "@env"
+
 
 SplashScreen.preventAutoHideAsync();
 
 const HomeScreen = () => {
-  const hotelURL = `http://127.0.0.1:8000/api/v1/hotels/all-hotels`
-  const postUrl = `http://127.0.0.1:8000/api/v1/hotels/posts/All-hotels`
   const navigation = useNavigation()
   const [loaded, error] = useFonts({
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
     'Inter': require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
   });
-  const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn, saveHotelData, setHotelData, hotelData} = useContext(AuthContext)
+  const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn, saveHotelData, setHotelData, hotelData, ip} = useContext(AuthContext)
   const [posts, setPosts] = useState()
+  const hotelURL = `http://127.0.0.1/api/v1/hotels/all-hotels`
+  const postUrl = `http://127.0.0.1/api/v1/hotels/posts/All-hotels`
 
   useEffect(() => {
     if (loaded || error) {
@@ -88,6 +88,9 @@ const HomeScreen = () => {
       const result = response.data
       const postData = result.data
       setPosts(postData)
+    })
+    .catch(error => {
+      console.log(`We are facing an error getting the posts, ${error}`)
     })
   }, [])
 
