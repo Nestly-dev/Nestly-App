@@ -118,7 +118,7 @@ const VideoScroll = () => {
     const fetchVideos = async () => {
       setIsLoading(true);
       try {
-        const videoSource = `http://127.0.0.1/api/v1/content/videos/all`;
+        const videoSource = `http://${ip}:8000/api/v1/content/videos/all`;
         const response = await axios.get(videoSource);
         const result = response.data;
         

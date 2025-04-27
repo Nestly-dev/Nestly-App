@@ -42,8 +42,8 @@ const HomeScreen = () => {
   });
   const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn, saveHotelData, setHotelData, hotelData, ip} = useContext(AuthContext)
   const [posts, setPosts] = useState()
-  const hotelURL = `http://127.0.0.1/api/v1/hotels/all-hotels`
-  const postUrl = `http://127.0.0.1/api/v1/hotels/posts/All-hotels`
+  const hotelURL = `http://${ip}:8000/api/v1/hotels/all-hotels`
+  const postUrl = `http://${ip}:8000/api/v1/hotels/posts/All-hotels`
 
   useEffect(() => {
     if (loaded || error) {

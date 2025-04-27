@@ -59,7 +59,7 @@ const PersonalDetails = () => {
   const handleSubmit = () =>{
     
     if(isFirstTime){
-    const url = `http://127.0.0.1/api/v1/profile/register`
+    const url = `http://${ip}:8000/api/v1/profile/register`
     const info ={
     "first_name": firstName,
     "last_name": lastName,
@@ -78,7 +78,7 @@ const PersonalDetails = () => {
         console.log(error);
     })
     } else{
-      const updateUrl = `http://127.0.0.1/api/v1/profile/update/${user.id}`
+      const updateUrl = `http://${ip}:8000/api/v1/profile/update/${user.id}`
       const updateInfo ={
         "first_name": firstName,
         "last_name": lastName,

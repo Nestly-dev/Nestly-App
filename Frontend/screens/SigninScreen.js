@@ -33,7 +33,7 @@ const SignInScreen = () => {
     if (!email || !password){
       alert("Please fill up all the details")
     } else{
-      const url = `http://127.0.0.1/api/v1/auth/login`
+      const url = `http://${ip}:8000/api/v1/auth/login`
       const credentials ={
         "email": email,
         "password": password
