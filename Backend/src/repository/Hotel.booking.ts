@@ -85,7 +85,7 @@ class BookingRepository {
 
       // Payment Procedure, Stripe
 
-      
+
 
       // Create booking in transaction
         const [booking] = await database
