@@ -79,7 +79,6 @@ class VideoService {
         const videosWithStreamingUrls = data.map(video => {
           return {
             ...video,
-            streaming_url: `/api/v1/content/videos/stream/${video.id}`,
             is_streamable: true
           };
         });
