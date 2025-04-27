@@ -3,6 +3,7 @@ import { Request, Response, Router } from "express";
 import { videoService } from "../services/Content.videos";
 import { MulterRequest, upload } from "../utils/config/multer";
 import { authMiddleware } from "../middleware/authMiddleware";
+import { videoStreamingController } from "../repository/videostreaming";
 
 export const VideoRoute = Router();
 
@@ -11,9 +12,9 @@ VideoRoute.get('/all', (req: Request, res: Response) => {
   return videoService.getAllVideos(req, res);
 });
 
-// Get video by id
-VideoRoute.get('/:videoId', (req: Request, res: Response) => {
-  return videoService.getVideo(req, res);
+// Stream video with support for range requests
+VideoRoute.get('/stream/:videoId', (req: Request, res: Response) => {
+  return videoStreamingController.streamVideo(req, res);
 });
 
 /*
