@@ -4,7 +4,7 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { SECRETS } from "../utils/helpers";
 import { Readable } from "stream";
 
-class VideoStreamingService {
+class VideoStreaming {
   private s3Client: S3Client;
 
   constructor() {
@@ -151,4 +151,4 @@ class VideoStreamingService {
   }
 }
 
-export const videoStreamingService = new VideoStreamingService();
+export const videoStreamingService = new VideoStreaming();

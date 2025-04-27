@@ -17,13 +17,11 @@ VideoRoute.get('/stream/:videoId', (req: Request, res: Response) => {
   return videoStreamingController.streamVideo(req, res);
 });
 
-/*
-// Get videos by category
-VideoRoute.get('/category/:category', (req: Request, res: Response) => {
-  return videoService.getVideosByCategory(req, res);
-});
+// Stream video from AWS Bucket URL.
+VideoRoute.get('/stream/:videoUrl', (req: Request, res: Response) => {
+  return videoStreamingController.streamFromS3Url(req, res);
+})
 
-*/
 // Upload new video
 VideoRoute.post('/upload/:hotelId',
   upload.fields([
