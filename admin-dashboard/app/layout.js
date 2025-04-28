@@ -1,17 +1,9 @@
 // app/layout.js
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastContextProvider } from "@/components/ui/use-toast";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Remove the Google Fonts import and use system fonts instead
+const fontClass = "font-sans"; // Using the system font stack from Tailwind
 
 export const metadata = {
   title: "Via Dashboard",
@@ -21,9 +13,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={fontClass}>
         <ToastContextProvider>
           {children}
         </ToastContextProvider>
