@@ -14,7 +14,7 @@ import {
   LineChart
 } from "lucide-react";
 import ReviewsTable from "@/components/dashboard/ReviewsTable";
-import ReviewAnalytics from "@/components/dashboard/ReviewAnalytics";
+import ReviewAnalytics from "@/components/dashboard/ReviewsAnalytics";
 
 export default function ReviewsPage() {
   return (
