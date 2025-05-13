@@ -28,7 +28,7 @@ export default function RoomsPage() {
         </div>
         <div className="flex space-x-2">
           <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add Room
+            <Plus className="mr-2 h-4 w-4 text-black" /> <p className="text-black">Add Room</p>
           </Button>
           <Button variant="outline">
             <Settings className="mr-2 h-4 w-4" /> Room Settings

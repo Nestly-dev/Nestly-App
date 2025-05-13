@@ -163,7 +163,7 @@ const ReviewAnalytics = () => {
             <h3 className="text-sm font-medium mb-2">Common Positive Keywords</h3>
             <div className="flex flex-wrap gap-2 mt-4">
               {["clean", "friendly", "helpful", "comfortable", "spacious", "location", "service", "breakfast", "view", "staff"].map((keyword) => (
-                <div key={keyword} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                <div key={keyword} className="px-3 py-1 bg-green-300 text-green-800 rounded-full text-sm">
                   {keyword}
                 </div>
               ))}
@@ -196,8 +196,8 @@ const ReviewAnalytics = () => {
               ].map((item) => (
                 <div key={item.source} className="space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-sm">{item.source}</span>
-                    <span className="text-sm font-medium">{item.percentage}%</span>
+                    <span className="text-sm text-black">{item.source}</span>
+                    <span className="text-sm font-medium text-black">{item.percentage}%</span>
                   </div>
                   <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div 

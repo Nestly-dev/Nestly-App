@@ -9,7 +9,7 @@ import {
   StatusBar,
   ActivityIndicator
 } from "react-native";
-import { Video, ResizeMode } from "expo-av";
+import { Video, ResizeMode, Audio } from "expo-av";
 import { useCallback, useState, useRef, useEffect, memo, useContext } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from '@expo/vector-icons/Feather';
@@ -32,10 +32,15 @@ const VideoItem = memo(({
       <Video
         ref={videoRef}
         style={[StyleSheet.absoluteFill, styles.video]}
-        source={{ uri: item.video_url }} // Updated to use URI from API
+        source={{ uri: item.video_url }}
         isLooping={true}
         resizeMode={ResizeMode.COVER}
         shouldPlay={isActive}
+        isMuted={false}
+        volume={1.0}
+        useNativeControls={false}
+        posterSource={item.thumbnail ? { uri: item.thumbnail } : null}
+        usePoster={!!item.thumbnail}
       />
       
       <Pressable onPress={() => onPress(index)} style={styles.content}>
@@ -111,7 +116,25 @@ const VideoScroll = () => {
   const [videoFeed, setVideoFeed] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const {ip} = useContext(AuthContext)
+  const {ip} = useContext(AuthContext);
+
+  // Setup audio mode for proper playback on mobile devices
+  useEffect(() => {
+    const setupAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+      } catch (e) {
+        console.error('Failed to configure audio mode:', e);
+      }
+    };
+    
+    setupAudio();
+  }, []);
 
   // Fetch videos from API
   useEffect(() => {
@@ -256,7 +279,7 @@ const VideoScroll = () => {
             setError(null);
             setIsLoading(true);
             // Retry fetching videos
-            axios.get("http://127.0.0.1:8000/api/v1/content/videos/all")
+            axios.get(`http://${ip}:8000/api/v1/content/videos/all`)
               .then(response => {
                 if (response.data && response.data.data) {
                   setVideoFeed(response.data.data);

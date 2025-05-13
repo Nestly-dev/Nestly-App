@@ -124,7 +124,7 @@ const SponsoredPost = ({ posts }) => {
                   <Text style={styles.sectionTitle}>Rating & Reviews</Text>
                   <View style={styles.ratingRow}>
                     <FontAwesome name="star" size={24} color="#F9A825" />
-                    <Text style={styles.expandedRatingText}>4.5 Rating</Text>
+                    <Text style={styles.expandedRatingText}>{expandedPost.avg_rating} Rating</Text>
                     <Text style={styles.reviewCount}>(234 reviews)</Text>
                   </View>
                 </View>
@@ -133,7 +133,7 @@ const SponsoredPost = ({ posts }) => {
                 <View style={styles.expandedPriceActionContainer}>
                   <View style={styles.expandedPriceContainer}>
                     <Text style={styles.expandedPriceLabel}>Start from</Text>
-                    <Text style={styles.expandedPriceValue}>$100/per night</Text>
+                    <Text style={styles.expandedPriceValue}>{expandedPost.currency} {expandedPost.base_price}/per night</Text>
                   </View>
                   
                   <TouchableOpacity 
@@ -215,14 +215,14 @@ const SponsoredPost = ({ posts }) => {
           {/* Rating */}
           <View style={styles.ratingContainer}>
             <FontAwesome name="star" size={20} color="#F9A825" />
-            <Text style={styles.ratingText}>4.5 Rating</Text>
+            <Text style={styles.ratingText}>{item.avg_rating} Rating</Text>
           </View>
 
           {/* Price and Action */}
           <View style={styles.priceActionContainer}>
             <View style={styles.priceContainer}>
               <Text style={styles.priceLabel}>Start from</Text>
-              <Text style={styles.priceValue}>$100/per night</Text>
+              <Text style={styles.priceValue}>{item.currency} {item.base_price}/per night</Text>
             </View>
             
             <TouchableOpacity 
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     color: "#757575",
   },
   expandedPriceValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "600",
     color: "#03045E",
     marginTop: 4,

@@ -29,7 +29,7 @@ export default function GalleryPage() {
         </div>
         <div className="flex space-x-2">
           <Button>
-            <Plus className="mr-2 h-4 w-4" /> Add Media
+            <Plus className="mr-2 h-4 w-4 text-black"/> <p className="text-black">Add Media</p>
           </Button>
           <Button variant="outline">
             <UploadCloud className="mr-2 h-4 w-4" /> Bulk Upload
@@ -64,7 +64,7 @@ export default function GalleryPage() {
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium text-muted-foreground">Most Viewed</p>
               <p className="text-2xl font-bold">Lobby Tour</p>
-              <Badge className="w-fit mt-1">24.7K views</Badge>
+              <Badge className="w-fit mt-1 text-black">24.7K views</Badge>
             </div>
           </CardContent>
         </Card>

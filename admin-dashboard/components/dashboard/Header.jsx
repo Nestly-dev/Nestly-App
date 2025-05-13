@@ -25,7 +25,7 @@ const Header = () => {
       <div className="relative w-64">
         <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
         <Input
-          className="pl-8 bg-gray-50 border-gray-200"
+          className="pl-8 bg-gray-50 border-gray-200 text-black"
           placeholder="Search..."
         />
       </div>

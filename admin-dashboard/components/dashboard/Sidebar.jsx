@@ -95,7 +95,7 @@ const Sidebar = () => {
         <div className="p-4 flex justify-between items-center">
           <div className={cn("flex items-center", { "justify-center w-full": collapsed })}>
             {!collapsed && (
-              <span className="text-xl font-bold ml-2">Hotel Manager</span>
+              <span className="text-xl font-bold ml-2 text-black">Via Admin</span>
             )}
             {collapsed && <span className="text-xl font-bold">HM</span>}
           </div>
