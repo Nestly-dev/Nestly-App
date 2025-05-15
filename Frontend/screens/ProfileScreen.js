@@ -133,7 +133,7 @@ const ProfileScreen = () => {
   
               <TouchableOpacity
                 onPress={() => {
-                  navigation.navigate("Personal Info");
+                  navigation.navigate("Security");
                 }}
               >
                 <View
@@ -185,7 +185,7 @@ const ProfileScreen = () => {
   
               <TouchableOpacity
                 onPress={() => {
-                  navigation.navigate("Personal Info");
+                  navigation.navigate("Privacy");
                 }}
               >
                 <View
@@ -226,7 +226,7 @@ const ProfileScreen = () => {
             <View>
               <TouchableOpacity
                 onPress={() => {
-                  navigation.navigate("Personal Info");
+                  navigation.navigate("HelpSupport");
                 }}
               >
                 <View
@@ -251,7 +251,7 @@ const ProfileScreen = () => {
   
               <TouchableOpacity
                 onPress={() => {
-                  navigation.navigate("Personal Info");
+                  navigation.navigate("TermsCondition");
                 }}
               >
                 <View
@@ -274,7 +274,7 @@ const ProfileScreen = () => {
   
               <TouchableOpacity
                 onPress={() => {
-                  navigation.navigate("Personal Info");
+                  navigation.navigate("ReportProblem");
                 }}
               >
                 <View
