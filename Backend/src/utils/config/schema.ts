@@ -20,6 +20,7 @@ export const hotelStatus = pgEnum("hotel_status", ["active", "inactive"]);
 export const paymentOptions = pgEnum('payment_options', ["Visa", "MasterCard", "Momo", "Irembo"]);
 export const mediaType = pgEnum('media_type', ['photo', 'video']);
 export const mediaTypeCategories = pgEnum('media_type_categories', ['landscape', 'portrait', 'profile', 'room', 'gallery', 'sponsored', 'virtualTours']);
+export const paymentStatus = pgEnum("payment_status", ["pending", "completed", "failed", "cancelled"]);
 
 // userTable & Profiles
 export const userTable = pgTable('user_table', {
@@ -109,7 +110,7 @@ export const room = pgTable('room', {
   max_occupancy: integer('max_occupancy').notNull(),
   num_beds: integer('num_beds').notNull(),
   room_size: decimal('room_size', { precision: 10, scale: 2 }),
-  floor_level: integer('floor_level'),
+  total_inventory: integer('total_inventory').default(1).notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
@@ -117,7 +118,7 @@ export const room = pgTable('room', {
 // Room pricing
 export const roomPricing = pgTable('room_pricing', {
   id: uuid('id').defaultRandom().primaryKey(),
-  room_id: uuid('room_id').references(() => room.id, { onDelete: 'cascade' }).notNull(),
+  roomTypeId: uuid('roomTypeId').references(() => room.id, { onDelete: 'cascade' }).notNull(),
   roomFee: decimal('room_fee', { precision: 10, scale: 2 }).notNull(),
   serviceFee: decimal('service_fee', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('USD').notNull(),
@@ -130,7 +131,7 @@ export const roomPricing = pgTable('room_pricing', {
 // Room availability tracking
 export const roomAvailability = pgTable('room_availability', {
   id: uuid('id').defaultRandom().primaryKey(),
-  room_id: uuid('room_id').references(() => room.id, { onDelete: 'cascade' }).notNull(),
+  roomTypeId: uuid('roomTypeId').references(() => room.id, { onDelete: 'cascade' }).notNull(),
   available: boolean('available').default(true).notNull(),
   date: timestamp('date').defaultNow().notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
@@ -140,7 +141,7 @@ export const roomAvailability = pgTable('room_availability', {
 // Price modifiers (seasonal rates, special offers)
 export const priceModifiers = pgTable('price_modifiers', {
   id: uuid('id').defaultRandom().primaryKey(),
-  room_id: uuid('room_id').references(() => room.id, { onDelete: 'cascade' }).notNull(),
+  roomTypeId: uuid('roomTypeId').references(() => room.id, { onDelete: 'cascade' }).notNull(),
   percentage: decimal('percentage', { precision: 5, scale: 2 }).notNull(),
   start_date: timestamp('start_date').notNull(),
   end_date: timestamp('end_date').notNull(),
@@ -153,13 +154,13 @@ export const bookings = pgTable('bookings', {
   id: uuid('id').defaultRandom().primaryKey(),
   user_id: uuid('user_id').references(() => userTable.id).notNull(),
   hotel_id: uuid('hotel_id').references(() => hotels.id).notNull(),
-  room_id: uuid('room_id').references(() => room.id).notNull(),
+  roomTypeId: uuid('roomTypeId').references(() => room.id).notNull(),
   check_in_date: timestamp('check_in_date').notNull(),
   check_out_date: timestamp('check_out_date').notNull(),
   num_guests: integer('num_guests').notNull(),
   total_price: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('USD').notNull(),
-  payment_status: varchar('payment_status', { length: 20 }).notNull(),
+  payment_status: paymentStatus('payment_status').default("pending").notNull(),
   cancelled: boolean('cancelled_booking').default(false),
   cancellation_timestamp: timestamp('cancellation_timestamp'),
   cancellation_reason: text('cancellation_reason'),

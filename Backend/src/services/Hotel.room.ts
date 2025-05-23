@@ -5,9 +5,9 @@ import { HttpStatusCodes } from '../utils/helpers';
 
 
 class HotelRooms {
-  async createRoom(req: Request, res: Response): Promise<Response> {
+  async createRoomType(req: Request, res: Response): Promise<Response> {
     try {
-      const { data, message, status } = await roomRepository.RegisterRoom(req);
+      const { data, message, status } = await roomRepository.RegisterRoomTypes(req);
       return res.status(status).json({
         message: message,
         data: data
@@ -20,7 +20,7 @@ class HotelRooms {
     }
   }
 
-  async getRoomByHotelId(req: Request, res: Response) {
+  async getRoomTypeByHotelId(req: Request, res: Response) {
     try {
       const { data, message, status } = await roomRepository.getRoomTypesByHotelId(req);
       return res.status(status).json({
@@ -35,7 +35,7 @@ class HotelRooms {
     }
   }
 
-  async getSpecificRoom(req: MulterRequest, res: Response) {
+  async getSpecificRoomType(req: MulterRequest, res: Response) {
     try {
       const { data, message, status } = await roomRepository.getSpecificRoomType(req);
       return res.status(status).json({
@@ -50,7 +50,7 @@ class HotelRooms {
     }
   }
 
-  async updateRoom(req: Request, res: Response) {
+  async updateRoomTypeDetails(req: Request, res: Response) {
     try {
       const { data, message, status } = await roomRepository.updateRoomType(req);
       return res.status(status).json({
@@ -65,24 +65,9 @@ class HotelRooms {
     }
   }
 
-  async deleteRoom(req: Request, res: Response) {
+  async deleteRoomType(req: Request, res: Response) {
     try {
       const { data, message, status } = await roomRepository.deleteRoomType(req);
-      return res.status(status).json({
-        message: message,
-        data: data
-      })
-
-    } catch (error) {
-      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: error
-      })
-    }
-  }
-
-  async deleteAllRoom(req: Request, res: Response) {
-    try {
-      const { data, message, status } = await roomRepository.deleteAllRoomTypes(req);
       return res.status(status).json({
         message: message,
         data: data

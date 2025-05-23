@@ -173,7 +173,7 @@ class Hotels {
           currency: roomPricing.currency,
         })
         .from(room)
-        .leftJoin(roomPricing, eq(room.id, roomPricing.room_id))
+        .leftJoin(roomPricing, eq(room.id, roomPricing.roomTypeId))
         .where(eq(room.hotel_id, hotelId))
         .execute();
 

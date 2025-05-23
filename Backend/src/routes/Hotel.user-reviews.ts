@@ -17,6 +17,11 @@ ReviewRoute.get('/:reviewId', (req: Request, res: Response) => {
   return reviewService.getSpecificReview(req, res);
 });
 
+// Get a specific Hotel Review
+ReviewRoute.get('/:hotelId', (req: Request, res: Response) => {
+  return reviewService.getSpecificHotelReview(req, res);
+});
+
 // Create a review
 ReviewRoute.post('/create/:hotelId/', authMiddleware, upload.single('media'), contentAwareImageMiddleware({
   maxWidth: 1200,

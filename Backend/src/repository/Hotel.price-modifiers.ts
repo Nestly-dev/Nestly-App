@@ -11,10 +11,10 @@ type PriceModifier = typeof priceModifiers.$inferSelect;
 
 class PriceModifierOperations {
   async createPriceModifier(req: Request): Promise<DataResponse> {
-    const roomId = req.params.roomId;
+    const roomTypeId = req.params.roomTypeId;
     try {
       const modifierData: NewPriceModifier = {
-        room_id: roomId,
+        roomTypeId: roomTypeId,
         percentage: req.body.percentage,
         start_date: new Date(req.body.start_date),
         end_date: new Date(req.body.end_date)
@@ -39,14 +39,14 @@ class PriceModifierOperations {
     }
   }
 
-  async getPriceModifiersByRoomId(req: Request): Promise<DataResponse> {
-    const roomId = req.params.roomId;
+  async getPriceModifiersByroomTypeId(req: Request): Promise<DataResponse> {
+    const roomTypeId = req.params.roomTypeId;
 
     try {
       const modifiers = await database
         .select()
         .from(priceModifiers)
-        .where(eq(priceModifiers.room_id, roomId));
+        .where(eq(priceModifiers.roomTypeId, roomTypeId));
 
       return {
         data: modifiers,
@@ -77,7 +77,7 @@ class PriceModifierOperations {
         })
         .from(hotels)
         .innerJoin(room, eq(room.hotel_id, hotels.id))
-        .innerJoin(priceModifiers, eq(priceModifiers.room_id, room.id))
+        .innerJoin(priceModifiers, eq(priceModifiers.roomTypeId, room.id))
         .where(
           and(
             gte(priceModifiers.end_date, new Date())
@@ -100,7 +100,7 @@ class PriceModifierOperations {
   }
 
   async updatePriceModifier(req: Request): Promise<DataResponse> {
-    const { roomId, discountId } = req.params;
+    const { roomTypeId, discountId } = req.params;
     const updateData = req.body;
 
     try {
@@ -116,7 +116,7 @@ class PriceModifierOperations {
         .set(updatedData)
         .where(
           and(
-            eq(priceModifiers.room_id, roomId),
+            eq(priceModifiers.roomTypeId, roomTypeId),
             eq(priceModifiers.id, discountId)
           )
         )
@@ -145,14 +145,14 @@ class PriceModifierOperations {
   }
 
   async deletePriceModifier(req: Request): Promise<DataResponse> {
-    const { roomId, discountId } = req.params;
+    const { roomTypeId, discountId } = req.params;
 
     try {
       const [deletedModifier] = await database
         .delete(priceModifiers)
         .where(
           and(
-            eq(priceModifiers.room_id, roomId),
+            eq(priceModifiers.roomTypeId, roomTypeId),
             eq(priceModifiers.id, discountId)
           )
         )

@@ -131,7 +131,7 @@ class HotelPostRepo {
           currency: roomPricing.currency
         })
         .from(roomPricing)
-        .innerJoin(room, eq(roomPricing.room_id, room.id))
+        .innerJoin(room, eq(roomPricing.roomTypeId, room.id))
         .groupBy(sql`${room.hotel_id}, ${roomPricing.currency}`)
         .as('room_prices');
 

@@ -70,6 +70,21 @@ class ReviewService {
     }
   }
 
+  async getSpecificHotelReview(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await reviewRepository.getHotelReviews(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
   async getAllReviews(req: Request, res: Response): Promise<Response> {
     try {
       const { data, status, message } = await reviewRepository.getAllReviews(req, res);

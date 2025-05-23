@@ -119,7 +119,6 @@ export interface RoomTypes {
   max_occupancy: number;
   num_beds: number;
   room_size?: any;
-  floor_level?: number;
   total_rooms: number;
 }
 
@@ -131,11 +130,28 @@ export interface RoomPricingTypes {
   child_policy?: string;
 }
 
-export interface RoomAvailabilityTypes {
-  room_type_id: string;
+export interface RoomAvailabilityInfo {
+  room_id: string;
+  room_type: string;
+  total_inventory: number;
   available_rooms: number;
-  date: string;
+  booked_rooms: number;
+  max_occupancy: number;
+  num_beds: number;
+  room_size: string | null;
+  description: string | null;
 }
+
+export interface HotelRoomSummary {
+  hotel_id: string;
+  hotel_name: string;
+  total_room_types: number;
+  total_rooms: number;
+  available_rooms: number;
+  occupancy_rate: number;
+  room_types: RoomAvailabilityInfo[];
+}
+
 
 export interface PriceModifierTypes {
   room_type_id: string;
