@@ -2,7 +2,7 @@ import { defineConfig } from "drizzle-kit";
 import { config } from 'dotenv';
 
 config();
-
+// Define config
 export default defineConfig({
   schema: "./src/utils/config/schema.ts",
   out: "./src/utils/config/migrations",

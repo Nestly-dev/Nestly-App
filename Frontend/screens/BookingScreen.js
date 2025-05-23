@@ -35,7 +35,7 @@ const BookingScreen = () => {
   const [doubles, setDoubles] = useState(0);
   const [checkInDate, setCheckInDate] = useState(new Date());
   const [checkOutDate, setCheckOutDate] = useState(new Date());
-  const { showConfirmation, setShowConfirmation, currentID } =
+  const { showConfirmation, setShowConfirmation, currentID, ip } =
     useContext(AuthContext);
   const [roomInfo, setRoomInfo] = useState();
   const [roomPrices, setRoomPrices] = useState({});
@@ -77,7 +77,7 @@ const BookingScreen = () => {
   };
 
   useEffect(() => {
-    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`;
+    const url = `http://${ip}:8000/api/v1/hotels/profile/${currentID}`;
     axios
       .get(url)
       .then((response) => {

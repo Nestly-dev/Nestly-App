@@ -3,6 +3,7 @@ import { Request, Response, Router } from "express";
 import { reviewService } from "../services/Hotel.user-reviews";
 import { MulterRequest, upload } from "../utils/config/multer";
 import { authMiddleware } from "../middleware/authMiddleware";
+import contentAwareImageMiddleware from "../middleware/contentAwareImageMiddleware";
 
 export const ReviewRoute = Router();
 
@@ -17,7 +18,11 @@ ReviewRoute.get('/:reviewId', (req: Request, res: Response) => {
 });
 
 // Create a review
-ReviewRoute.post('/create/:hotelId/:bookingId', authMiddleware, upload.single('media'), (req: Request, res: Response) => {
+ReviewRoute.post('/create/:hotelId/', authMiddleware, upload.single('media'), contentAwareImageMiddleware({
+  maxWidth: 1200,
+  maxHeight: 1200,
+  quality: 85
+}), (req: Request, res: Response) => {
   return reviewService.createReview(req as MulterRequest, res);
 });
 

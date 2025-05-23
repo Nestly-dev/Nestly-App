@@ -6,14 +6,14 @@ import AuthContext from '../context/AuthContext';
 
 const RoomComponent = ({roomInfo}) => {
 
-  const {currentID, currentRoomId, setCurrentRoomId} = useContext(AuthContext)
+  const {currentID, currentRoomId, setCurrentRoomId, ip} = useContext(AuthContext)
   const [room, setRoom] = useState()
 
   
 useEffect(() =>{
   // Getting The Room
 
-  const url = `http://172.20.10.4:8000/api/v1/hotels/rooms/${currentID}`
+  const url = `http://${ip}:8000/api/v1/hotels/rooms/${currentID}`
   axios.get(url)
   .then((response) =>{
     const results = response.data

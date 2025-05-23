@@ -4,10 +4,9 @@ import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
 import { DataResponse } from "../utils/types";
 import { MulterRequest } from "../utils/config/multer";
-import { hotelPosts, hotels } from '../utils/config/schema';
-import { eq } from "drizzle-orm";
+import { hotelPosts, hotels, reviews, room, roomPricing } from '../utils/config/schema';
+import { eq, sql } from "drizzle-orm";
 import fileUpload from "./File.upload";
-import { ImageOptimisation } from "../utils/imageOptimisation";
 
 // Define types using Drizzle's type inference
 type NewHotelPost = typeof hotelPosts.$inferInsert;
@@ -27,8 +26,7 @@ class HotelPostRepo {
         };
       }
 
-      const postFile = await ImageOptimisation(req.file, 600, 600)
-      const postUrl = await fileUpload.uploadFileToS3(postFile);
+      const postUrl = await fileUpload.uploadFileToS3(req.file);
       if (typeof postUrl !== 'string') {
         return {
           message: "Failed to upload post",
@@ -80,8 +78,7 @@ class HotelPostRepo {
 
       // Handle file upload if there is one
       if (req.file) {
-        const postFile = await ImageOptimisation(req.file, 600, 600)
-        const postUrl = await fileUpload.uploadFileToS3(postFile);
+        const postUrl = await fileUpload.uploadFileToS3(req.file);
         if (typeof postUrl !== 'string') {
           return {
             message: "Failed to upload post image",
@@ -115,6 +112,29 @@ class HotelPostRepo {
 
   async getAllHotelPosts(req: Request, res: Response): Promise<DataResponse> {
     try {
+      // Subquery to count reviews and calculate average rating for each hotel
+      const reviewStats = database
+        .select({
+          hotel_id: reviews.hotel_id,
+          avg_rating: sql`ROUND(AVG(${reviews.rating}), 1)`.as('avg_rating'),
+          review_count: sql`COUNT(${reviews.id})`.as('review_count')
+        })
+        .from(reviews)
+        .groupBy(reviews.hotel_id)
+        .as('review_stats');
+
+      // Subquery to get the base price for each hotel (from the first room)
+      const roomPrices = database
+        .select({
+          hotel_id: room.hotel_id,
+          base_price: sql`MIN(${roomPricing.roomFee})`.as('base_price'),
+          currency: roomPricing.currency
+        })
+        .from(roomPricing)
+        .innerJoin(room, eq(roomPricing.room_id, room.id))
+        .groupBy(sql`${room.hotel_id}, ${roomPricing.currency}`)
+        .as('room_prices');
+
       const postData = await database
         .select({
           id: hotelPosts.id,
@@ -125,17 +145,33 @@ class HotelPostRepo {
           url: hotelPosts.url,
           created_at: hotelPosts.created_at,
           updated_at: hotelPosts.updated_at,
+          base_price: roomPrices.base_price,
+          currency: roomPrices.currency,
+          avg_rating: reviewStats.avg_rating,
+          review_count: reviewStats.review_count
         })
         .from(hotelPosts)
         .innerJoin(hotels, eq(hotelPosts.hotel_id, hotels.id))
+        .leftJoin(reviewStats, eq(hotels.id, reviewStats.hotel_id))
+        .leftJoin(roomPrices, eq(hotels.id, roomPrices.hotel_id))
         .orderBy(hotelPosts.created_at);
 
+      // Format the results to handle null values and apply proper types
+      const formattedPostData = postData.map(post => ({
+        ...post,
+        avg_rating: post.avg_rating ? parseFloat(post.avg_rating as string) : 0,
+        review_count: post.review_count ? parseInt(post.review_count as string) : 0,
+        base_price: post.base_price ? parseFloat(post.base_price as string) : 0,
+        currency: post.currency || 'USD'
+      }));
+
       return {
-        data: postData,
+        data: formattedPostData,
         status: HttpStatusCodes.OK,
         message: "All hotel posts retrieved successfully"
       };
     } catch (error) {
+      console.error('Error fetching hotel posts with additional data:', error);
       return {
         data: '',
         message: error instanceof Error ? error.message : 'An unknown error occurred',

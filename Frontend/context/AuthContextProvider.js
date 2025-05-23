@@ -11,7 +11,7 @@ const UserContexProvider = ({ children }) => {
   const [hotelData, setHotelData] = useState()
   const [currentID, setCurrentID] = useState()
   const [currentRoomId, setCurrentRoomId] = useState()
-
+  const ip = "172.20.10.2"
 
 // initialising the app
 
@@ -45,7 +45,6 @@ const initializeAuth = async () => {
 useEffect(() =>{
     initializeAuth()
 }, [])
-
 
 // all the savings
 
@@ -146,7 +145,11 @@ useEffect(() =>{
     currentID, 
     setCurrentID,
     currentRoomId, 
-    setCurrentRoomId
+    setCurrentRoomId,
+
+    //IP address
+    ip
+
   };
 
   return (

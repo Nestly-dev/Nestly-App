@@ -4,10 +4,9 @@ import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
 import { DataResponse } from "../utils/types";
 import { MulterRequest } from "../utils/config/multer";
-import { reviews, userTable, hotels, bookings } from '../utils/config/schema';
+import { reviews, userTable, hotels } from '../utils/config/schema';
 import { eq } from "drizzle-orm";
 import fileUpload from "./File.upload";
-import { ImageOptimisation } from "../utils/imageOptimisation";
 
 // Define types using Drizzle's type inference
 type NewReview = typeof reviews.$inferInsert;
@@ -24,8 +23,7 @@ class ReviewRepo {
 
       let mediaUrl = null;
       if (req.file) {
-        const postFile = await ImageOptimisation(req.file, 600, 600)
-        const mediaUrl = await fileUpload.uploadFileToS3(postFile);
+        const mediaUrl = await fileUpload.uploadFileToS3(req.file);
         if (typeof mediaUrl !== 'string') {
           return {
             message: "Failed to upload media",
@@ -38,7 +36,6 @@ class ReviewRepo {
       const data: NewReview = {
         user_id: user_ID,
         hotel_id: reviewData.hotel_id,
-        booking_id: reviewData.booking_id,
         rating: reviewData.rating,
         mediaUrl: mediaUrl,
         review_text: reviewData.review_text,
@@ -106,7 +103,6 @@ class ReviewRepo {
           reviewId: reviews.id,
           userId: userTable.id,
           hotelId: hotels.id,
-          bookingId: bookings.id,
           rating: reviews.rating,
           mediaUrl: reviews.mediaUrl,
           reviewText: reviews.review_text,
@@ -117,7 +113,6 @@ class ReviewRepo {
         .where(eq(reviews.id, review_id))
         .innerJoin(userTable, eq(reviews.user_id, userTable.id))
         .innerJoin(hotels, eq(reviews.hotel_id, hotels.id))
-        .innerJoin(bookings, eq(reviews.booking_id, bookings.id));
 
       return {
         data: reviewData,
@@ -140,7 +135,6 @@ class ReviewRepo {
           reviewId: reviews.id,
           userId: userTable.id,
           hotelId: hotels.id,
-          bookingId: bookings.id,
           rating: reviews.rating,
           mediaUrl: reviews.mediaUrl,
           reviewText: reviews.review_text,
@@ -150,7 +144,6 @@ class ReviewRepo {
         .from(reviews)
         .innerJoin(userTable, eq(reviews.user_id, userTable.id))
         .innerJoin(hotels, eq(reviews.hotel_id, hotels.id))
-        .innerJoin(bookings, eq(reviews.booking_id, bookings.id));
 
       return {
         data: reviewsData,

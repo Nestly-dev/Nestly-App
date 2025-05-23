@@ -23,7 +23,7 @@ const SignInScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation("");
-  const {setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails} = useContext(AuthContext)
+  const {setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails, ip} = useContext(AuthContext)
   const [isLoading, setIsLoading] = useState(false)
  
 
@@ -33,7 +33,7 @@ const SignInScreen = () => {
     if (!email || !password){
       alert("Please fill up all the details")
     } else{
-      const url = `http://127.0.0.1:8000/api/v1/auth/login`
+      const url = `http://${ip}:8000/api/v1/auth/login`
       const credentials ={
         "email": email,
         "password": password

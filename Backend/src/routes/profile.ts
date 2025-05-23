@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { profileService } from "../services/profile";
 import { MulterRequest, upload } from "../utils/config/multer";
+import contentAwareImageMiddleware from "../middleware/contentAwareImageMiddleware";
 
 export const ProfileRoute = Router();
 
@@ -15,7 +16,11 @@ ProfileRoute.get('/:profileId', (req: Request, res: Response) => {
 });
 
 // Register a user profile
-ProfileRoute.post('/register', upload.single('profilePicture'), (req: Request, res: Response) => {
+ProfileRoute.post('/register', upload.single('profilePicture'), contentAwareImageMiddleware({
+  maxWidth: 500,
+  maxHeight: 500,
+  quality: 85
+}), (req: Request, res: Response) => {
   return profileService.registerProfile(req as MulterRequest, res);
 });
 

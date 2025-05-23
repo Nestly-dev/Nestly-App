@@ -53,6 +53,7 @@ class VideoService {
     }
   }
 
+  /*
   async getVideo(req: Request, res: Response): Promise<Response> {
     try {
       const { data, status, message } = await videoRepository.getVideo(req, res);
@@ -67,10 +68,26 @@ class VideoService {
       });
     }
   }
+  */
 
   async getAllVideos(req: Request, res: Response): Promise<Response> {
     try {
       const { data, status, message } = await videoRepository.getAllVideos(req, res);
+
+      // Add streaming URLs to each video
+      if (data && Array.isArray(data)) {
+        const videosWithStreamingUrls = data.map(video => {
+          return {
+            ...video,
+            is_streamable: true
+          };
+        });
+
+        return res.status(status).json({
+          message,
+          data: videosWithStreamingUrls
+        });
+      }
 
       return res.status(status).json({
         message,

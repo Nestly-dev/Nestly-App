@@ -21,6 +21,12 @@ import SignInScreen from '../screens/SigninScreen';
 import SignUpScreen from '../screens/SignUpScreen'
 import PersonalDetails from "../components/PersonalDetails";
 import loading from "../screens/LoadingScreen";
+import PrivacyScreen from "../screens/PrivacyScreen";
+import HelpSupportScreen from "../screens/HelpSupportScreen";
+import TermsConditionsScreen from "../screens/TermsConditionsScreen";
+import ReportProblemScreen from "../screens/ReportProblem";
+import SecurityScreen from "../screens/SecurityScreen";
+
 
 // Screen names
 const HomeScreenName = "Home";
@@ -174,6 +180,21 @@ const ProfileNavigator = () =>{
       options={{ headerTransparent: true, headerShown: true, title: "" }}/>
       <Stack.Screen name="Personal Info"
       component={PersonalDetails}
+      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen name="HelpSupport"
+      component={HelpSupportScreen}
+      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen name="Privacy"
+      component={PrivacyScreen}
+      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen name="ReportProblem"
+      component={ReportProblemScreen}
+      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen name="Security"
+      component={SecurityScreen}
+      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen name="TermsCondition"
+      component={TermsConditionsScreen}
       options={{ headerTransparent: true, headerShown: true, title: "" }}/>
     </Stack.Navigator>
   )

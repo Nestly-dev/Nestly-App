@@ -32,12 +32,13 @@ import MapLocation from "../components/MapLocation";
 import Loading from "./LoadingScreen";
 import { WebView } from 'react-native-webview';
 
+
 const { width } = Dimensions.get("window");
 const IMG_HEIGHT = 300;
 
 const HotelProfile = () => {
   const [isloading, setIsLoading] = useState(true);
-  const { currentID, currentRoomId } = useContext(AuthContext);
+  const { currentID, currentRoomId, ip } = useContext(AuthContext);
   const [hotelName, setHotelName] = useState();
   const [adresse, setAdresse] = useState();
   const [summary, setSummary] = useState("");
@@ -59,7 +60,7 @@ const HotelProfile = () => {
 
   //API Calls
   useEffect(() => {
-    const url = `http://127.0.0.1:8000/api/v1/hotels/profile/${currentID}`;
+    const url = `http://${ip}:8000/api/v1/hotels/profile/${currentID}`;
 
     axios
       .get(url)

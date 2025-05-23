@@ -1,0 +1,184 @@
+@import "tailwindcss";
+
+:root {
+  /* Base colors */
+  --background: #ffffff;
+  --foreground: #111827; /* Rich black with slight blue undertone */
+  
+  /* Text hierarchy */
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --text-tertiary: #000000;
+  --text-muted: #000000;
+
+  /* Accent colors */
+  --accent-blue: #3B82F6;
+  --accent-green: #03d690;
+  --accent-purple: #8B5CF6;
+  --accent-amber: #F59E0B;
+  --accent-red: #EF4444;
+
+  /* Gradients for special elements */
+  --gradient-blue: linear-gradient(135deg, #3B82F6, #2563EB);
+  --gradient-purple: linear-gradient(135deg, #8B5CF6, #7C3AED);
+  
+  /* System font stack instead of Geist */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #111827;
+    --foreground: #e4e4e4;
+    
+    --text-primary: #1995AD;
+    --text-secondary: #000000;
+    --text-tertiary: #000000;
+    --text-muted: #000000;
+  }
+}
+
+/* Base styles */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography enhancement */
+h1 {
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+p {
+  color: var(--text-secondary);
+}
+
+/* UI Element Improvements */
+.text-muted-foreground {
+  color: var(--text-tertiary) !important;
+}
+
+.bg-card, .card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+/* Dashboard-specific styles */
+.dashboard-stats-card {
+  border-left: 4px solid var(--accent-blue);
+}
+
+/* Button enhancements */
+.button-primary, button[variant="default"] {
+  background: var(--gradient-blue) !important;
+  transition: all 0.2s ease;
+}
+
+.button-primary:hover, button[variant="default"]:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+/* Table improvements */
+th {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+td {
+  color: var(--text-primary);
+}
+
+/* Chart and visualization tweaks */
+.recharts-text {
+  fill: var(--text-tertiary) !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.3);
+}
+
+/* Focus states enhancement */
+*:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+/* Animation utilities */
+.hover-lift {
+  transition: transform 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Add a subtle gradient background to the header */
+header {
+  background: linear-gradient(to right, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Improve sidebar styling */
+aside, .sidebar {
+  background: linear-gradient(to bottom, #ffffff, #f8fafc);
+  border-right: 1px solid rgba(0,0,0,0.05);
+}
+
+/* Add a nice highlight effect to the active nav item */
+.active-nav-item, a[data-state="active"] {
+  position: relative;
+  font-weight: 600;
+}
+
+.active-nav-item::before, a[data-state="active"]::before {
+  content: "";
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 60%;
+  width: 3px;
+  background: var(--accent-blue);
+  border-radius: 4px;
+}

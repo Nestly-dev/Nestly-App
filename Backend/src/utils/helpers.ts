@@ -1,16 +1,19 @@
 import { config } from "dotenv";
 config();
 
-interface EnvironmentVariables {
+type EnvironmentVariables = {
   AWS_BUCKET_NAME: string;
   ACCESS_TOKEN_SECRET: string;
   SALT_ROUNDS: number;
   PORT: number;
   NODE_ENV: "development" | "production";
-  NEON_DATABASE_URL: string,
-  AWS_ACCESS_KEY_ID: string,
-  AWS_SECRET_ACCESS_KEY: string,
-  AWS_REGION: string
+  NEON_DATABASE_URL: string;
+  AWS_ACCESS_KEY_ID: string;
+  AWS_SECRET_ACCESS_KEY: string;
+  AWS_REGION: string;
+  IREMBOPAY_SECRET_KEY: string;
+  IREMBOPAY_PUBLIC_KEY: string;
+  IREMBOPAY_ACCOUNT_ID: string;
 }
 
 export enum HttpStatusCodes {
@@ -41,7 +44,10 @@ export const SECRETS: EnvironmentVariables = {
   SALT_ROUNDS: parseInt(process.env.SALT_ROUNDS!),
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string,
-  AWS_REGION: process.env.AWS_REGION as string
+  AWS_REGION: process.env.AWS_REGION as string,
+  IREMBOPAY_PUBLIC_KEY: process.env.IREMBOPAY_PUBLIC_KEY as string,
+  IREMBOPAY_SECRET_KEY: process.env.IREMBOPAY_SECRET_KEY as string,
+  IREMBOPAY_ACCOUNT_ID: process.env.IREMBOPAY_ACCOUNT_ID as string,
 }
 
 
