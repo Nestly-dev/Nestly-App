@@ -1,9 +1,9 @@
 import { Request } from "express";
 import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, gte, lte, sql } from "drizzle-orm";
 import { DataResponse } from "../utils/types";
-import { roomPricing, roomAvailability } from "../utils/config/schema";
+import { roomPricing, roomAvailability, bookings, room } from "../utils/config/schema";
 import { generateDateRange } from "../utils/dateRangeGenerator";
 
 // Define types using Drizzle's type inference
@@ -14,11 +14,11 @@ type RoomAvailability = typeof roomAvailability.$inferSelect;
 
 class RoomOperations {
   // Room Pricing CRUD Operations
-  async createRoomPricing(req: Request): Promise<DataResponse> {
-    const roomId = req.params.roomId;
+  async createRoomTypePricing(req: Request): Promise<DataResponse> {
+    const roomTypeId = req.params.roomTypeId;
     try {
       const pricingData: NewRoomPricing = {
-        room_id: roomId,
+        roomTypeId: roomTypeId,
         roomFee: req.body.roomFee,
         serviceFee: req.body.serviceFee,
         currency: req.body.currency || 'USD',
@@ -45,14 +45,14 @@ class RoomOperations {
     }
   }
 
-  async getRoomPricingByRoomId(req: Request): Promise<DataResponse> {
-    const roomId = req.params.roomId;
+  async getRoomTypePricingByroomTypeId(req: Request): Promise<DataResponse> {
+    const roomTypeId = req.params.roomTypeId;
 
     try {
       const [pricing] = await database
         .select()
         .from(roomPricing)
-        .where(eq(roomPricing.room_id, roomId));
+        .where(eq(roomPricing.roomTypeId, roomTypeId));
 
       if (!pricing) {
         return {
@@ -76,8 +76,8 @@ class RoomOperations {
     }
   }
 
-  async updateRoomPricing(req: Request): Promise<DataResponse> {
-    const { roomId, pricingId } = req.params;
+  async updateRoomTypePricing(req: Request): Promise<DataResponse> {
+    const { roomTypeId, pricingId } = req.params;
     const updateData = req.body;
 
     try {
@@ -91,7 +91,7 @@ class RoomOperations {
         .set(updatedData)
         .where(
           and(
-            eq(roomPricing.room_id, roomId),
+            eq(roomPricing.roomTypeId, roomTypeId),
             eq(roomPricing.id, pricingId)
           )
         )
@@ -119,15 +119,15 @@ class RoomOperations {
     }
   }
 
-  async deleteRoomPricing(req: Request): Promise<DataResponse> {
-    const { roomId, pricingId } = req.params;
+  async deleteRoomTypePricing(req: Request): Promise<DataResponse> {
+    const { roomTypeId, pricingId } = req.params;
 
     try {
       const [deletedPricing] = await database
         .delete(roomPricing)
         .where(
           and(
-            eq(roomPricing.room_id, roomId),
+            eq(roomPricing.roomTypeId, roomTypeId),
             eq(roomPricing.id, pricingId)
           )
         )
@@ -156,11 +156,11 @@ class RoomOperations {
   }
 
   // Room Availability CRUD Operations
-  async createRoomAvailability(req: Request): Promise<DataResponse> {
-    const roomId = req.params.roomId;
+  async createRoomTypeAvailability(req: Request): Promise<DataResponse> {
+    const roomTypeId = req.params.roomTypeId;
     try {
       const availabilityData: NewRoomAvailability = {
-        room_id: roomId,
+        roomTypeId: roomTypeId,
         available: req.body.available,
         date: req.body.date
       };
@@ -184,8 +184,8 @@ class RoomOperations {
     }
   }
 
-  async getRoomAvailability(req: Request): Promise<DataResponse> {
-    const { roomId } = req.params;
+  async getRoomTypeAvailability(req: Request): Promise<DataResponse> {
+    const { roomTypeId } = req.params;
 
     try {
       const [availability] = await database
@@ -193,7 +193,7 @@ class RoomOperations {
         .from(roomAvailability)
         .where(
           and(
-            eq(roomAvailability.room_id, roomId)          )
+            eq(roomAvailability.roomTypeId, roomTypeId)          )
         );
 
       if (!availability) {
@@ -218,8 +218,8 @@ class RoomOperations {
     }
   }
 
-  async updateRoomAvailability(req: Request): Promise<DataResponse> {
-    const { roomId, availabilityId } = req.params;
+  async updateRoomTypeAvailability(req: Request): Promise<DataResponse> {
+    const { roomTypeId, availabilityId } = req.params;
     const updateData = req.body;
 
     try {
@@ -233,7 +233,7 @@ class RoomOperations {
         .set(updatedData)
         .where(
           and(
-            eq(roomAvailability.room_id, roomId),
+            eq(roomAvailability.roomTypeId, roomTypeId),
             eq(roomAvailability.id, availabilityId)
           )
         )
@@ -261,15 +261,15 @@ class RoomOperations {
     }
   }
 
-  async deleteRoomAvailability(req: Request): Promise<DataResponse> {
-    const { roomId, availabilityId } = req.params;
+  async deleteRoomTypeAvailability(req: Request): Promise<DataResponse> {
+    const { roomTypeId, availabilityId } = req.params;
 
     try {
       const [deletedAvailability] = await database
         .delete(roomAvailability)
         .where(
           and(
-            eq(roomAvailability.room_id, roomId),
+            eq(roomAvailability.roomTypeId, roomTypeId),
             eq(roomAvailability.id, availabilityId)
           )
         )
@@ -297,8 +297,8 @@ class RoomOperations {
     }
   }
 
-  async updateRoomAvailabilityForDateRange(
-    roomId: string,
+  async updateRoomTypeAvailabilityForDateRange(
+    roomTypeId: string,
     startDate: Date,
     endDate: Date,
     available: boolean
@@ -312,7 +312,7 @@ class RoomOperations {
         .from(roomAvailability)
         .where(
           and(
-            eq(roomAvailability.room_id, roomId),
+            eq(roomAvailability.roomTypeId, roomTypeId),
             eq(roomAvailability.date, date)
           )
         );
@@ -327,7 +327,7 @@ class RoomOperations {
           })
           .where(
             and(
-              eq(roomAvailability.room_id, roomId),
+              eq(roomAvailability.roomTypeId, roomTypeId),
               eq(roomAvailability.date, date)
             )
           );
@@ -336,7 +336,7 @@ class RoomOperations {
         await database
           .insert(roomAvailability)
           .values({
-            room_id: roomId,
+            roomTypeId: roomTypeId,
             date,
             available: false,
           });
@@ -345,27 +345,190 @@ class RoomOperations {
   }
 
   async isRoomAvailableForPeriod(
-    roomId: string,
+    roomTypeId: string,
     startDate: Date,
-    endDate: Date
-  ): Promise<boolean> {
-    const dateRange = generateDateRange(startDate, endDate);
+    endDate: Date,
+    requestedQuantity: number = 1
+  ): Promise<{
+    available: boolean;
+    reason?: string;
+    details: {
+      roomExists: boolean;
+      totalInventory: number;
+      bookedQuantity: number;
+      availableQuantity: number;
+      requestedQuantity: number;
+      hasInventory: boolean;
+      hasBlockedDates: boolean;
+      blockedDates?: string[];
+    };
+    roomInfo?: {
+      roomTypeId: string;
+      room_type: string;
+      hotel_id: string;
+      total_inventory: number;
+    };
+  }> {
+    try {
+      // Input validation
+      if (!roomTypeId || !startDate || !endDate) {
+        return {
+          available: false,
+          reason: "Missing required parameters: roomTypeId, startDate, or endDate",
+          details: {
+            roomExists: false,
+            totalInventory: 0,
+            bookedQuantity: 0,
+            availableQuantity: 0,
+            requestedQuantity,
+            hasInventory: false,
+            hasBlockedDates: false
+          }
+        };
+      }
 
-    const unavailableDates = await database
-      .select()
-      .from(roomAvailability)
-      .where(
-        and(
-          eq(roomAvailability.room_id, roomId),
-          eq(roomAvailability.available, false),
-          inArray(
-            roomAvailability.date,
-            dateRange.map(date => date)
+      if (startDate >= endDate) {
+        return {
+          available: false,
+          reason: "Start date must be before end date",
+          details: {
+            roomExists: false,
+            totalInventory: 0,
+            bookedQuantity: 0,
+            availableQuantity: 0,
+            requestedQuantity,
+            hasInventory: false,
+            hasBlockedDates: false
+          }
+        };
+      }
+
+      if (requestedQuantity <= 0) {
+        return {
+          available: false,
+          reason: "Requested quantity must be greater than 0",
+          details: {
+            roomExists: false,
+            totalInventory: 0,
+            bookedQuantity: 0,
+            availableQuantity: 0,
+            requestedQuantity,
+            hasInventory: false,
+            hasBlockedDates: false
+          }
+        };
+      }
+
+      // Step 1: Get room type information and verify it exists
+      const [roomInfo] = await database
+        .select({
+          roomTypeId: room.id,
+          room_type: room.type,
+          total_inventory: room.total_inventory,
+          hotel_id: room.hotel_id
+        })
+        .from(room)
+        .where(eq(room.id, roomTypeId))
+        .limit(1);
+
+      if (!roomInfo) {
+        return {
+          available: false,
+          reason: "Room type not found",
+          details: {
+            roomExists: false,
+            totalInventory: 0,
+            bookedQuantity: 0,
+            availableQuantity: 0,
+            requestedQuantity,
+            hasInventory: false,
+            hasBlockedDates: false
+          }
+        };
+      }
+
+      // Step 2: Count existing bookings that overlap with the requested period
+      // Booking overlaps if: booking starts before our endDate AND booking ends after our startDate
+      const overlappingBookings = await database
+        .select({
+          booking_count: sql<number>`count(*)`
+        })
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.roomTypeId, roomTypeId),
+            eq(bookings.cancelled, false), // Only count non-cancelled bookings
+            // Date overlap logic: existing booking starts before our end date
+            lte(bookings.check_in_date, endDate),
+            // AND existing booking ends after our start date
+            gte(bookings.check_out_date, startDate)
           )
-        )
-      );
+        );
 
-    return unavailableDates.length === 0;
+      const bookedQuantity = Number(overlappingBookings[0]?.booking_count || 0);
+      const availableQuantity = Math.max(0, roomInfo.total_inventory - bookedQuantity);
+      const hasInventory = availableQuantity >= requestedQuantity;
+
+      // Step 3: Check if we have enough rooms available for the request
+      if (!hasInventory) {
+        return {
+          available: false,
+          reason: `Insufficient inventory. You requested ${requestedQuantity} room(s), but only ${availableQuantity} are available. Total inventory: ${roomInfo.total_inventory}, Currently booked: ${bookedQuantity}`,
+          details: {
+            roomExists: true,
+            totalInventory: roomInfo.total_inventory,
+            bookedQuantity,
+            availableQuantity,
+            requestedQuantity,
+            hasInventory: false,
+            hasBlockedDates: false
+          },
+          roomInfo: {
+            roomTypeId: roomInfo.roomTypeId,
+            room_type: roomInfo.room_type,
+            hotel_id: roomInfo.hotel_id,
+            total_inventory: roomInfo.total_inventory
+          }
+        };
+      }
+
+      // Step 4: All checks passed - room is available!
+      return {
+        available: true,
+        reason: `${requestedQuantity} room(s) available for the requested period`,
+        details: {
+          roomExists: true,
+          totalInventory: roomInfo.total_inventory,
+          bookedQuantity,
+          availableQuantity,
+          requestedQuantity,
+          hasInventory: true,
+          hasBlockedDates: false
+        },
+        roomInfo: {
+          roomTypeId: roomInfo.roomTypeId,
+          room_type: roomInfo.room_type,
+          hotel_id: roomInfo.hotel_id,
+          total_inventory: roomInfo.total_inventory
+        }
+      };
+
+    } catch (error) {
+      console.error('Error checking room availability:', error);
+      return {
+        available: false,
+        reason: `System error while checking availability: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        details: {
+          roomExists: false,
+          totalInventory: 0,
+          bookedQuantity: 0,
+          availableQuantity: 0,
+          requestedQuantity,
+          hasInventory: false,
+          hasBlockedDates: false
+        }
+      };
+    }
   }
 }
 

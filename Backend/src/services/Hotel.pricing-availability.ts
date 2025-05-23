@@ -7,7 +7,7 @@ import { HttpStatusCodes } from '../utils/helpers';
 class RoomOperations {
   async createRoomPricing(req: Request, res: Response): Promise<Response> {
     try {
-      const { data, message, status } = await roomOperationsRepository.createRoomPricing(req);
+      const { data, message, status } = await roomOperationsRepository.createRoomTypePricing(req);
       return res.status(status).json({
         message: message,
         data: data
@@ -22,7 +22,7 @@ class RoomOperations {
 
   async getRoomPricingByRoomId(req: Request, res: Response) {
     try {
-      const { data, message, status } = await roomOperationsRepository.getRoomPricingByRoomId(req);
+      const { data, message, status } = await roomOperationsRepository.getRoomTypePricingByroomTypeId(req);
       return res.status(status).json({
         message: message,
         data: data
@@ -37,7 +37,7 @@ class RoomOperations {
 
   async updateRoomPricing(req: MulterRequest, res: Response) {
     try {
-      const { data, message, status } = await roomOperationsRepository.updateRoomPricing(req);
+      const { data, message, status } = await roomOperationsRepository.updateRoomTypePricing(req);
       return res.status(status).json({
         message: message,
         data: data
@@ -52,7 +52,7 @@ class RoomOperations {
 
   async deleteRoomPricing(req: Request, res: Response) {
     try {
-      const { data, message, status } = await roomOperationsRepository.deleteRoomPricing(req);
+      const { data, message, status } = await roomOperationsRepository.deleteRoomTypePricing(req);
       return res.status(status).json({
         message: message,
         data: data
@@ -67,7 +67,7 @@ class RoomOperations {
 
   async createRoomAvailability(req: Request, res: Response) {
     try {
-      const { data, message, status } = await roomOperationsRepository.createRoomAvailability(req);
+      const { data, message, status } = await roomOperationsRepository.createRoomTypePricing(req);
       return res.status(status).json({
         message: message,
         data: data
@@ -82,7 +82,7 @@ class RoomOperations {
 
   async getRoomAvailability(req: Request, res: Response) {
     try {
-      const { data, message, status } = await roomOperationsRepository.getRoomAvailability(req);
+      const { data, message, status } = await roomOperationsRepository.getRoomTypeAvailability(req);
       return res.status(status).json({
         message: message,
         data: data
@@ -97,7 +97,7 @@ class RoomOperations {
 
   async updateRoomAvailability(req: Request, res: Response) {
     try {
-      const { data, message, status } = await roomOperationsRepository.updateRoomAvailability(req);
+      const { data, message, status } = await roomOperationsRepository.updateRoomTypeAvailability(req);
       return res.status(status).json({
         message: message,
         data: data
@@ -112,7 +112,7 @@ class RoomOperations {
 
   async deleteRoomAvailability(req: Request, res: Response) {
     try {
-      const { data, message, status } = await roomOperationsRepository.deleteRoomAvailability(req);
+      const { data, message, status } = await roomOperationsRepository.deleteRoomTypeAvailability(req);
       return res.status(status).json({
         message: message,
         data: data

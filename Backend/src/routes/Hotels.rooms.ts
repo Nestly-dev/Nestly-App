@@ -5,26 +5,22 @@ import { authMiddleware } from "../middleware/authMiddleware";
 export const HotelRoomsRoutes = Router();
 
 HotelRoomsRoutes.get('/:hotelId', (req: Request, res: Response) => {
-  return HotelRoomService.getRoomByHotelId(req as MulterRequest, res)
+  return HotelRoomService.getRoomTypeByHotelId(req as MulterRequest, res)
 });
 
-HotelRoomsRoutes.get('/:hotelId/:roomId', (req: Request, res: Response) => {
-  return HotelRoomService.getSpecificRoom(req as MulterRequest, res)
+HotelRoomsRoutes.get('/:hotelId/:roomTypeId', (req: Request, res: Response) => {
+  return HotelRoomService.getSpecificRoomType(req as MulterRequest, res)
 });
 
 HotelRoomsRoutes.post('/register/:hotelId', authMiddleware, (req: Request, res: Response) => {
-  return HotelRoomService.createRoom(req as MulterRequest, res)
+  return HotelRoomService.createRoomType(req as MulterRequest, res)
 });
 
-HotelRoomsRoutes.patch('/update/:hotelId/:roomId', authMiddleware, (req: Request, res: Response) => {
-  return HotelRoomService.updateRoom(req as MulterRequest, res)
+HotelRoomsRoutes.patch('/update/:hotelId/:roomTypeId', authMiddleware, (req: Request, res: Response) => {
+  return HotelRoomService.updateRoomTypeDetails(req as MulterRequest, res)
 });
 
-HotelRoomsRoutes.delete('/delete/:hotelId/:roomId', authMiddleware, (req: Request, res: Response) => {
-  return HotelRoomService.deleteRoom(req, res)
-});
-
-HotelRoomsRoutes.delete('/delete/:hotelId', authMiddleware, (req: Request, res: Response) => {
-  return HotelRoomService.deleteAllRoom(req, res)
+HotelRoomsRoutes.delete('/delete/:hotelId/:roomTypeId', authMiddleware, (req: Request, res: Response) => {
+  return HotelRoomService.deleteRoomType(req, res)
 });
 

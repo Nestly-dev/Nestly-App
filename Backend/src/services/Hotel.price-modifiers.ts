@@ -20,9 +20,9 @@ class HotelPriceModifiers {
     }
   }
 
-  async getPriceModifiersByRoomId(req: Request, res: Response) {
+  async getPriceModifiersByRoomTypeId(req: Request, res: Response) {
     try {
-      const { data, message, status } = await priceModifierOperation.getPriceModifiersByRoomId(req);
+      const { data, message, status } = await priceModifierOperation.getPriceModifiersByroomTypeId(req);
       return res.status(status).json({
         message: message,
         data: data

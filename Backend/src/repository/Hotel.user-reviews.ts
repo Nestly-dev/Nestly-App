@@ -4,8 +4,8 @@ import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
 import { DataResponse } from "../utils/types";
 import { MulterRequest } from "../utils/config/multer";
-import { reviews, userTable, hotels } from '../utils/config/schema';
-import { eq } from "drizzle-orm";
+import { reviews, userTable, hotels, userProfiles } from '../utils/config/schema';
+import { desc, eq } from "drizzle-orm";
 import fileUpload from "./File.upload";
 
 // Define types using Drizzle's type inference
@@ -128,6 +128,38 @@ class ReviewRepo {
     }
   }
 
+  async getHotelReviews(req: Request, res: Response): Promise<DataResponse> {
+    try {
+      const hotelId = req.params.hotelId;
+      const reviewData = await database
+        .select({
+          reviewId: reviews.id,
+          userId: userTable.id,
+          hotelId: hotels.id,
+          rating: reviews.rating,
+          mediaUrl: reviews.mediaUrl,
+          reviewText: reviews.review_text,
+          createdAt: reviews.created_at,
+          updatedAt: reviews.updated_at
+        })
+        .from(reviews)
+        .where(eq(reviews.hotel_id, hotelId))
+        .innerJoin(userTable, eq(reviews.user_id, userTable.id))
+        .innerJoin(hotels, eq(reviews.hotel_id, hotels.id))
+
+      return {
+        data: reviewData,
+        status: HttpStatusCodes.OK,
+        message: "Review Retrieved Successfully"
+      };
+    } catch (error) {
+      return {
+        data: '',
+        message: error as string,
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR
+      };
+    }
+  }
   async getAllReviews(req: Request, res: Response): Promise<DataResponse> {
     try {
       const reviewsData = await database

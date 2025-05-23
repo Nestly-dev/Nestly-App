@@ -13,20 +13,21 @@ type Booking = typeof bookings.$inferSelect;
 
 class BookingRepository {
   // Create - Create New Booking
+  /*
   async createBookingOldVersion(req: Request): Promise<DataResponse> {
-    const { hotelId, roomId } = req.params;
+    const { hotelId, roomTypeId } = req.params;
     const userId = req.user?.id
     try {
       const bookingData: NewBooking = {
         user_id: userId as string,
         hotel_id: hotelId,
-        room_id: roomId,
+        roomTypeId: roomTypeId,
         check_in_date: new Date(req.body.check_in_date),
         check_out_date: new Date(req.body.check_out_date),
         num_guests: req.body.num_guests,
         total_price: req.body.total_price,
         currency: req.body.currency || 'USD',
-        payment_status: req.body.payment_status
+        payment_status: "pending"
       };
 
       const [createdBooking] = await database
@@ -47,10 +48,10 @@ class BookingRepository {
       };
     }
   }
-
+  */
   // Create - Create New Booking
   async createBooking(req: Request): Promise<DataResponse> {
-    const { hotelId, roomId } = req.params;
+    const { hotelId, roomTypeId } = req.params;
     const userId = req.user?.id;
     const checkInDate = new Date(req.body.check_in_date);
     const checkOutDate = new Date(req.body.check_out_date);
@@ -58,9 +59,10 @@ class BookingRepository {
     try {
       // Check if room is available for the requested period
       const isAvailable = await roomOperationsRepository.isRoomAvailableForPeriod(
-        roomId,
+        roomTypeId,
         checkInDate,
-        checkOutDate
+        checkOutDate,
+        req.body.num_guests
       );
 
       if (!isAvailable) {
@@ -74,32 +76,34 @@ class BookingRepository {
       const bookingData: NewBooking = {
         user_id: userId as string,
         hotel_id: hotelId,
-        room_id: roomId,
+        roomTypeId: roomTypeId,
         check_in_date: checkInDate,
         check_out_date: checkOutDate,
         num_guests: req.body.num_guests,
         total_price: req.body.total_price,
         currency: req.body.currency || 'USD',
-        payment_status: req.body.payment_status
+        payment_status: "pending"
       };
 
-      // Payment Procedure, Stripe
+      // Payment Procedure, FlutterWave
 
-
+      // Get the hotel banking credentials.
 
       // Create booking in transaction
-        const [booking] = await database
-          .insert(bookings)
-          .values(bookingData)
-          .returning();
+      const [booking] = await database
+        .insert(bookings)
+        .values(bookingData)
+        .returning();
 
-        // Update room availability
-         await roomOperationsRepository.updateRoomAvailabilityForDateRange(
-          roomId,
-          checkInDate,
-          checkOutDate,
-          false // Set as unavailable
-        );
+      // Check if the payment is fully done.
+
+      // Update room availability
+      await roomOperationsRepository.updateRoomTypeAvailabilityForDateRange(
+        roomTypeId,
+        checkInDate,
+        checkOutDate,
+        false // Set as unavailable
+      );
 
       return {
         data: booking,
@@ -282,24 +286,24 @@ class BookingRepository {
       }
 
       // Cancel booking in transaction
-        const [cancelBooking] = await database
-          .update(bookings)
-          .set({
-            cancelled: true,
-            cancellation_timestamp: new Date(),
-            cancellation_reason,
-            updated_at: new Date()
-          })
-          .where(eq(bookings.id, bookingId))
-          .returning();
+      const [cancelBooking] = await database
+        .update(bookings)
+        .set({
+          cancelled: true,
+          cancellation_timestamp: new Date(),
+          cancellation_reason,
+          updated_at: new Date()
+        })
+        .where(eq(bookings.id, bookingId))
+        .returning();
 
-        // Update room availability
-        await roomOperationsRepository.updateRoomAvailabilityForDateRange(
-          existingBooking.room_id,
-          existingBooking.check_in_date,
-          existingBooking.check_out_date,
-          true // Set as available
-        );
+      // Update room availability
+      await roomOperationsRepository.updateRoomTypeAvailabilityForDateRange(
+        existingBooking.roomTypeId,
+        existingBooking.check_in_date,
+        existingBooking.check_out_date,
+        true
+      );
 
       return {
         data: cancelBooking,
