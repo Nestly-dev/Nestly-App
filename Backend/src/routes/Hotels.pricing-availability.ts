@@ -22,19 +22,6 @@ HotelPricingAvailabilityRoutes.delete('/roomPricing/:roomTypeId/:pricingId', aut
 });
 
 // Room Availability
-HotelPricingAvailabilityRoutes.post('/roomAvailability/:roomTypeId', authMiddleware, (req: Request, res: Response) => {
-  return RoomOperationService.createRoomAvailability(req, res)
-});
-
-HotelPricingAvailabilityRoutes.get('/roomAvailability/:roomTypeId', (req: Request, res: Response) => {
+HotelPricingAvailabilityRoutes.post('/roomAvailability/:roomTypeId', (req: Request, res: Response) => {
   return RoomOperationService.getRoomAvailability(req, res)
 });
-
-HotelPricingAvailabilityRoutes.patch('/roomAvailability/:roomTypeId/:availabilityId', authMiddleware, (req: Request, res: Response) => {
-  return RoomOperationService.updateRoomAvailability(req, res)
-});
-
-HotelPricingAvailabilityRoutes.delete('/roomAvailability/:roomTypeId/:availabilityId', authMiddleware, (req: Request, res: Response) => {
-  return RoomOperationService.deleteRoomAvailability(req, res)
-});
-

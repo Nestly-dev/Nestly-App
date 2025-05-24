@@ -65,54 +65,9 @@ class RoomOperations {
     }
   }
 
-  async createRoomAvailability(req: Request, res: Response) {
-    try {
-      const { data, message, status } = await roomOperationsRepository.createRoomTypeAvailability(req);
-      return res.status(status).json({
-        message: message,
-        data: data
-      })
-
-    } catch (error) {
-      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: error
-      })
-    }
-  }
-
   async getRoomAvailability(req: Request, res: Response) {
     try {
       const { data, message, status } = await roomOperationsRepository.getRoomTypeAvailability(req);
-      return res.status(status).json({
-        message: message,
-        data: data
-      })
-
-    } catch (error) {
-      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: error
-      })
-    }
-  }
-
-  async updateRoomAvailability(req: Request, res: Response) {
-    try {
-      const { data, message, status } = await roomOperationsRepository.updateRoomTypeAvailability(req);
-      return res.status(status).json({
-        message: message,
-        data: data
-      })
-
-    } catch (error) {
-      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: error
-      })
-    }
-  }
-
-  async deleteRoomAvailability(req: Request, res: Response) {
-    try {
-      const { data, message, status } = await roomOperationsRepository.deleteRoomTypeAvailability(req);
       return res.status(status).json({
         message: message,
         data: data

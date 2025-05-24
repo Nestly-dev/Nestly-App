@@ -22,7 +22,8 @@ class Rooms {
         max_occupancy: req.body.max_occupancy,
         num_beds: req.body.num_beds,
         room_size: req.body.room_size,
-        total_inventory: req.body.total_inventory
+        total_inventory: req.body.total_inventory,
+        available_inventory: req.body.available_inventory
       };
 
       const [createdRoom] = await database

@@ -111,6 +111,7 @@ export const room = pgTable('room', {
   num_beds: integer('num_beds').notNull(),
   room_size: decimal('room_size', { precision: 10, scale: 2 }),
   total_inventory: integer('total_inventory').default(1).notNull(),
+  available_inventory: integer('available_inventory').notNull(),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
@@ -158,6 +159,7 @@ export const bookings = pgTable('bookings', {
   check_in_date: timestamp('check_in_date').notNull(),
   check_out_date: timestamp('check_out_date').notNull(),
   num_guests: integer('num_guests').notNull(),
+  num_rooms: integer('num_rooms').notNull(),
   total_price: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('USD').notNull(),
   payment_status: paymentStatus('payment_status').default("pending").notNull(),
