@@ -11,6 +11,8 @@ declare global {
         id: string;
         email: string;
         email_verified: boolean;
+        preferred_language: string;
+        preferred_currency: string;
       };
     }
   }
@@ -30,7 +32,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       console.log('Decoded token:', decoded);
 
       const authRepository = new AuthenticationRepository();
-      const user = await authRepository.findUserByEmail(decoded.email);
+      const user = await authRepository.findUserByEmailForAuth(decoded.email);
       console.log('Found user:', user);
 
       if (!user) {
@@ -42,6 +44,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         id: user.id,
         email: user.email,
         email_verified: user.email_verified,
+        preferred_currency: user.preferred_currency,
+        preferred_language: user.preferred_language
       };
 
       next();
