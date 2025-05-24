@@ -67,7 +67,7 @@ class RoomOperations {
 
   async createRoomAvailability(req: Request, res: Response) {
     try {
-      const { data, message, status } = await roomOperationsRepository.createRoomTypePricing(req);
+      const { data, message, status } = await roomOperationsRepository.createRoomTypeAvailability(req);
       return res.status(status).json({
         message: message,
         data: data
