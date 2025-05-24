@@ -105,7 +105,7 @@ export const hotelPosts = pgTable('hotel_posts', {
 export const room = pgTable('room', {
   id: uuid('id').defaultRandom().primaryKey(),
   hotel_id: uuid('hotel_id').references(() => hotels.id, { onDelete: 'cascade' }).notNull(),
-  type: varchar('room_types').notNull(),
+  type: varchar('type').notNull(),
   description: text('description'),
   max_occupancy: integer('max_occupancy').notNull(),
   num_beds: integer('num_beds').notNull(),
