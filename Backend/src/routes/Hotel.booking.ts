@@ -4,11 +4,11 @@ import { BookingService } from "../services/Hotel.booking";
 
 export const BookingRoutes = Router();
 
-BookingRoutes.post('/create/:hotelId/:roomId', (req: Request, res: Response) => {
+BookingRoutes.post('/create/:hotelId/:roomTypeId', (req: Request, res: Response) => {
   return BookingService.createBooking(req, res);
 });
 
-BookingRoutes.get('/:userId', (req: Request, res: Response) => {
+BookingRoutes.get('/user/:userId', (req: Request, res: Response) => {
   return BookingService.getUserBookings(req, res);
 });
 

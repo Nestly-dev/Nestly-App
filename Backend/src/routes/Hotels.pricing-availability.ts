@@ -31,10 +31,10 @@ HotelPricingAvailabilityRoutes.get('/roomAvailability/:roomTypeId', (req: Reques
 });
 
 HotelPricingAvailabilityRoutes.patch('/roomAvailability/:roomTypeId/:availabilityId', authMiddleware, (req: Request, res: Response) => {
-  return RoomOperationService.createRoomAvailability(req, res)
+  return RoomOperationService.updateRoomAvailability(req, res)
 });
 
 HotelPricingAvailabilityRoutes.delete('/roomAvailability/:roomTypeId/:availabilityId', authMiddleware, (req: Request, res: Response) => {
-  return RoomOperationService.createRoomAvailability(req, res)
+  return RoomOperationService.deleteRoomAvailability(req, res)
 });
 
