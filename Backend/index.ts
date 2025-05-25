@@ -19,6 +19,7 @@ import { ReviewRoute } from "./src/routes/Hotel.user-reviews";
 import { HotelMediaRoute } from "./src/routes/Hotel.media";
 import { VideoRoute } from "./src/routes/Content.videos";
 import { HotelPostRoute } from "./src/routes/Hotel.posts";
+import { complaintsRoutes } from "./src/routes/Client.complaints";
 dotenv.config();
 
 // Middleware
@@ -44,6 +45,8 @@ app.use('/api/v1/hotels/reviews', ReviewRoute);
 app.use('/api/v1/hotels/Media', HotelMediaRoute);
 app.use('/api/v1/hotels/posts', HotelPostRoute);
 app.use('/api/v1/content/videos', VideoRoute);
+app.use('/api/v1/complaints', authMiddleware, complaintsRoutes);
+
 
 
 app.listen(port, () => {
