@@ -168,3 +168,12 @@ export interface HotelReviewTypes {
   content: string;
   rating?: any;
 }
+
+export interface complaintsDataType {
+  username?: string,
+  email?: string,
+  hotelName: string,
+  subject: string,
+  message: string
+}
+
