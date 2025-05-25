@@ -106,6 +106,7 @@ import * as EmailValidator from 'email-validator';
      const user = await database
        .select({
          id: userTable.id,
+         username: userTable.username,
          email: userTable.email,
          password: userTable.password,
          email_verified: userTable.email_verified,
