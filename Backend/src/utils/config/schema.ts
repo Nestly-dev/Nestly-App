@@ -48,6 +48,15 @@ export const userProfiles = pgTable('user_profiles', {
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
 
+export const otpTable = pgTable("OTP", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: varchar("email", { length: 255 }).notNull(),
+  code: varchar("code", { length: 6 }).notNull(), // 6-digit OTP code
+  expires_at: timestamp("expires_at").notNull(), // Expiration time
+  verified: boolean("verified").notNull().default(false),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+})
+
 // Core hotel information
 export const hotels = pgTable('hotels', {
   id: uuid('id').defaultRandom().primaryKey(),
