@@ -244,7 +244,7 @@ export default function RoomsPage() {
                 <div className="bg-purple-500 w-[20%]"></div>
                 <div className="bg-amber-500 w-[10%]"></div>
               </div>
-              <div className="flex justify-between mt-2 text-xs text-gray-500">
+              <div className="flex justify-between mt-2 text-xs text-black">
                 <span>Standard (40%)</span>
                 <span>Deluxe (30%)</span>
                 <span>Family (20%)</span>

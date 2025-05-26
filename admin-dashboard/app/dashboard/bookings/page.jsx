@@ -28,7 +28,7 @@ export default function BookingsPage() {
             <div className="flex flex-col gap-1">
               <p className="text-sm font-medium text-muted-foreground">Total Bookings</p>
               <p className="text-2xl font-bold">1,247</p>
-              <Badge className="w-fit mt-1" variant="outline">Apr 2025</Badge>
+              <Badge className="w-fit mt-1 text-black" variant="outline">Apr 2020</Badge>
             </div>
           </CardContent>
         </Card>
