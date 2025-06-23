@@ -14,7 +14,6 @@ import React, {useEffect, useState} from "react";
 import { Feather } from "@expo/vector-icons";
 import styles from "../GlobalStyling";
 import TrendingArea from "../components/BestDeals";
-import Recommendations from "../components/Recommendations";
 import { LinearGradient } from "expo-linear-gradient";
 import LivePlaces from "../components/LivePlaces";
 import SponsoredPost from "../components/SponsoredPost";
@@ -23,7 +22,6 @@ import * as SplashScreen from "expo-splash-screen"
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Octicons from '@expo/vector-icons/Octicons';
 import Entypo from '@expo/vector-icons/Entypo';
-import Categories from "../components/Categories";
 import { useNavigation } from "@react-navigation/native";
 import { useContext } from "react";
 import AuthContext from "../context/AuthContext";

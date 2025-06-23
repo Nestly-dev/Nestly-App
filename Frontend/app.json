@@ -13,7 +13,8 @@
       "backgroundColor": "#1995AD"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.Nestly"
     },
     "android": {
       "adaptiveIcon": {

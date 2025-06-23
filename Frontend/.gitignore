@@ -37,3 +37,6 @@ yarn-error.*
 
 # assets
 assets
+
+# env
+.env

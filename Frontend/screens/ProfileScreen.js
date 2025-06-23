@@ -22,7 +22,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Entypo from '@expo/vector-icons/Entypo';
 import Octicons from '@expo/vector-icons/Octicons';
 import WelcomeScreen from "./WelcomeScreen";
-import {BASEURL} from "@env"
+
 
 const ProfileScreen = () => {
 

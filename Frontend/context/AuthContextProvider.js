@@ -11,7 +11,7 @@ const UserContexProvider = ({ children }) => {
   const [hotelData, setHotelData] = useState()
   const [currentID, setCurrentID] = useState()
   const [currentRoomId, setCurrentRoomId] = useState()
-  const ip = "172.20.10.2"
+  const ip = "127.0.0.1"
 
 // initialising the app
 

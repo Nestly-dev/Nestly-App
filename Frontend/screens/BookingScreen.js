@@ -19,9 +19,7 @@ import "react-native-gesture-handler";
 import Payment from "../components/Payment";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
-import RoomDetailComponent from "../components/RoomDetailComponent";
 import RoomItem from "../components/RoomItem";
-import {BASEURL} from "@env"
 
 const BookingScreen = () => {
   const [name, setName] = useState();

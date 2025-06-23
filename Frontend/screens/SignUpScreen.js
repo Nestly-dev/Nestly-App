@@ -16,7 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
-import {BASEURL} from "@env"
+
 
 const SignUpScreen = () => {
   const [name, setName] = useState("");
