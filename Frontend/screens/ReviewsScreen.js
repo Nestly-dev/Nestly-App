@@ -12,14 +12,28 @@ import {
   StatusBar,
   Alert
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { data } from "../data/reviewdata";
 import * as ImagePicker from 'expo-image-picker'; // Make sure to install this: expo install expo-image-picker
+import axios from "axios";
+import AuthContext from "../context/AuthContext";
 
 const ReviewsScreen = () => {
   const [comment, setComment] = useState("");
   const [userRating, setUserRating] = useState(0);
   const [attachments, setAttachments] = useState([]);
+  const {currentID, ip} = useContext(AuthContext)
+  const [allReviews, setAllReviews] = useState()
+
+  useEffect(() =>{
+    const getUrl = `http://${ip}:8000/api/v1/hotels/reviews/${currentID}`
+    axios.get(getUrl)
+    .then((response) =>{
+      const result = response.data
+      setAllReviews(result.data)
+      console.log(allReviews)
+    })
+  }, [])
 
   const pickFile = async () => {
     // Request permissions
@@ -32,7 +46,7 @@ const ReviewsScreen = () => {
 
     // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All, // Images and videos
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsMultipleSelection: true,
       maxFiles: 3,
       quality: 0.8,
@@ -157,6 +171,20 @@ const ReviewsScreen = () => {
     </View>
   );
 
+  const handlePost = () =>{
+    const url =`http://${ip}:8000/api/v1/hotels/reviews/create/${currentID}`
+    const reviewPost = {
+      "rating" : userRating,
+      "review_text" : comment,
+      "media" : attachments
+    }
+    axios.post(url, reviewPost)
+    .then((response =>{
+      const result = response.data
+      console.log(result)
+    }))
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -202,6 +230,7 @@ const ReviewsScreen = () => {
           </TouchableOpacity>
           
           <TouchableOpacity 
+          onPress={handlePost}
             style={[
               styles.postButton, 
               { 

@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Entypo from "@expo/vector-icons/Entypo";
 
 const RoomItem = ({ item, updateRoomPrice }) => {
@@ -7,9 +7,18 @@ const RoomItem = ({ item, updateRoomPrice }) => {
     
     // Update the price in the parent component whenever roomCount changes
     useEffect(() => {
-        const roomPrice = item.roomFee * roomCount;
+        const roomPrice = parseFloat((item.roomFee * roomCount).toFixed(2));
         updateRoomPrice(item.roomType, roomPrice);
-    }, [roomCount, item.roomFee, item.roomType, updateRoomPrice]);
+    }, [roomCount, item.roomFee, item.roomType]); // Removed updateRoomPrice from dependencies
+
+    // Memoize increment/decrement functions to prevent unnecessary re-renders
+    const incrementRoom = useCallback(() => {
+        setRoomCount(prev => prev + 1);
+    }, []);
+
+    const decrementRoom = useCallback(() => {
+        setRoomCount(prev => prev > 0 ? prev - 1 : 0);
+    }, []);
 
     return (
         <View>
@@ -29,14 +38,14 @@ const RoomItem = ({ item, updateRoomPrice }) => {
                 />
                 <View style={{ justifyContent: "center" }}>
                     <Text
-                        style={{ fontSize: 18, fontWeight: 500, marginLeft: 20 }}
+                        style={{ fontSize: 18, fontWeight: "500", marginLeft: 20 }}
                     >
                         {item.roomType}
                     </Text>
                     <Text
                         style={{
                             fontSize: 15,
-                            fontWeight: 500,
+                            fontWeight: "500",
                             marginLeft: 20,
                             marginTop: 10,
                         }}
@@ -46,12 +55,13 @@ const RoomItem = ({ item, updateRoomPrice }) => {
                     <Text
                         style={{
                             fontSize: 18,
-                            fontWeight: 500,
+                            fontWeight: "bold", // Removed duplicate fontWeight
                             marginLeft: 20,
                             marginTop: 10,
-                            fontWeight: "bold"
                         }}
-                    >Price: ${item.roomFee} </Text>
+                    >
+                        Price: ${parseFloat(item.roomFee).toFixed(2)}
+                    </Text>
                 </View>
             </View>
             <View
@@ -64,15 +74,13 @@ const RoomItem = ({ item, updateRoomPrice }) => {
                     marginRight: 20,
                 }}
             >
-                <Text style={{ fontSize: 18, fontWeight: 500 }}>
+                <Text style={{ fontSize: 18, fontWeight: "500" }}>
                     Number of {item.roomType}
                 </Text>
                 <View style={{ flexDirection: "row" }}>
                     <TouchableOpacity
                         style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                        onPress={() => {
-                            setRoomCount(roomCount + 1);
-                        }}
+                        onPress={incrementRoom}
                     >
                         <Entypo name="plus" size={24} color="white" />
                     </TouchableOpacity>
@@ -88,11 +96,7 @@ const RoomItem = ({ item, updateRoomPrice }) => {
                     </Text>
                     <TouchableOpacity
                         style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                        onPress={() => {
-                            if (roomCount > 0) {
-                                setRoomCount(roomCount - 1);
-                            }
-                        }}
+                        onPress={decrementRoom}
                     >
                         <Entypo name="minus" size={24} color="white" />
                     </TouchableOpacity>
@@ -107,7 +111,7 @@ const RoomItem = ({ item, updateRoomPrice }) => {
                 }}
             >
                 <Text style={{ fontSize: 16, fontWeight: "bold", color: "#1995AD" }}>
-                    Subtotal: ${item.roomFee * roomCount}
+                    Subtotal: ${(item.roomFee * roomCount).toFixed(2)}
                 </Text>
             </View>
         </View>
