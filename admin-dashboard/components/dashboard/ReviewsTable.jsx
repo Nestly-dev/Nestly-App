@@ -20,15 +20,15 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   MoreHorizontal, 
-  Reply, 
-  Flag,
+  Eye, 
+  Edit, 
+  Trash, 
   Star,
+  MessageSquare,
   ThumbsUp,
-  ThumbsDown,
-  Trash
+  ThumbsDown
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -36,117 +36,181 @@ import { Input } from "@/components/ui/input";
 // Sample reviews data
 const reviewsData = [
   {
-    id: 1,
-    guestName: "Sarah Johnson",
-    avatar: "/avatars/sarah.jpg",
-    date: "2025-04-15",
+    id: "REV-1234",
+    guestName: "John Doe",
     rating: 5,
-    comment: "Amazing hotel with exceptional service. The staff went above and beyond to make our stay memorable.",
+    comment: "Excellent service and beautiful room. The staff was very friendly and helpful. Would definitely recommend!",
+    date: "2025-04-20",
     roomType: "Deluxe Suite",
-    responded: true,
-    response: "Thank you for your kind words, Sarah! We're thrilled you enjoyed your stay with us.",
-    responseDate: "2025-04-16",
-    flagged: false
+    status: "published",
+    helpful: 12,
+    notHelpful: 2
   },
   {
-    id: 2,
-    guestName: "Michael Chen",
-    avatar: "/avatars/michael.jpg",
-    date: "2025-04-10",
+    id: "REV-1235",
+    guestName: "Sarah Johnson",
     rating: 4,
-    comment: "Great location and beautiful views. The room was clean and comfortable. The only downside was the slow Wi-Fi.",
+    comment: "Great location and clean rooms. The breakfast was delicious. Only minor issue was the slow WiFi in the room.",
+    date: "2025-04-18",
     roomType: "Standard Room",
-    responded: false,
-    response: null,
-    responseDate: null,
-    flagged: false
+    status: "published",
+    helpful: 8,
+    notHelpful: 1
   },
   {
-    id: 3,
-    guestName: "Emily Garcia",
-    avatar: "/avatars/emily.jpg",
-    date: "2025-04-05",
-    rating: 5,
-    comment: "Perfect for our family vacation. The kids loved the pool area!",
-    roomType: "Family Suite",
-    responded: true,
-    response: "We're so happy your family enjoyed their stay with us, Emily! The pool is definitely a favorite among our younger guests.",
-    responseDate: "2025-04-06",
-    flagged: false
-  },
-  {
-    id: 4,
-    guestName: "David Wilson",
-    avatar: "/avatars/david.jpg",
-    date: "2025-03-28",
+    id: "REV-1236",
+    guestName: "Michael Chen",
     rating: 3,
-    comment: "The location was convenient but room service was slow and the bathroom needed some maintenance.",
-    roomType: "Junior Suite",
-    responded: false,
-    response: null,
-    responseDate: null,
-    flagged: true
+    comment: "The room was clean but quite small for the price. Staff was friendly though. Average experience overall.",
+    date: "2025-04-15",
+    roomType: "Standard Room",
+    status: "published",
+    helpful: 5,
+    notHelpful: 3
   },
   {
-    id: 5,
-    guestName: "Lisa Thompson",
-    avatar: "/avatars/lisa.jpg",
-    date: "2025-03-25",
+    id: "REV-1237",
+    guestName: "Emily Garcia",
+    rating: 5,
+    comment: "Absolutely amazing! The presidential suite was incredible with ocean views. Service was impeccable. Worth every penny!",
+    date: "2025-04-12",
+    roomType: "Presidential Suite",
+    status: "published",
+    helpful: 15,
+    notHelpful: 0
+  },
+  {
+    id: "REV-1238",
+    guestName: "David Wilson",
+    rating: 2,
+    comment: "Disappointed with the service. Room wasn't ready on time and the staff was unhelpful. Won't be returning.",
+    date: "2025-04-10",
+    roomType: "Deluxe Suite",
+    status: "pending",
+    helpful: 2,
+    notHelpful: 8
+  },
+  {
+    id: "REV-1239",
+    guestName: "Jessica Brown",
     rating: 4,
-    comment: "Lovely hotel with friendly staff. The breakfast buffet was excellent!",
-    roomType: "Deluxe Room",
-    responded: false,
-    response: null,
-    responseDate: null,
-    flagged: false
+    comment: "Nice hotel with good amenities. The pool area was great. Room was clean and comfortable.",
+    date: "2025-04-08",
+    roomType: "Junior Suite",
+    status: "published",
+    helpful: 6,
+    notHelpful: 2
+  },
+  {
+    id: "REV-1240",
+    guestName: "Robert Martinez",
+    rating: 5,
+    comment: "Perfect family vacation! The family suite was spacious and the kids loved the pool. Staff went above and beyond.",
+    date: "2025-04-05",
+    roomType: "Family Suite",
+    status: "published",
+    helpful: 18,
+    notHelpful: 1
+  },
+  {
+    id: "REV-1241",
+    guestName: "Laura Taylor",
+    rating: 1,
+    comment: "Terrible experience. Room was dirty, AC didn't work, and staff was rude. Avoid this hotel at all costs.",
+    date: "2025-04-03",
+    roomType: "Standard Room",
+    status: "flagged",
+    helpful: 1,
+    notHelpful: 12
   }
 ];
 
-const ReviewsTable = ({ filterBy }) => {
+const ReviewsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [reviews, setReviews] = useState(reviewsData);
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  // Filter reviews based on search term and filter type
+  // Filter reviews based on search term and status filter
   const filteredReviews = reviews.filter(review => {
     const matchesSearch = 
       review.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       review.comment.toLowerCase().includes(searchTerm.toLowerCase()) ||
       review.roomType.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (filterBy === "pending") {
-      return matchesSearch && !review.responded;
-    } else if (filterBy === "responded") {
-      return matchesSearch && review.responded;
-    } else if (filterBy === "flagged") {
-      return matchesSearch && review.flagged;
-    }
+    const matchesFilter = 
+      statusFilter === "all" ||
+      statusFilter === review.status;
     
-    return matchesSearch;
+    return matchesSearch && matchesFilter;
   });
 
-  // Function to render stars based on rating
+  // Function to render star rating
   const renderStars = (rating) => {
-    return Array(5)
-      .fill(0)
-      .map((_, i) => (
-        <Star
-          key={i}
-          className={`h-4 w-4 ${
-            i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-          }`}
-        />
-      ));
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`h-4 w-4 ${
+          i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+        }`}
+      />
+    ));
+  };
+
+  // Function to get status badge style
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'published':
+        return <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">Published</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-100">Pending</Badge>;
+      case 'flagged':
+        return <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-100">Flagged</Badge>;
+      case 'hidden':
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-100">Hidden</Badge>;
+      default:
+        return <Badge>{status}</Badge>;
+    }
   };
 
   return (
     <div>
-      <div className="flex items-center py-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between py-4 gap-3">
         <Input
           placeholder="Search reviews..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="max-w-sm"
         />
+        <div className="flex space-x-2">
+          <Button 
+            variant={statusFilter === "all" ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setStatusFilter("all")}
+          >
+            All
+          </Button>
+          <Button 
+            variant={statusFilter === "published" ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setStatusFilter("published")}
+          >
+            Published
+          </Button>
+          <Button 
+            variant={statusFilter === "pending" ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setStatusFilter("pending")}
+          >
+            Pending
+          </Button>
+          <Button 
+            variant={statusFilter === "flagged" ? "default" : "outline"} 
+            size="sm"
+            onClick={() => setStatusFilter("flagged")}
+          >
+            Flagged
+          </Button>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -154,46 +218,45 @@ const ReviewsTable = ({ filterBy }) => {
             <TableRow>
               <TableHead>Guest</TableHead>
               <TableHead>Rating</TableHead>
-              <TableHead>Review</TableHead>
-              <TableHead>Room Type</TableHead>
+              <TableHead>Comment</TableHead>
+              <TableHead>Room</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Helpful</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredReviews.map((review) => (
-              <TableRow key={review.id} className={review.flagged ? "bg-red-50" : ""}>
+              <TableRow key={review.id}>
+                <TableCell className="font-medium">{review.guestName}</TableCell>
                 <TableCell>
-                  <div className="flex items-center space-x-3">
-                    <Avatar>
-                      <AvatarImage src={review.avatar} alt={review.guestName} />
-                      <AvatarFallback>{review.guestName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{review.guestName}</span>
+                  <div className="flex items-center">
+                    {renderStars(review.rating)}
+                    <span className="ml-2 text-sm text-muted-foreground">
+                      ({review.rating}/5)
+                    </span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex">{renderStars(review.rating)}</div>
-                </TableCell>
-                <TableCell>
                   <div className="max-w-xs">
-                    <p className="text-sm truncate">{review.comment}</p>
-                    {review.responded && (
-                      <div className="mt-1 text-xs italic text-gray-500">
-                        Response: {review.response.length > 30 ? `${review.response.substring(0, 30)}...` : review.response}
-                      </div>
-                    )}
+                    <p className="text-sm line-clamp-2">{review.comment}</p>
                   </div>
                 </TableCell>
                 <TableCell>{review.roomType}</TableCell>
                 <TableCell>{formatDate(review.date)}</TableCell>
+                <TableCell>{getStatusBadge(review.status)}</TableCell>
                 <TableCell>
-                  {review.responded ? (
-                    <Badge className="bg-green-100 text-green-800">Responded</Badge>
-                  ) : (
-                    <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>
-                  )}
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center text-green-600">
+                      <ThumbsUp className="h-3 w-3 mr-1" />
+                      <span className="text-xs">{review.helpful}</span>
+                    </div>
+                    <div className="flex items-center text-red-600">
+                      <ThumbsDown className="h-3 w-3 mr-1" />
+                      <span className="text-xs">{review.notHelpful}</span>
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -205,29 +268,32 @@ const ReviewsTable = ({ filterBy }) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      
                       <DropdownMenuItem className="cursor-pointer">
-                        <Reply className="mr-2 h-4 w-4" /> {review.responded ? "Edit Response" : "Respond"}
+                        <Eye className="mr-2 h-4 w-4" /> View Full Review
                       </DropdownMenuItem>
-                      
-                      {!review.flagged ? (
+                      <DropdownMenuItem className="cursor-pointer">
+                        <Edit className="mr-2 h-4 w-4" /> Edit Review
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {review.status === 'pending' && (
                         <DropdownMenuItem className="cursor-pointer">
-                          <Flag className="mr-2 h-4 w-4" /> Flag for Follow-Up
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem className="cursor-pointer">
-                          <Flag className="mr-2 h-4 w-4" /> Remove Flag
+                          <ThumbsUp className="mr-2 h-4 w-4" /> Approve
                         </DropdownMenuItem>
                       )}
-                      
-                      <DropdownMenuSeparator />
-                      
+                      {review.status === 'published' && (
+                        <DropdownMenuItem className="cursor-pointer">
+                          <ThumbsDown className="mr-2 h-4 w-4" /> Hide
+                        </DropdownMenuItem>
+                      )}
+                      {review.status === 'flagged' && (
+                        <DropdownMenuItem className="cursor-pointer">
+                          <ThumbsUp className="mr-2 h-4 w-4" /> Approve
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem className="cursor-pointer">
-                        <ThumbsUp className="mr-2 h-4 w-4" /> Mark as Helpful
+                        <MessageSquare className="mr-2 h-4 w-4" /> Reply
                       </DropdownMenuItem>
-                      
                       <DropdownMenuSeparator />
-                      
                       <DropdownMenuItem className="text-red-600 cursor-pointer">
                         <Trash className="mr-2 h-4 w-4" /> Delete
                       </DropdownMenuItem>

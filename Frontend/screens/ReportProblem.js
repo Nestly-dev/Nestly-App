@@ -23,7 +23,9 @@ import {
   const ReportProblemScreen = () => {
     const navigation = useNavigation();
     const [problemType, setProblemType] = useState("");
-    const [problemDescription, setProblemDescription] = useState("");
+    const [hotelName, setHotelName] = useState("");
+    const [subject, setSubject] = useState("");
+    const [message, setMessage] = useState("");
     const [deviceInfo, setDeviceInfo] = useState(true);
     const [screenshots, setScreenshots] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,8 +48,8 @@ import {
       },
       {
         id: 4,
-        title: "Content Error",
-        icon: <MaterialIcons name="report-problem" size={24} color="#1995AD" />,
+        title: "Hotel Services",
+        icon: <MaterialIcons name="hotel" size={24} color="#1995AD" />,
       },
       {
         id: 5,
@@ -97,35 +99,70 @@ import {
       setScreenshots(newScreenshots);
     };
   
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
       if (!problemType) {
         Alert.alert("Error", "Please select a problem type");
         return;
       }
       
-      if (!problemDescription.trim()) {
+      if (!hotelName.trim()) {
+        Alert.alert("Error", "Please enter the hotel name");
+        return;
+      }
+      
+      if (!subject.trim()) {
+        Alert.alert("Error", "Please enter a subject for your report");
+        return;
+      }
+      
+      if (!message.trim()) {
         Alert.alert("Error", "Please describe the problem");
         return;
       }
       
       setIsSubmitting(true);
       
-      // Simulate API call
-      setTimeout(() => {
-        setIsSubmitting(false);
-        Alert.alert(
-          "Report Submitted",
-          "Thank you for your report. Our team will investigate the issue.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                navigation.goBack();
+      // Prepare data for API
+      const problemReportData = {
+        hotelName: hotelName.trim(),
+        subject: subject.trim(),
+        message: message.trim(),
+        problemType: problemType,
+        deviceInfo: deviceInfo ? getDeviceInformation() : null,
+        screenshots: screenshots.length > 0 ? screenshots : null
+      };
+      
+      try {
+        // Replace with your actual API endpoint
+        // const response = await fetch('YOUR_API_ENDPOINT', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify(problemReportData),
+        // });
+        
+        // Simulate API call for now
+        setTimeout(() => {
+          setIsSubmitting(false);
+          Alert.alert(
+            "Report Submitted",
+            "Thank you for your report. Our team will investigate the issue.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation.goBack();
+                }
               }
-            }
-          ]
-        );
-      }, 1500);
+            ]
+          );
+        }, 1500);
+        
+      } catch (error) {
+        setIsSubmitting(false);
+        Alert.alert("Error", "Failed to submit report. Please try again.");
+      }
     };
     
     const getDeviceInformation = () => {
@@ -152,7 +189,7 @@ import {
           <View style={styles.introSection}>
             <MaterialCommunityIcons name="bug-outline" size={40} color="#1995AD" />
             <Text style={styles.introTitle}>
-              Help us improve the app
+              Help us improve your experience
             </Text>
             <Text style={styles.introText}>
               Please provide detailed information about the issue you're experiencing. 
@@ -162,7 +199,7 @@ import {
   
           {/* Problem Type Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What type of problem are you experiencing?</Text>
+            <Text style={styles.sectionTitle}>What type of problem are you experiencing? *</Text>
             
             <View style={styles.problemTypesContainer}>
               {problemTypes.map((item) => (
@@ -189,16 +226,34 @@ import {
               ))}
             </View>
           </View>
-  
-          {/* Description Section */}
+
+          {/* Report Details Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Describe the problem</Text>
+            <Text style={styles.sectionTitle}>Report Details</Text>
+            
+            <Text style={styles.label}>Hotel Name *</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter hotel name"
+              value={hotelName}
+              onChangeText={setHotelName}
+            />
+            
+            <Text style={styles.label}>Subject *</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Brief description of the problem"
+              value={subject}
+              onChangeText={setSubject}
+            />
+            
+            <Text style={styles.label}>Problem Description *</Text>
             <TextInput
               style={styles.descriptionInput}
               multiline
               placeholder="Please describe what happened, what you were doing at the time, and any other details that might help us understand the issue..."
-              value={problemDescription}
-              onChangeText={setProblemDescription}
+              value={message}
+              onChangeText={setMessage}
               textAlignVertical="top"
             />
           </View>
@@ -276,14 +331,17 @@ import {
           {/* Submit Button */}
           <View style={styles.submitContainer}>
             <TouchableOpacity
-              style={styles.submitButton}
+              style={[
+                styles.submitButton,
+                isSubmitting && styles.disabledButton
+              ]}
               onPress={handleSubmit}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <ActivityIndicator color="white" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>Submit Report</Text>
+                <Text style={styles.submitButtonText}>Submit Problem Report</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -356,6 +414,22 @@ import {
       color: "#666",
       marginBottom: 16,
     },
+    label: {
+      fontSize: 16,
+      color: "#333",
+      marginBottom: 8,
+      marginTop: 8,
+      fontWeight: "500",
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 8,
+      padding: 12,
+      backgroundColor: "#f9f9f9",
+      fontSize: 16,
+      marginBottom: 8,
+    },
     problemTypesContainer: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -395,6 +469,7 @@ import {
       minHeight: 120,
       backgroundColor: "#f9f9f9",
       fontSize: 16,
+      marginBottom: 8,
     },
     screenshotsContainer: {
       flexDirection: "row",
@@ -472,6 +547,9 @@ import {
       borderRadius: 8,
       padding: 16,
       alignItems: "center",
+    },
+    disabledButton: {
+      opacity: 0.7,
     },
     submitButtonText: {
       color: "white",

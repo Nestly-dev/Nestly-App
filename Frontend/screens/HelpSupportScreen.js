@@ -10,19 +10,25 @@ import {
     Alert,
     ActivityIndicator
   } from "react-native";
-  import React, { useState } from "react";
+  import React, { useState, useContext } from "react";
   import { useNavigation } from "@react-navigation/native";
   import Ionicons from "@expo/vector-icons/Ionicons";
   import MaterialIcons from "@expo/vector-icons/MaterialIcons";
   import FontAwesome from "@expo/vector-icons/FontAwesome";
   import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
   import Feather from "@expo/vector-icons/Feather";
+  import axios from "axios";
+  import AuthContext from "../context/AuthContext";
   
   const HelpSupportScreen = () => {
     const navigation = useNavigation();
     const [issueType, setIssueType] = useState("");
+    const [hotelName, setHotelName] = useState("");
+    const [subject, setSubject] = useState("");
     const [message, setMessage] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const {ip} = useContext(AuthContext)
+    
     
     const commonIssues = [
       {
@@ -49,11 +55,27 @@ import {
         icon: <MaterialIcons name="phone-android" size={24} color="#1995AD" />,
         description: "Issues with the app's features or performance"
       },
+      {
+        id: 5,
+        title: "Room & Service Issues",
+        icon: <MaterialIcons name="hotel" size={24} color="#1995AD" />,
+        description: "Problems with room quality, cleanliness, or hotel services"
+      },
     ];
-  
-    const handleSubmit = () => {
+
+    const handleSubmit = async () => {
       if (!issueType) {
         Alert.alert("Error", "Please select an issue type");
+        return;
+      }
+      
+      if (!hotelName.trim()) {
+        Alert.alert("Error", "Please enter the hotel name");
+        return;
+      }
+      
+      if (!subject.trim()) {
+        Alert.alert("Error", "Please enter a subject for your issue");
         return;
       }
       
@@ -64,23 +86,62 @@ import {
       
       setIsSubmitting(true);
       
-      // Simulate API call
-      setTimeout(() => {
-        setIsSubmitting(false);
-        Alert.alert(
-          "Ticket Submitted",
-          "We've received your support request and will get back to you soon.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                setMessage("");
-                setIssueType("");
+      const supportTicketData = {
+        hotelName: hotelName.trim(),
+        subject: subject.trim(),
+        message: message.trim(),
+      };
+      
+      try {
+        const url = `http://${ip}:8000/api/v1/complaints/send`;
+        
+        const response = await axios.post(url, supportTicketData, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        });
+
+        if (response.status === 200 || response.status === 201) {
+          setIsSubmitting(false);
+          Alert.alert(
+            "Ticket Submitted",
+            "We've received your support request and will get back to you soon.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  setHotelName("");
+                  setSubject("");
+                  setMessage("");
+                  setIssueType("");
+                }
               }
-            }
-          ]
-        );
-      }, 1500);
+            ]
+          );
+        } else {
+          throw new Error(`Server responded with status: ${response.status}`);
+        }
+        
+      } catch (error) {
+        setIsSubmitting(false);
+        console.error("API Error:", error);
+        
+        // More specific error messages
+        let errorMessage = "Failed to submit ticket. Please try again.";
+        
+        if (error.code === 'ECONNABORTED') {
+          errorMessage = "Request timed out. Please check your internet connection.";
+        } else if (error.response) {
+          // Server responded with an error status
+          errorMessage = `Server error: ${error.response.status}. ${error.response.data?.message || 'Please try again.'}`;
+        } else if (error.request) {
+          // Request was made but no response received
+          errorMessage = "No response from server. Please check your internet connection.";
+        }
+        
+        Alert.alert("Error", errorMessage);
+      }
     };
   
     return (
@@ -102,13 +163,13 @@ import {
             />
             <Text style={styles.heroTitle}>How can we help you?</Text>
             <Text style={styles.heroSubtitle}>
-              Choose a category below or search for your issue
+              Choose a category below and provide details about your issue
             </Text>
           </View>
   
           {/* Common Issues Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Common Issues</Text>
+            <Text style={styles.sectionTitle}>Issue Category</Text>
             
             {commonIssues.map((item) => (
               <TouchableOpacity
@@ -135,28 +196,47 @@ import {
   
           {/* Contact Support Form */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Contact Support</Text>
+            <Text style={styles.sectionTitle}>Support Request Details</Text>
             
             <View style={styles.formContainer}>
-              <Text style={styles.label}>Describe your issue</Text>
+              <Text style={styles.label}>Hotel Name *</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter hotel name"
+                value={hotelName}
+                onChangeText={setHotelName}
+              />
+              
+              <Text style={styles.label}>Subject *</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Brief description of your issue"
+                value={subject}
+                onChangeText={setSubject}
+              />
+              
+              <Text style={styles.label}>Message *</Text>
               <TextInput
                 style={styles.messageInput}
                 multiline
-                placeholder="Please provide details about your issue..."
+                placeholder="Please provide detailed information about your issue..."
                 value={message}
                 onChangeText={setMessage}
                 textAlignVertical="top"
               />
               
               <TouchableOpacity
-                style={styles.submitButton}
+                style={[
+                  styles.submitButton,
+                  isSubmitting && styles.disabledButton
+                ]}
                 onPress={handleSubmit}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <ActivityIndicator color="white" size="small" />
                 ) : (
-                  <Text style={styles.submitButtonText}>Submit Ticket</Text>
+                  <Text style={styles.submitButtonText}>Submit Support Request</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -205,12 +285,12 @@ import {
             
             <View style={styles.contactRow}>
               <Feather name="mail" size={22} color="#1995AD" />
-              <Text style={styles.contactText}>support@viatravels.com</Text>
+              <Text style={styles.contactText}>atnestly@gmail.com</Text>
             </View>
             
             <View style={styles.contactRow}>
               <Feather name="phone" size={22} color="#1995AD" />
-              <Text style={styles.contactText}>+1 (800) 123-4567</Text>
+              <Text style={styles.contactText}>+250 783 520 488</Text>
             </View>
             
             <View style={styles.contactRow}>
@@ -330,6 +410,16 @@ import {
       fontSize: 16,
       color: "#333",
       marginBottom: 8,
+      fontWeight: "500",
+    },
+    textInput: {
+      borderWidth: 1,
+      borderColor: "#ddd",
+      borderRadius: 8,
+      padding: 12,
+      backgroundColor: "#f9f9f9",
+      fontSize: 16,
+      marginBottom: 16,
     },
     messageInput: {
       borderWidth: 1,
@@ -339,13 +429,17 @@ import {
       minHeight: 120,
       backgroundColor: "#f9f9f9",
       fontSize: 16,
+      marginBottom: 16,
     },
     submitButton: {
       backgroundColor: "#1995AD",
       borderRadius: 8,
       padding: 14,
       alignItems: "center",
-      marginTop: 16,
+      marginTop: 8,
+    },
+    disabledButton: {
+      opacity: 0.7,
     },
     submitButtonText: {
       color: "white",
