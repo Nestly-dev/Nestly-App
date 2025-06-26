@@ -1,0 +1,393 @@
+@import "tailwindcss";
+
+:root {
+  /* Hotel Management Color Palette */
+  --background: #fafbfc;
+  --foreground: #1a202c;
+  --primary: #3182ce;
+  --primary-hover: #2c5aa0;
+  --secondary: #2d3748;
+  --accent: #e53e3e;
+  --success: #38a169;
+  --warning: #d69e2e;
+  --info: #3182ce;
+  
+  /* Surface Colors */
+  --surface: #ffffff;
+  --surface-hover: #f7fafc;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e0;
+  
+  /* Text Colors */
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #718096;
+  --text-disabled: #a0aec0;
+  
+  /* Hotel Specific Colors */
+  --hotel-gold: #d4af37;
+  --hotel-navy: #1e3a8a;
+  --hotel-cream: #fef5e7;
+  --hotel-blue: #3b82f6;
+  
+  /* Status Colors */
+  --status-active: #10b981;
+  --status-inactive: #6b7280;
+  --status-pending: #f59e0b;
+  --status-cancelled: #ef4444;
+  
+  /* Spacing & Layout */
+  --header-height: 64px;
+  --sidebar-width: 256px;
+  --border-radius: 8px;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    --primary: #60a5fa;
+    --primary-hover: #3b82f6;
+    --secondary: #334155;
+    --accent: #f87171;
+    --success: #4ade80;
+    --warning: #fbbf24;
+    --info: #60a5fa;
+    
+    --surface: #1e293b;
+    --surface-hover: #334155;
+    --border: #475569;
+    --border-hover: #64748b;
+    
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-disabled: #64748b;
+    
+    --hotel-gold: #fbbf24;
+    --hotel-navy: #60a5fa;
+    --hotel-cream: #292524;
+    --hotel-blue: #60a5fa;
+    
+    --status-active: #22c55e;
+    --status-inactive: #9ca3af;
+    --status-pending: #f59e0b;
+    --status-cancelled: #ef4444;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  font-size: 14px;
+  overflow-x: hidden;
+}
+
+/* Hotel Management Specific Styles */
+.hotel-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--background) 0%, var(--hotel-cream) 100%);
+}
+
+.hotel-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--header-height);
+}
+
+.hotel-sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  width: var(--sidebar-width);
+  box-shadow: var(--shadow-md);
+}
+
+.hotel-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease-in-out;
+}
+
+.hotel-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+}
+
+.hotel-form-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  transition: all 0.2s ease-in-out;
+}
+
+.hotel-form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.hotel-form-input:hover {
+  border-color: var(--border-hover);
+}
+
+/* Status Badges */
+.status-active {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--status-active);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.status-inactive {
+  background: rgba(107, 114, 128, 0.1);
+  color: var(--status-inactive);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+.status-pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--status-pending);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.status-cancelled {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--status-cancelled);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Hotel Specific Components */
+.room-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  position: relative;
+  overflow: hidden;
+}
+
+.room-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--hotel-gold);
+}
+
+.price-display {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--hotel-navy);
+}
+
+.hotel-rating {
+  color: var(--hotel-gold);
+  font-weight: 600;
+}
+
+/* Navigation Styles */
+.nav-link {
+  color: var(--text-secondary);
+  transition: all 0.2s ease-in-out;
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1rem;
+  margin: 0.25rem 0;
+}
+
+.nav-link:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.nav-link.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Button Styles */
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+}
+
+/* Table Styles */
+.hotel-table {
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.hotel-table th {
+  background: var(--hotel-cream);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.hotel-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.hotel-table tr:hover {
+  background: var(--surface-hover);
+}
+
+/* Loading States */
+.loading-spinner {
+  border: 2px solid var(--border);
+  border-top: 2px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Alert Styles */
+.alert-success {
+  background: rgba(56, 161, 105, 0.1);
+  border: 1px solid rgba(56, 161, 105, 0.2);
+  color: var(--success);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--accent);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+
+.alert-warning {
+  background: rgba(214, 158, 46, 0.1);
+  border: 1px solid rgba(214, 158, 46, 0.2);
+  color: var(--warning);
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+
+/* Media Upload Styles */
+.upload-area {
+  border: 2px dashed var(--border);
+  border-radius: var(--border-radius);
+  background: var(--surface);
+  transition: all 0.2s ease-in-out;
+}
+
+.upload-area:hover {
+  border-color: var(--primary);
+  background: rgba(59, 130, 246, 0.02);
+}
+
+.upload-area.dragover {
+  border-color: var(--primary);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hotel-sidebar {
+    width: 100%;
+    position: fixed;
+    left: -100%;
+    transition: left 0.3s ease-in-out;
+    z-index: 40;
+  }
+  
+  .hotel-sidebar.open {
+    left: 0;
+  }
+  
+  .hotel-card {
+    margin: 0.5rem;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .hotel-sidebar,
+  .hotel-header {
+    display: none;
+  }
+  
+  .hotel-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
