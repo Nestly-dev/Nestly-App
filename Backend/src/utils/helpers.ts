@@ -13,7 +13,12 @@ type EnvironmentVariables = {
   AWS_REGION: string;
   EMAIL_USER: string
   EMAIL_PASSWORD: string,
-  COMPLAINTS_EMAIL: string
+  COMPLAINTS_EMAIL: string,
+  FLW_PUBLIC_KEY: string,
+  FLW_SECRET_KEY: string,
+  FLW_ENCRYPTION_KEY: string,
+  FLUTTERWAVE_API_URL: string,
+  FLUTTERWAVE_PAYMENT_VERIFICATION_URL: string
 }
 
 export enum HttpStatusCodes {
@@ -33,6 +38,8 @@ export enum HttpStatusCodes {
   INTERNAL_SERVER_ERROR = 500,
   // Bad Gateway
   BAD_GATEWAY = 502,
+  // Accepted
+  ACCEPTED = 202
 }
 
 export const SECRETS: EnvironmentVariables = {
@@ -47,7 +54,12 @@ export const SECRETS: EnvironmentVariables = {
   AWS_REGION: process.env.AWS_REGION as string,
   EMAIL_USER: process.env.EMAIL_USER as string,
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD as string,
-  COMPLAINTS_EMAIL: process.env.COMPLAINTS_EMAIL as string
+  COMPLAINTS_EMAIL: process.env.COMPLAINTS_EMAIL as string,
+  FLW_SECRET_KEY: process.env.FLW_SECRET_KEY as string,
+  FLW_PUBLIC_KEY: process.env.FLW_PUBLIC_KEY as string,
+  FLW_ENCRYPTION_KEY: process.env.FLW_ENCRYPTION_KEY as string,
+  FLUTTERWAVE_API_URL: process.env.FLUTTERWAVE_API_URL as string,
+  FLUTTERWAVE_PAYMENT_VERIFICATION_URL: process.env.FLUTTERWAVE_PAYMENT_VERIFICATION_URL as string
 }
 
 
