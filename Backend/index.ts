@@ -20,6 +20,7 @@ import { HotelMediaRoute } from "./src/routes/Hotel.media";
 import { VideoRoute } from "./src/routes/Content.videos";
 import { HotelPostRoute } from "./src/routes/Hotel.posts";
 import { complaintsRoutes } from "./src/routes/Client.complaints";
+import { BookingCleanup } from "./src/middleware/booking.cleanup";
 dotenv.config();
 
 // Middleware
@@ -29,6 +30,11 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(BookingCleanup({
+  skipRoutes: ['/health', '/status', '/metrics', '/favicon.ico', '/robots.txt'],
+  logActivity: process.env.NODE_ENV === 'development'
+}));
+
 
 // Routes
 app.get('/api/v1/test', (req: Request, res: Response) => {
@@ -47,8 +53,7 @@ app.use('/api/v1/hotels/posts', HotelPostRoute);
 app.use('/api/v1/content/videos', VideoRoute);
 app.use('/api/v1/complaints', authMiddleware, complaintsRoutes);
 
-
-
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
 });
+
