@@ -14,6 +14,7 @@ declare global {
         username: string;
         preferred_language: string;
         preferred_currency: string;
+        phone_number: string;
       };
     }
   }
@@ -47,7 +48,8 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
         email_verified: user.email_verified,
         username: user.username,
         preferred_currency: user.preferred_currency,
-        preferred_language: user.preferred_language
+        preferred_language: user.preferred_language,
+        phone_number: user.phone_number
       };
 
       next();
