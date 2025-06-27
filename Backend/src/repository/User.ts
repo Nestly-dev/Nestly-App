@@ -111,7 +111,8 @@ import * as EmailValidator from 'email-validator';
          password: userTable.password,
          email_verified: userTable.email_verified,
          preferred_language: userProfiles.preferred_language,
-         preferred_currency: userProfiles.preferred_currency
+         preferred_currency: userProfiles.preferred_currency,
+         phone_number: userProfiles.phone_number
        })
        .from(userTable)
        .leftJoin(userProfiles, eq(userTable.id, userProfiles.user_id))
