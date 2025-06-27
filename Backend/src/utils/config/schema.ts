@@ -78,6 +78,15 @@ export const hotels = pgTable('hotels', {
   latitude: decimal('latitude', { precision: 10, scale: 7 }),
   longitude: decimal('longitude', { precision: 10, scale: 7 }),
   map_url: text('map_url'),
+  // Banking data
+  account_bank: varchar('account_bank'),
+  account_number: varchar('account_number'),
+  bank_name: varchar('bank_name'),
+  subaccount_id: varchar('subaccount_id'),
+  business_mobile: varchar('business_mobile'),
+  business_email: varchar('business_email'),
+  business_contact: varchar('business_contact'),
+  business_contact_mobile: varchar('business_contact_mobile'),
   //hotel services
   total_rooms: integer('total_rooms').notNull(),
   cancellation_policy: text('cancellation_policy'),
@@ -171,6 +180,7 @@ export const bookings = pgTable('bookings', {
   num_rooms: integer('num_rooms').notNull(),
   total_price: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('USD').notNull(),
+  tx_ref: varchar('tx_ref'),
   payment_status: paymentStatus('payment_status').default("pending").notNull(),
   cancelled: boolean('cancelled_booking').default(false),
   cancellation_timestamp: timestamp('cancellation_timestamp'),
