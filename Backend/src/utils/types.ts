@@ -44,7 +44,13 @@ export interface NoDataResponse {
 export interface DataResponse {
   message: string,
   status: number,
-  data: any
+  data?: any
+}
+
+export interface IFlutterPaymentDataResponse {
+  message: string,
+  status: string,
+  data?: any
 }
 
 export interface profileDataTypes {
@@ -177,3 +183,13 @@ export interface complaintsDataType {
   message: string
 }
 
+export interface IsubAccountInfo {
+  account_number: string,
+  account_bank: string,
+  full_name: string,
+  created_at?: string,
+  split_type?: string,
+  split_value?: number,
+  subaccount_id: string,
+  bank_name?: string
+}
