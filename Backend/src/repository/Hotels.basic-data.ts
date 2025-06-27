@@ -1,9 +1,13 @@
 import { Request } from 'express';
-import { HttpStatusCodes } from '../utils/helpers';
+import { HttpStatusCodes, SECRETS } from '../utils/helpers';
 import { database } from '../utils/config/database';
 import { eq } from 'drizzle-orm';
-import { DataResponse } from '../utils/types';
+import { DataResponse, IsubAccountInfo } from '../utils/types';
 import { hotelMedia, hotels, room, roomPricing } from '../utils/config/schema';
+const Flutterwave = require('flutterwave-node-v3');
+
+const flw = new Flutterwave(SECRETS.FLW_PUBLIC_KEY, SECRETS.FLW_SECRET_KEY);
+
 
 // Define types based on your schema
 type PaymentOption = 'Visa' | 'MasterCard' | 'Momo';
@@ -43,16 +47,59 @@ class Hotels {
         status: req.body.status as HotelStatus,
       };
 
-      const [createdHotel] = await database
-        .insert(hotels)
-        .values(hotelData)
-        .returning();
+
+      const hotelDataSubAccountPayload = {
+        account_bank: req.body.account_bank,
+        account_number: req.body.account_number,
+        business_name: hotelData.name,
+        country: "RW",
+        business_mobile: req.body.business_mobile,
+        business_email: req.body.business_email,
+        business_contact: req.body.business_contact,
+        business_contact_mobile: req.body.business_contact_mobile,
+        split_type: 'percentage',
+        split_value: 0.05,
+      }
+
+      // First Create a payment subAccount
+      const response = await flw.Subaccount.create(hotelDataSubAccountPayload);
+      console.log(response);
+
+      const { status, message } = response;
+      if (status === "success") {
+        const subAccountInfo: IsubAccountInfo = response.data;
+        const hotelPayload = {
+          ...hotelData,
+          account_bank: subAccountInfo.account_bank,
+          account_number: subAccountInfo.account_number,
+          bank_name: subAccountInfo.bank_name,
+          business_name: hotelData.name,
+          subaccount_id: subAccountInfo.subaccount_id,
+          country: "RW",
+          business_mobile: req.body.business_mobile,
+          business_email: req.body.business_email,
+          business_contact: req.body.business_contact,
+          business_contact_mobile: req.body.business_contact_mobile,
+          split_type: 'percentage',
+          split_value: 0.05,
+        }
+        const [createdHotel] = await database
+          .insert(hotels)
+          .values(hotelPayload)
+          .returning();
+
+        return {
+          data: createdHotel,
+          message: 'Hotel created successfully',
+          status: HttpStatusCodes.CREATED,
+        };
+      }
 
       return {
-        data: createdHotel,
-        message: 'Hotel created successfully',
+        message: `Something went wrong while registering Banking data`,
         status: HttpStatusCodes.CREATED,
       };
+
     } catch (error) {
       return {
         data: null,
@@ -189,6 +236,39 @@ class Hotels {
         message: 'Hotel Profile fetched successfully',
         status: HttpStatusCodes.OK,
       };
+    } catch (error) {
+      console.error('Hotel Profile Fetch Error:', error);
+      return {
+        data: null,
+        message: `Error retrieving hotel profile, ${error}`,
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  async getHotelById(hotelId: string): Promise<DataResponse> {
+    try {
+      // Fetch Hotel Base Information
+      const [hotelBase] = await database
+        .select()
+        .from(hotels)
+        .where(eq(hotels.id, hotelId))
+        .execute();
+
+      if (!hotelBase) {
+        return {
+          data: null,
+          message: 'Hotel not found',
+          status: HttpStatusCodes.NOT_FOUND,
+        };
+      }
+
+      return {
+        status: HttpStatusCodes.OK,
+        message: "Hotel Profile Data fetched successfully",
+        data: hotelBase
+      }
+
     } catch (error) {
       console.error('Hotel Profile Fetch Error:', error);
       return {
