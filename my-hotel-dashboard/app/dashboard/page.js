@@ -103,10 +103,69 @@ const HotelDashboard = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const registrationUrl = 'http://localhost:3000/api/v1/hotels/register';
+    const roomRegistrationUrl = 'http://localhost:3000/api/v1/hotels/rooms/register/:hotelId';
+    const roomPricingUrl = 'http://localhost:3000/api/v1//hotels/availability/roomPricing/:roomTypeId';
+    const mediaUploadUrl = 'http://localhost:3000/api/v1//hotels/Media/upload/:hotelId';
+    const hotelPostUrl = 'http://localhost:3000/api/v1/hotels/posts/upload/:hotelId';
+    const reelUploadUrl = 'http://localhost:3000/api/v1/content/videos/upload/:hotelId';
+
     const hotetFormData = {
-        
+        "name": name,
+        "short_description": shortDescription,
+        "long_description": longDescription,
+        "star_rating": starRating,
+         "property_type": propertyType,
+        "built_year": builtYear,
+        "last_renovation_year": lastRenovationYear,
+        "category": category,
+        "street_address": streetAddress,
+        "city": city,
+        "state": state,
+        "province": province,
+        "country": country,
+        "postal_code": postalCode,
+        "latitude": latitude,
+        "longitude":longitude,
+        "map_url": mapUrl,
+        "total_rooms": totalRooms,
+        "cancellation_policy": cancellationPolicy,
+        "payment_options": paymentOptions,
+        "menu_download_url": menuDownloadUrl,
+        "sponsored": sponsored,
+        "status": status,
+         }
+    const roomFormData = {
+        "type": roomType,
+        "description": roomDescription,
+        "max_occupancy": maxOccupancy,
+        "num_beds": numBeds,
+        "room_size": roomSize,
+        "total_inventory": totalRooms,
+        "available_inventory": availableRooms
     }
-    axios.post()
+    const roomPricingFormData = {
+        "roomFee": basePrice,
+        "serviceFee": 0,
+        "currency": currency,
+        "tax_percentage": taxPercentage,
+        "child_policy": childPolicy
+    }
+    const mediaUploadFormData = {
+        "media_type": mediaType,
+        "media_category": mediaCategory,
+        "media": mediaFile,
+    }
+    const hotelPostFormData = {
+        "caption": postCaption,
+        "postDescription": postDescription,
+        "media": postMedia,
+    }
+    const reelUploadFormData = {
+        "title": reelCaption,
+        "description": reelDescription,
+        "video": reelFile
+    }
+    axios.post(registrationUrl, hotetFormData)
   };
 
   const tabs = [
