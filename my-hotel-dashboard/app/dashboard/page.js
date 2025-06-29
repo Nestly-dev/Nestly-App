@@ -114,7 +114,7 @@ const HotelDashboard = () => {
         "short_description": shortDescription,
         "long_description": longDescription,
         "star_rating": starRating,
-         "property_type": propertyType,
+        "property_type": propertyType,
         "built_year": builtYear,
         "last_renovation_year": lastRenovationYear,
         "category": category,
@@ -133,6 +133,17 @@ const HotelDashboard = () => {
         "menu_download_url": menuDownloadUrl,
         "sponsored": sponsored,
         "status": status,
+
+        "account_number": businessContactMobile,
+        "bank_name": bankName,
+        "business_mobile": phoneNumber,
+        "business_email": email,
+        // "business_website": businessWebsite,
+        // "business_email": businessEmail,
+        "business_contact": businessContact,
+        "business_contact_mobile": businessContactMobile,
+        
+
          }
     const roomFormData = {
         "type": roomType,
@@ -531,7 +542,7 @@ const HotelDashboard = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Business Contact Mobile</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Account Bank</label>
             <input
               type="tel"
               value={formData.businessContactMobile}
