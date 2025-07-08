@@ -294,12 +294,12 @@ const ReviewsScreen = () => {
       <View style={styles.reviewCard}>
         <View style={styles.reviewHeader}>
           <Image 
-            source={{ uri: item?.profile || 'https://via.placeholder.com/50' }} 
+            source={{ uri: item?.profile || 'https://rentals-app-bucket.s3.eu-north-1.amazonaws.com/1751995971866-free-user-icon-3296-thumb.png' }} 
             style={styles.profileImage}
             onError={(error) => console.warn('Profile image failed to load')}
           />
           <View style={styles.reviewerInfo}>
-            <Text style={styles.reviewerName}>{item?.name || 'Anonymous User'}</Text>
+            <Text style={styles.reviewerName}>{item?.username || 'Anonymous User'}</Text>
             <View style={styles.dateRatingContainer}>
               <Text style={styles.reviewDate}>
                 {item?.createdAt ? formatDate(item.createdAt) : 'Unknown date'}
@@ -327,7 +327,7 @@ const ReviewsScreen = () => {
                   style={styles.mediaItemContainer}
                 >
                   <Image 
-                    source={{ uri: mediaUri }} 
+                    source={{ uri: `${mediaUri}` }} 
                     style={styles.reviewAttachmentImage}
                     onError={(error) => console.warn('Review media failed to load:', mediaUri)}
                   />
@@ -444,9 +444,6 @@ const ReviewsScreen = () => {
         <Text style={styles.headerTitle}>
           Reviews {currentID && filteredReviews.length > 0 && `(${filteredReviews.length})`}
         </Text>
-        {currentID && (
-          <Text style={styles.headerSubtitle}>Hotel ID: {currentID}</Text>
-        )}
       </View>
       
       <FlatList

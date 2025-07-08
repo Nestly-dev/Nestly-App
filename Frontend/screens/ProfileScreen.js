@@ -37,6 +37,11 @@ const ProfileScreen = () => {
       setSignedIn(false);
     });
     saveAuthStatus("isLoggedIn", "notLoggedin")
+    return(
+      <Modal visible={true} animationType="slide">
+        <WelcomeScreen />
+      </Modal>
+    )
   };
 
   if (!signedIn) {
