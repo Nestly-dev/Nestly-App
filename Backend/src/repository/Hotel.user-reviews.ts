@@ -23,7 +23,7 @@ class ReviewRepo {
 
       let mediaUrl = null;
       if (req.file) {
-        const mediaUrl = await fileUpload.uploadFileToS3(req.file);
+         mediaUrl = await fileUpload.uploadFileToS3(req.file) as string;
         if (typeof mediaUrl !== 'string') {
           return {
             message: "Failed to upload media",
