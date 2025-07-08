@@ -102,81 +102,90 @@ const HotelDashboard = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const registrationUrl = 'http://localhost:3000/api/v1/hotels/register';
-    const roomRegistrationUrl = 'http://localhost:3000/api/v1/hotels/rooms/register/:hotelId';
-    const roomPricingUrl = 'http://localhost:3000/api/v1//hotels/availability/roomPricing/:roomTypeId';
-    const mediaUploadUrl = 'http://localhost:3000/api/v1//hotels/Media/upload/:hotelId';
-    const hotelPostUrl = 'http://localhost:3000/api/v1/hotels/posts/upload/:hotelId';
-    const reelUploadUrl = 'http://localhost:3000/api/v1/content/videos/upload/:hotelId';
+    const registrationUrl = 'http://localhost:8000/api/v1/hotels/register';
+    const roomRegistrationUrl = 'http://localhost:8000/api/v1/hotels/rooms/register/:hotelId';
+    const roomPricingUrl = 'http://localhost:8000/api/v1//hotels/availability/roomPricing/:roomTypeId';
+    const mediaUploadUrl = 'http://localhost:000/api/v1//hotels/Media/upload/:hotelId';
+    const hotelPostUrl = 'http://localhost:8000/api/v1/hotels/posts/upload/:hotelId';
+    const reelUploadUrl = 'http://localhost:8000/api/v1/content/videos/upload/:hotelId';
 
     const hotetFormData = {
-        "name": name,
-        "short_description": shortDescription,
-        "long_description": longDescription,
-        "star_rating": starRating,
-        "property_type": propertyType,
-        "built_year": builtYear,
-        "last_renovation_year": lastRenovationYear,
-        "category": category,
-        "street_address": streetAddress,
-        "city": city,
-        "state": state,
-        "province": province,
-        "country": country,
-        "postal_code": postalCode,
-        "latitude": latitude,
-        "longitude":longitude,
-        "map_url": mapUrl,
-        "total_rooms": totalRooms,
-        "cancellation_policy": cancellationPolicy,
-        "payment_options": paymentOptions,
-        "menu_download_url": menuDownloadUrl,
-        "sponsored": sponsored,
-        "status": status,
-
-        "account_number": businessContactMobile,
-        "bank_name": bankName,
-        "business_mobile": phoneNumber,
-        "business_email": email,
+        "name": formData.name,
+        "short_description": formData.shortDescription,
+        "long_description": formData.longDescription,
+        "star_rating": formData.starRating,
+        "property_type": formData.propertyType,
+        "built_year": formData.builtYear,
+        "last_renovation_year": formData.lastRenovationYear,
+        "category": formData.category,
+        "street_address": formData.streetAddress,
+        "city": formData.city,
+        "state": formData.state,
+        "province": formData.province,
+        "country": formData.country,
+        "postal_code": formData.postalCode,
+        "latitude": formData.latitude,
+        "longitude":formData.longitude,
+        "map_url": formData.mapUrl,
+        "total_rooms": formData.totalRooms,
+        "cancellation_policy": formData.cancellationPolicy,
+        "payment_options": formData.paymentOptions,
+        "menu_download_url": formData.menuDownloadUrl,
+        "sponsored": formData.sponsored,
+        "status": formData.status,
+        "account_bank": formData.accountBank,
+        "account_number": formData.businessContactMobile,
+        "bank_name": formData.bankName,
+        "business_mobile": formData.phoneNumber,
+        "business_email": formData.email,
         // "business_website": businessWebsite,
         // "business_email": businessEmail,
-        "business_contact": businessContact,
-        "business_contact_mobile": businessContactMobile,
+        "business_contact": formData.businessContact,
+        "business_contact_mobile": formData.businessContactMobile,
         
 
          }
     const roomFormData = {
-        "type": roomType,
-        "description": roomDescription,
-        "max_occupancy": maxOccupancy,
-        "num_beds": numBeds,
-        "room_size": roomSize,
-        "total_inventory": totalRooms,
-        "available_inventory": availableRooms
+        "type": formData.roomType,
+        "description": formData.roomDescription,
+        "max_occupancy": formData.maxOccupancy,
+        "num_beds": formData.numBeds,
+        "room_size": formData.roomSize,
+        "total_inventory": formData.totalRooms,
+        "available_inventory": formData.availableRooms
     }
     const roomPricingFormData = {
-        "roomFee": basePrice,
+        "roomFee": formData.basePrice,
         "serviceFee": 0,
-        "currency": currency,
-        "tax_percentage": taxPercentage,
-        "child_policy": childPolicy
+        "currency": formData.currency,
+        "tax_percentage": formData.taxPercentage,
+        "child_policy": formData.childPolicy
     }
     const mediaUploadFormData = {
-        "media_type": mediaType,
-        "media_category": mediaCategory,
-        "media": mediaFile,
+        "media_type": formData.mediaType,
+        "media_category": formData.mediaCategory,
+        "media": formData.mediaFile,
     }
     const hotelPostFormData = {
-        "caption": postCaption,
-        "postDescription": postDescription,
-        "media": postMedia,
+        "caption": formData.postCaption,
+        "postDescription": formData.postDescription,
+        "media": formData.postMedia,
     }
     const reelUploadFormData = {
-        "title": reelCaption,
-        "description": reelDescription,
-        "video": reelFile
+        "title": formData.reelCaption,
+        "description": formData.reelDescription,
+        "video": formData.reelFile
     }
-    axios.post(registrationUrl, hotetFormData)
+   try {
+     axios.post(registrationUrl, hotetFormData)
+    .then((response)=>{
+        const result = response.data;
+        console.log(result);
+    })
+   }
+   catch (error) {
+        console.error("Error during hotel registration:", error);
+   }
   };
 
   const tabs = [

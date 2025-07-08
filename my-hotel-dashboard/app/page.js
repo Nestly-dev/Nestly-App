@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import axios from 'axios';
 
 // Simple icon components matching your dashboard style
 const Eye = () => <span>👁️</span>;
@@ -94,21 +95,28 @@ const HotelLoginPage = () => {
     }
 
     setIsLoading(true);
-
-    // Simulate API call
+    const url = `http://localhost:8000/api/v1/auth/login`
+    const userData = {
+      "email": formData.email,
+      "password": formData.password,}
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       console.log('Form submitted:', { ...formData, password: '[HIDDEN]' });
       
-      // Here you would typically:
-      // 1. Send data to your authentication API
-      // 2. Handle the response
-      // 3. Redirect to dashboard on success
-      // 4. Show error message on failure
-      
-      alert(isLogin ? 'Login successful! Redirecting to dashboard...' : 'Account created successfully!');
-      
+    axios.post(url, userData)
+    .then((response) => {
+      const result = response.data;
+      console.log(result.message);
+      if (result.message === "Login successful") {
+        window.location.href = '/dashboard';
+      }
+      else {
+        alert('Login failed. Please check your credentials.');
+      }
+    
+    })
+            
       // Reset form
       setFormData({
         email: '',
@@ -453,39 +461,6 @@ const HotelLoginPage = () => {
             <button className="text-gray-600 hover:text-gray-800">Terms of Service</button> and{' '}
             <button className="text-gray-600 hover:text-gray-800">Privacy Policy</button>
           </p>
-        </div>
-
-        {/* Features Preview */}
-        <div className="mt-12 bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-            What you can manage with our platform
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="text-green-500" />
-              <span className="text-gray-600">Hotel Registration</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="text-green-500" />
-              <span className="text-gray-600">Room Management</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="text-green-500" />
-              <span className="text-gray-600">Pricing Control</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="text-green-500" />
-              <span className="text-gray-600">Media Gallery</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="text-green-500" />
-              <span className="text-gray-600">Content Publishing</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="text-green-500" />
-              <span className="text-gray-600">Analytics Dashboard</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>

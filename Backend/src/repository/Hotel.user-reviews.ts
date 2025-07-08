@@ -166,6 +166,7 @@ class ReviewRepo {
         .select({
           reviewId: reviews.id,
           userId: userTable.id,
+          username: userTable.username,
           hotelId: hotels.id,
           rating: reviews.rating,
           mediaUrl: reviews.mediaUrl,
