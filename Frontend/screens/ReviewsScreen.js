@@ -27,7 +27,7 @@ const ReviewsScreen = () => {
   const [comment, setComment] = useState("");
   const [userRating, setUserRating] = useState(0);
   const [attachments, setAttachments] = useState([]);
-  const {currentID, ip, userId} = useContext(AuthContext);
+  const {currentID, ip, userId, setReview, review} = useContext(AuthContext);
   const [allReviews, setAllReviews] = useState([]);
   const [filteredReviews, setFilteredReviews] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -77,6 +77,8 @@ const ReviewsScreen = () => {
       const reviews = response.data.data || response.data;
       const reviewsArray = Array.isArray(reviews) ? reviews : [];
       setAllReviews(reviewsArray);
+      setReview(reviews);
+      console.log(review)
       
       filterReviewsByHotel(reviewsArray);
       

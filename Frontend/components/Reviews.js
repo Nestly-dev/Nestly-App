@@ -1,7 +1,21 @@
 import { StyleSheet, Text, View, Image } from "react-native";
-import React, { useState } from "react";
-import { data } from "../data/reviewdata";
+import React, { useState, useContext, useEffect } from "react";
+// import { data } from "../data/reviewdata";
+import AuthContext from "../context/AuthContext";
+import axios from "axios";
 const Reviews = () => {
+ const {ip} = useContext(AuthContext)
+  const [data, setData] = useState();
+  useEffect(() =>{
+    const smallReviewUrl = `http://${ip}:8000/api/v1/hotels/reviews/all-reviews`
+    axios.get(smallReviewUrl)
+    .then((response) =>{
+      const result = response.data
+      const review = result.data
+      console.log("Reviews called Successfully!")
+      setData(review)
+    })
+  }, [])
   return (
     <>
       <View
@@ -16,7 +30,7 @@ const Reviews = () => {
         }}
       >
         <View style={{ flexDirection: "row" }}>
-          <Image source={{ uri: data[0].profile }} style={styles.rate} />
+          <Image source={{ uri: data.profile }} style={styles.rate} />
           <View>
             <Text
               style={{
@@ -35,11 +49,11 @@ const Reviews = () => {
                 marginTop: 10,
               }}
             >
-              <Text>{data[0].date}</Text>
+              <Text>{data.date}</Text>
             </View>
           </View>
         </View>
-        <Text style={styles.review}>{data[0].review}</Text>
+        <Text style={styles.review}>{data.review}</Text>
       </View>
 
       {/* Second person */}

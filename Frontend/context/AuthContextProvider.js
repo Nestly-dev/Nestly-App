@@ -11,6 +11,7 @@ const UserContexProvider = ({ children }) => {
   const [hotelData, setHotelData] = useState()
   const [currentID, setCurrentID] = useState()
   const [currentRoomId, setCurrentRoomId] = useState()
+  const [review, setReview] = useState()
   const ip = "127.0.0.1"
 
 // initialising the app
@@ -146,6 +147,8 @@ useEffect(() =>{
     setCurrentID,
     currentRoomId, 
     setCurrentRoomId,
+    review,
+    setReview,
 
     //IP address
     ip

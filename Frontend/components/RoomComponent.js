@@ -8,6 +8,7 @@ const RoomComponent = ({roomInfo}) => {
 
   const {currentID, currentRoomId, setCurrentRoomId, ip} = useContext(AuthContext)
   const [room, setRoom] = useState()
+  
 
   
 useEffect(() =>{
@@ -101,7 +102,7 @@ useEffect(() =>{
                 Available
                 </Text>
                 <View style={{flexDirection: "row"}}>
-                  <Text style={{ fontSize: 18, fontWeight: 500, marginRight: 10 }}>20 Rooms</Text>
+                  <Text style={{ fontSize: 18, fontWeight: 500, marginRight: 10 }}>{room.available_inventory} Rooms</Text>
                   <View>
                   <MaterialCommunityIcons name="sticker-check" size={24} color="#4cbf04" />
                   </View>

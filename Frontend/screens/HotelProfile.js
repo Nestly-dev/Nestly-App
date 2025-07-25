@@ -56,7 +56,8 @@ const HotelProfile = () => {
   const [media, setMedia] = useState();
   const [roomInfo, setRoomInfo] = useState();
   const [basePrice, setBaseprice] = useState();
-  const [menu, setMenu] = useState()
+  const [menu, setMenu] = useState();
+ 
 
   //API Calls
   useEffect(() => {
