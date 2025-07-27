@@ -3,16 +3,16 @@ import { Router, Request, Response } from "express";
 import { BookingService } from "../services/Hotel.booking";
 import { bookingRepository } from "../repository/Hotel.booking";
 import { HttpStatusCode } from "axios";
+import { authMiddleware } from "../middleware/authMiddleware";
 
 export const BookingRoutes = Router();
 
-BookingRoutes.post('/create/:hotelId/:roomTypeId', (req: Request, res: Response) => {
+BookingRoutes.post('/create/:hotelId', authMiddleware, (req: Request, res: Response) => {
   return BookingService.createBooking(req, res);
 });
 
-
 // Verify payment status for a booking
-BookingRoutes.get('/:booking_id/verify-payment', async (req: Request, res: Response) => {
+BookingRoutes.get('/:booking_id/verify-payment', authMiddleware, async (req: Request, res: Response) => {
   try {
     const result = await bookingRepository.verifyBookingPayment(req);
     return res.status(result.status).json(result);
@@ -25,19 +25,19 @@ BookingRoutes.get('/:booking_id/verify-payment', async (req: Request, res: Respo
   }
 });
 
-BookingRoutes.get('/user/:userId', (req: Request, res: Response) => {
+BookingRoutes.get('/user/:userId', authMiddleware, (req: Request, res: Response) => {
   return BookingService.getUserBookings(req, res);
 });
 
-BookingRoutes.get('/:bookingId', (req: Request, res: Response) => {
+BookingRoutes.get('/:bookingId', authMiddleware, (req: Request, res: Response) => {
   return BookingService.getSpecificBooking(req, res);
 });
 
-BookingRoutes.patch('/update/:bookingId', (req: Request, res: Response) => {
+BookingRoutes.patch('/update/:bookingId', authMiddleware, (req: Request, res: Response) => {
   return BookingService.updateBooking(req, res);
 });
 
-BookingRoutes.patch('/cancel/:bookingId', (req: Request, res: Response) => {
+BookingRoutes.patch('/cancel/:bookingId', authMiddleware, (req: Request, res: Response) => {
   return BookingService.cancelBooking(req, res);
 });
 
