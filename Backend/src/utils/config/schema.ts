@@ -18,6 +18,8 @@ import {
 // Enums
 export const hotelStatus = pgEnum("hotel_status", ["active", "inactive"]);
 export const paymentOptions = pgEnum('payment_options', ["Visa", "MasterCard", "Momo", "Irembo"]);
+export const Roles = pgEnum('roles', ["customer","hotel-manager", "via-admin"]);
+
 export const mediaType = pgEnum('media_type', ['photo', 'video']);
 export const mediaTypeCategories = pgEnum('media_type_categories', ['landscape', 'portrait', 'profile', 'room', 'gallery', 'sponsored', 'virtualTours']);
 export const paymentStatus = pgEnum("payment_status", ["pending", "completed", "failed", "cancelled"]);
@@ -32,6 +34,13 @@ export const userTable = pgTable('user_table', {
   email_verified: boolean('email_verified').default(false),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
+});
+
+export const userRolesTable = pgTable('user_roles_table', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  user_id: uuid('user_id').references(() => userTable.id, { onDelete: 'cascade' }).notNull(),
+  roles: Roles('roles').default("customer").notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull()
 });
 
 export const userProfiles = pgTable('user_profiles', {
@@ -94,8 +103,17 @@ export const hotels = pgTable('hotels', {
   menu_download_url: text('menu_download_url'),
   sponsored: boolean('sponsored').default(false),
   status: hotelStatus('hotel_status').default('active').notNull(),
+  // Hotel management
+  management_email: varchar("management_email"),
+  management_name: varchar("management_name"),
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
+});
+
+export const hotelManagement = pgTable('hotel_management', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  user_id: uuid('user_id').references(() => userTable.id, { onDelete: 'cascade' }).notNull(),
+  hotel_id: uuid('hotel_id').references(() => hotels.id, { onDelete: 'cascade' }).notNull()
 });
 
 // Hotel media with enhanced categorization
@@ -173,11 +191,8 @@ export const bookings = pgTable('bookings', {
   id: uuid('id').defaultRandom().primaryKey(),
   user_id: uuid('user_id').references(() => userTable.id).notNull(),
   hotel_id: uuid('hotel_id').references(() => hotels.id).notNull(),
-  roomTypeId: uuid('roomTypeId').references(() => room.id).notNull(),
   check_in_date: timestamp('check_in_date').notNull(),
   check_out_date: timestamp('check_out_date').notNull(),
-  num_guests: integer('num_guests').notNull(),
-  num_rooms: integer('num_rooms').notNull(),
   total_price: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
   currency: varchar('currency', { length: 3 }).default('USD').notNull(),
   tx_ref: varchar('tx_ref'),
@@ -188,6 +203,15 @@ export const bookings = pgTable('bookings', {
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
+
+export const bookingRoomTypes = pgTable('booking_room_types', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  booking_id: uuid('booking_id').references(() => bookings.id).notNull(),
+  roomTypeId: uuid('roomTypeId').references(() => room.id).notNull(),
+  num_rooms: integer('num_rooms').notNull(),
+  num_guests: integer('num_guests').notNull()
+});
+
 
 // Reviews
 export const reviews = pgTable('reviews', {
