@@ -2,16 +2,20 @@
 import { Request, Response } from 'express';
 import { HttpStatusCodes } from '../utils/helpers';
 import { database } from '../utils/config/database';
-import { and, eq, sql, lte } from 'drizzle-orm';
+import { and, eq, sql, lte, inArray } from 'drizzle-orm';
 import { DataResponse } from '../utils/types';
-import { bookings, room } from '../utils/config/schema';
+import { bookings, bookingRoomTypes, room } from '../utils/config/schema';
 import { roomOperationsRepository } from './Hotel.pricing-availability';
-import { IFlutterwavePaymentUserDetails, paymentRepository } from './FlutterwavePayment';
+import {
+  IFlutterwavePaymentUserDetails,
+  paymentRepository,
+} from './FlutterwavePayment';
 import { hotelRepository } from './Hotels.basic-data';
 
 // Define types using Drizzle's type inference
 type NewBooking = typeof bookings.$inferInsert;
 type Booking = typeof bookings.$inferSelect;
+type BookingRoomType = typeof bookingRoomTypes.$inferSelect;
 
 export interface IBookingPayment {
   amount: number | string;
@@ -25,150 +29,312 @@ export interface IBookingPayment {
 }
 
 class BookingRepository {
-  // Create - Create New Booking
   async createBooking(req: Request): Promise<DataResponse> {
-    const { hotelId, roomTypeId } = req.params;
+    const { hotelId } = req.params;
     const userId = req.user?.id as string;
     const checkInDate = new Date(req.body.check_in_date);
     const checkOutDate = new Date(req.body.check_out_date);
-    const numGuests = req.body.num_guests;
-    const numRooms = req.body.num_rooms || 1;
+    const roomTypes = req.body.roomTypes as {
+      roomtypeId: string;
+      num_rooms: number;
+      num_guests: number;
+    }[];
     const preferredCurrency = (req.user?.preferred_currency || 'RWF') as string;
     const total_price = req.body.total_price;
 
+    // Track state for rollback purposes
+    let createdBooking: any = null;
+    const createdBookingRoomTypes: any[] = [];
+    const inventoryUpdates: { roomTypeId: string; numRooms: number }[] = [];
+
     try {
-      // Check availability using dynamic inventory
-      const availabilityCheck =
-        await roomOperationsRepository.isRoomAvailableForPeriod(
-          roomTypeId,
+      let totalRooms = 0;
+      let combinedCapacity = 0;
+      let totalGuests = 0;
+
+      // Step 1: Sequential availability check for all room types (read-only check first)
+      console.log(`Processing multi-booking for user ${userId}: ${roomTypes.length} room types`);
+
+      for (let i = 0; i < roomTypes.length; i++) {
+        const { roomtypeId, num_rooms, num_guests } = roomTypes[i];
+
+        console.log(`Checking availability for room type ${i + 1}/${roomTypes.length}: ${roomtypeId}`);
+
+        const availabilityCheck = await roomOperationsRepository.isRoomAvailableForPeriod(
+          roomtypeId,
           checkInDate,
           checkOutDate,
-          numGuests,
-          numRooms,
+          num_guests,
+          num_rooms,
         );
 
-      if (!availabilityCheck.available) {
-        return {
-          data: null,
-          message: availabilityCheck.reason || 'Rooms are not available',
-          status: HttpStatusCodes.BAD_REQUEST,
-        };
+        if (!availabilityCheck.available) {
+          return {
+            data: null,
+            message: `Room type ${roomtypeId} is not available: ${availabilityCheck.reason}`,
+            status: HttpStatusCodes.BAD_REQUEST,
+          };
+        }
+
+        totalRooms += num_rooms;
+        totalGuests += num_guests;
+        combinedCapacity += availabilityCheck.details.totalCapacity;
       }
 
-      // Start database transaction for booking + inventory update
-      const bookingData: NewBooking = {
-        user_id: userId as string,
-        hotel_id: hotelId,
-        roomTypeId: roomTypeId,
-        check_in_date: checkInDate,
-        check_out_date: checkOutDate,
-        num_rooms: numRooms,
-        num_guests: numGuests,
-        total_price,
-        currency: preferredCurrency,
-        payment_status: 'pending',
-      };
+      console.log(`All ${roomTypes.length} room types are available. Creating booking...`);
 
-      // Start processing the payment: Get checkout link to use
-      // Initialize payment with Flutterwave
+      // Step 2: Initialize payment first (before creating booking records)
       const paymentDetails: IFlutterwavePaymentUserDetails = {
         amount: total_price,
         currency: preferredCurrency,
         name: req.user?.username as string,
         email: req.user?.email as string,
         phone_number: req.user?.phone_number || '',
-        customizationsTitle: `Hotel Booking - ${numRooms} Room(s)`,
-        customizationsDescription: `Booking for ${numGuests} guest(s) from ${checkInDate.toDateString()} to ${checkOutDate.toDateString()}`,
+        customizationsTitle: `Hotel Booking - ${totalRooms} Room(s)`,
+        customizationsDescription: `Booking for ${totalGuests} guest(s) from ${checkInDate.toDateString()} to ${checkOutDate.toDateString()}`,
       };
 
-      // Get SubAccountId of a hotel
-      const response = await hotelRepository.getHotelById(hotelId);
-      const paymentResponse = await paymentRepository.Payment(paymentDetails, response.data.subaccount_id) as DataResponse;
+      const hotelResponse = await hotelRepository.getHotelById(hotelId);
+      const paymentResponse = await paymentRepository.Payment(
+        paymentDetails,
+        hotelResponse.data.subaccount_id
+      ) as DataResponse;
 
       if (paymentResponse.status !== HttpStatusCodes.OK) {
-        // Something went wrong
         return {
-          message: `Payment processing for booking failed, ${paymentResponse.message}`,
+          data: null,
+          message: `Payment initialization failed: ${paymentResponse.message}`,
           status: paymentResponse.status
         };
       }
 
-      // Create booking first with pending status
-      const [pendingBooking] = await database
+      console.log('Payment initialized successfully. Creating booking record...');
+
+      // Step 3: Create the main booking record with pending status
+      const bookingData: NewBooking = {
+        user_id: userId,
+        hotel_id: hotelId,
+        check_in_date: checkInDate,
+        check_out_date: checkOutDate,
+        total_price,
+        currency: preferredCurrency,
+        payment_status: 'pending',
+        tx_ref: paymentResponse.data?.tx_ref,
+      };
+
+      [createdBooking] = await database
         .insert(bookings)
         .values(bookingData)
         .returning();
 
-      // Update dynamic inventory - decrease available rooms
-      const inventoryUpdated =
-        await roomOperationsRepository.decreaseRoomInventory(
-          roomTypeId,
-          numRooms,
-        );
+      console.log(`Booking created with ID: ${createdBooking.id}. Creating room type entries...`);
 
-      if (!inventoryUpdated) {
-        // Rollback booking if inventory update fails
-        await database
-          .delete(bookings)
-          .where(eq(bookings.id, pendingBooking.id));
+      // Step 4: Create booking room types entries one by one
+      for (let i = 0; i < roomTypes.length; i++) {
+        const { roomtypeId, num_rooms, num_guests } = roomTypes[i];
 
-        return {
-          data: null,
-          message: 'Failed to update room inventory',
-          status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        };
+        try {
+          const [bookingRoomType] = await database
+            .insert(bookingRoomTypes)
+            .values({
+              booking_id: createdBooking.id,
+              roomTypeId: roomtypeId,
+              num_rooms,
+              num_guests,
+            })
+            .returning();
+
+          createdBookingRoomTypes.push(bookingRoomType);
+          console.log(`Created booking room type entry ${i + 1}/${roomTypes.length}`);
+
+        } catch (error) {
+          console.error(`Failed to create booking room type entry for ${roomtypeId}:`, error);
+          // Rollback what we've created so far
+          await this.rollbackBookingCreation(createdBooking.id, createdBookingRoomTypes, inventoryUpdates);
+
+          return {
+            data: null,
+            message: `Failed to create booking room type entry: ${error}`,
+            status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+          };
+        }
       }
 
-      if (!paymentResponse || paymentResponse.status !== HttpStatusCodes.OK) {
-        // Rollback booking and inventory if payment initialization fails
-        await database
-          .delete(bookings)
-          .where(eq(bookings.id, pendingBooking.id));
+      console.log('All booking room type entries created. Updating inventory...');
 
-        await roomOperationsRepository.increaseRoomInventory(
-          roomTypeId,
-          numRooms,
+      // Step 5: Check and reserve inventory for each room type one by one
+      for (let i = 0; i < roomTypes.length; i++) {
+        const { roomtypeId, num_rooms, num_guests } = roomTypes[i];
+
+        console.log(`Checking and reserving inventory for room type ${i + 1}/${roomTypes.length}: ${roomtypeId}`);
+
+        const reservationResult = await this.checkAndReserveRoomInventory(
+          roomtypeId,
+          checkInDate,
+          checkOutDate,
+          num_guests,
+          num_rooms
         );
 
-        return {
-          data: null,
-          message: paymentResponse?.message || 'Failed to initialize payment',
-          status: paymentResponse?.status || HttpStatusCodes.INTERNAL_SERVER_ERROR,
-        };
+        if (!reservationResult.success) {
+          console.error(`Failed to reserve room type ${roomtypeId}: ${reservationResult.reason}`);
+          // Rollback everything created so far
+          await this.rollbackBookingCreation(createdBooking.id, createdBookingRoomTypes, inventoryUpdates);
+
+          return {
+            data: null,
+            message: `Failed to reserve room type ${roomtypeId}: ${reservationResult.reason}`,
+            status: HttpStatusCodes.BAD_REQUEST,
+          };
+        }
+
+        // Track successful inventory update for potential rollback
+        inventoryUpdates.push({ roomTypeId: roomtypeId, numRooms: num_rooms });
+        console.log(`Successfully reserved inventory for room type ${i + 1}/${roomTypes.length}: ${roomtypeId}`);
       }
 
-      // Update booking with payment transaction reference
-      const [updatedBooking] = await database
-        .update(bookings)
-        .set({
-          tx_ref: paymentResponse.data?.tx_ref,
-          updated_at: new Date()
-        })
-        .where(eq(bookings.id, pendingBooking.id))
-        .returning();
+      console.log('Multi-booking completed successfully!');
 
+      // Step 6: Return success response
       return {
         message: `Booking created successfully. Please complete payment in 30 minutes using checkout link to confirm your reservation.`,
         data: {
           checkout_url: paymentResponse.data?.checkout_link as string,
-          booking: updatedBooking,
+          booking: createdBooking,
+          booking_room_types: createdBookingRoomTypes,
           summary: {
-            rooms_booked: numRooms,
-            guests_accommodated: numGuests,
-            capacity_per_room: availabilityCheck.details.maxOccupancy,
-            total_capacity: availabilityCheck.details.totalCapacity,
-            rooms_remaining:
-              availabilityCheck.details.availableInventory - numRooms,
+            booking_id: createdBooking.id,
+            rooms_booked: totalRooms,
+            guests_accommodated: totalGuests,
+            total_capacity: combinedCapacity,
+            room_type_breakdown: roomTypes.map(rt => ({
+              roomtypeId: rt.roomtypeId,
+              num_rooms: rt.num_rooms,
+              num_guests: rt.num_guests
+            }))
           },
         },
         status: HttpStatusCodes.CREATED,
       };
 
     } catch (error: any) {
+      console.error('Error in createBooking:', error);
+
+      // Rollback any partial state
+      if (createdBooking) {
+        await this.rollbackBookingCreation(createdBooking.id, createdBookingRoomTypes, inventoryUpdates);
+      }
+
       return {
         data: null,
         message: `Booking creation failed: ${error?.message || error}`,
         status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+  // Helper method to handle comprehensive rollback
+  private async rollbackBookingCreation(
+    bookingId: string,
+    createdBookingRoomTypes: any[],
+    inventoryUpdates: { roomTypeId: string; numRooms: number }[]
+  ): Promise<void> {
+    console.log(`Rolling back booking creation for booking ID: ${bookingId}`);
+
+    try {
+      // Step 1: Restore inventory (reverse order of operations)
+      for (const { roomTypeId, numRooms } of inventoryUpdates) {
+        try {
+          await roomOperationsRepository.increaseRoomInventory(roomTypeId, numRooms);
+          console.log(`Restored inventory for room type: ${roomTypeId}`);
+        } catch (error) {
+          console.error(`Failed to restore inventory for room type ${roomTypeId}:`, error);
+        }
+      }
+
+      // Step 2: Delete booking room types (if any were created)
+      if (createdBookingRoomTypes.length > 0) {
+        try {
+          await database
+            .delete(bookingRoomTypes)
+            .where(eq(bookingRoomTypes.booking_id, bookingId));
+          console.log(`Deleted ${createdBookingRoomTypes.length} booking room type entries`);
+        } catch (error) {
+          console.error('Failed to delete booking room types:', error);
+        }
+      }
+
+      // Step 3: Delete main booking record
+      try {
+        await database
+          .delete(bookings)
+          .where(eq(bookings.id, bookingId));
+        console.log(`Deleted main booking record: ${bookingId}`);
+      } catch (error) {
+        console.error('Failed to delete main booking:', error);
+      }
+
+    } catch (error) {
+      console.error('Error during rollback:', error);
+      // Log this for manual intervention
+    }
+  }
+  // Helper method to check and reserve room inventory with better error handling
+  private async checkAndReserveRoomInventory(
+    roomTypeId: string,
+    checkInDate: Date,
+    checkOutDate: Date,
+    numGuests: number,
+    numRooms: number
+  ): Promise<{
+    success: boolean;
+    reason?: string;
+    details?: {
+      totalCapacity: number;
+      maxOccupancy: number;
+    };
+  }> {
+    try {
+      const availabilityCheck = await roomOperationsRepository.isRoomAvailableForPeriod(
+        roomTypeId,
+        checkInDate,
+        checkOutDate,
+        numGuests,
+        numRooms,
+      );
+
+      if (!availabilityCheck.available) {
+        return {
+          success: false,
+          reason: availabilityCheck.reason
+        };
+      }
+
+      // If available, attempt to reserve inventory
+      const inventoryUpdated = await roomOperationsRepository.decreaseRoomInventory(
+        roomTypeId,
+        numRooms,
+      );
+
+      if (!inventoryUpdated) {
+        return {
+          success: false,
+          reason: "Failed to reserve inventory - may have been taken by another booking"
+        };
+      }
+
+      return {
+        success: true,
+        details: {
+          totalCapacity: availabilityCheck.details.totalCapacity,
+          maxOccupancy: availabilityCheck.details.maxOccupancy
+        }
+      };
+
+    } catch (error) {
+      console.error('Error in checkAndReserveRoomInventory:', error);
+      return {
+        success: false,
+        reason: `System error: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   }
@@ -202,7 +368,9 @@ class BookingRepository {
       const transactionReference = booking.tx_ref;
 
       // Verify payment with Flutterwave
-      const verificationResponse = await paymentRepository.verifyPayment(transactionReference) as DataResponse;
+      const verificationResponse = (await paymentRepository.verifyPayment(
+        transactionReference,
+      )) as DataResponse;
 
       if (verificationResponse.status === HttpStatusCodes.OK) {
         // Only update if not already marked as completed
@@ -219,7 +387,7 @@ class BookingRepository {
           return {
             message: `Payment verified and booking ${booking_id} confirmed`,
             status: HttpStatusCodes.OK,
-            data: updatedBooking
+            data: updatedBooking,
           };
         }
 
@@ -237,27 +405,55 @@ class BookingRepository {
     } catch (error) {
       return {
         data: null,
-        message: error instanceof Error
-          ? error.message
-          : 'Payment verification failed',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Payment verification failed',
         status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
       };
     }
   }
 
-  // Read - Get All User Bookings
+  // Read - Get All User Bookings (with room types)
   async getUserBookings(req: Request): Promise<DataResponse> {
     const userId = req.params.userId;
     this.processExpiredCheckouts();
     try {
+      // Get bookings with their room types
       const userBookings = await database
-        .select()
+        .select({
+          booking: bookings,
+          roomTypes: bookingRoomTypes,
+        })
         .from(bookings)
+        .leftJoin(
+          bookingRoomTypes,
+          eq(bookings.id, bookingRoomTypes.booking_id),
+        )
         .where(
           and(eq(bookings.user_id, userId), eq(bookings.cancelled, false)),
         );
+
+      // Group room types by booking
+      const groupedBookings = userBookings.reduce(
+        (acc, item) => {
+          const bookingId = item.booking.id;
+          if (!acc[bookingId]) {
+            acc[bookingId] = {
+              ...item.booking,
+              room_types: [],
+            };
+          }
+          if (item.roomTypes) {
+            acc[bookingId].room_types.push(item.roomTypes);
+          }
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
+
       return {
-        data: userBookings,
+        data: Object.values(groupedBookings),
         message: 'User bookings fetched successfully',
         status: HttpStatusCodes.OK,
       };
@@ -271,7 +467,7 @@ class BookingRepository {
     }
   }
 
-  // Read - Get Specific Booking
+  // Read - Get Specific Booking (with room types)
   async getSpecificBooking(req: Request): Promise<DataResponse> {
     const bookingId = req.params.bookingId;
 
@@ -291,8 +487,17 @@ class BookingRepository {
         };
       }
 
+      // Get associated room types
+      const roomTypesData = await database
+        .select()
+        .from(bookingRoomTypes)
+        .where(eq(bookingRoomTypes.booking_id, bookingId));
+
       return {
-        data: booking,
+        data: {
+          ...booking,
+          room_types: roomTypesData,
+        },
         message: 'Booking fetched successfully',
         status: HttpStatusCodes.OK,
       };
@@ -353,7 +558,7 @@ class BookingRepository {
     }
   }
 
-  // Update - Cancel Booking
+  // Update - Cancel Booking (Fixed to handle normalized tables)
   async cancelBooking(req: Request): Promise<DataResponse> {
     const bookingId = req.params.bookingId;
     const { cancellation_reason } = req.body;
@@ -383,6 +588,12 @@ class BookingRepository {
         };
       }
 
+      // Get associated room types for inventory update
+      const bookingRoomTypesData = await database
+        .select()
+        .from(bookingRoomTypes)
+        .where(eq(bookingRoomTypes.booking_id, bookingId));
+
       // Cancel booking
       const [cancelledBooking] = await database
         .update(bookings)
@@ -395,31 +606,42 @@ class BookingRepository {
         .where(eq(bookings.id, bookingId))
         .returning();
 
-      // Update dynamic inventory - increase available rooms
-      const inventoryUpdated =
-        await roomOperationsRepository.increaseRoomInventory(
-          existingBooking.roomTypeId,
-          existingBooking.num_rooms,
-        );
+      // Update dynamic inventory - increase available rooms for each room type
+      let totalRoomsFreed = 0;
+      let totalGuestsAffected = 0;
 
-      if (!inventoryUpdated) {
-        console.error('Failed to update room inventory after cancellation');
-        // Log error but don't fail the cancellation
+      for (const roomType of bookingRoomTypesData) {
+        const inventoryUpdated =
+          await roomOperationsRepository.increaseRoomInventory(
+            roomType.roomTypeId,
+            roomType.num_rooms,
+          );
+
+        if (!inventoryUpdated) {
+          console.error(
+            `Failed to update room inventory after cancellation for room type: ${roomType.roomTypeId}`,
+          );
+          // Log error but don't fail the cancellation
+        } else {
+          totalRoomsFreed += roomType.num_rooms;
+          totalGuestsAffected += roomType.num_guests;
+        }
       }
 
       return {
         data: {
           ...cancelledBooking,
+          room_types: bookingRoomTypesData,
           summary: {
-            rooms_freed: existingBooking.num_rooms,
-            guests_affected: existingBooking.num_guests,
+            rooms_freed: totalRoomsFreed,
+            guests_affected: totalGuestsAffected,
             booking_period: {
               check_in: existingBooking.check_in_date,
               check_out: existingBooking.check_out_date,
             },
           },
         },
-        message: `Booking cancelled: ${existingBooking.num_rooms} room(s) now available`,
+        message: `Booking cancelled: ${totalRoomsFreed} room(s) now available`,
         status: HttpStatusCodes.OK,
       };
     } catch (error) {
@@ -438,11 +660,14 @@ class BookingRepository {
       // Find all active bookings where checkout time has passed
       const expiredBookings = await database
         .select({
-          id: bookings.id,
-          roomTypeId: bookings.roomTypeId,
-          num_rooms: bookings.num_rooms,
+          booking: bookings,
+          roomTypes: bookingRoomTypes,
         })
         .from(bookings)
+        .leftJoin(
+          bookingRoomTypes,
+          eq(bookings.id, bookingRoomTypes.booking_id),
+        )
         .where(
           and(
             eq(bookings.cancelled, false),
@@ -450,28 +675,50 @@ class BookingRepository {
           ),
         );
 
+      // Group by booking ID
+      const groupedExpiredBookings = expiredBookings.reduce(
+        (acc, item) => {
+          const bookingId = item.booking.id;
+          if (!acc[bookingId]) {
+            acc[bookingId] = {
+              booking: item.booking,
+              roomTypes: [],
+            };
+          }
+          if (item.roomTypes) {
+            acc[bookingId].roomTypes.push(item.roomTypes);
+          }
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
+
       let totalRoomsFreed = 0;
 
       // Process each expired booking
-      for (const booking of expiredBookings) {
-        // Free up the rooms by increasing available inventory
-        await database
-          .update(room)
-          .set({
-            available_inventory: sql`${room.available_inventory} + ${booking.num_rooms}`,
-            updated_at: new Date(),
-          })
-          .where(eq(room.id, booking.roomTypeId));
+      for (const { booking, roomTypes } of Object.values(
+        groupedExpiredBookings,
+      ) as any[]) {
+        // Free up rooms for each room type in the booking
+        for (const roomType of roomTypes) {
+          await database
+            .update(room)
+            .set({
+              available_inventory: sql`${room.available_inventory} + ${roomType.num_rooms}`,
+              updated_at: new Date(),
+            })
+            .where(eq(room.id, roomType.roomTypeId));
 
-        // Mark booking as processed (optional - set a flag or status)
+          totalRoomsFreed += roomType.num_rooms;
+        }
+
+        // Mark booking as processed
         await database
           .update(bookings)
           .set({
             updated_at: new Date(),
           })
           .where(eq(bookings.id, booking.id));
-
-        totalRoomsFreed += booking.num_rooms;
       }
 
       return totalRoomsFreed;
@@ -492,63 +739,93 @@ class BookingRepository {
       // 3. Not already cancelled
       const expiredPendingBookings = await database
         .select({
-          id: bookings.id,
-          roomTypeId: bookings.roomTypeId,
-          num_rooms: bookings.num_rooms,
-          user_id: bookings.user_id,
-          hotel_id: bookings.hotel_id,
-          created_at: bookings.created_at,
-          tx_ref: bookings.tx_ref,
+          booking: bookings,
+          roomTypes: bookingRoomTypes,
         })
         .from(bookings)
+        .leftJoin(
+          bookingRoomTypes,
+          eq(bookings.id, bookingRoomTypes.booking_id),
+        )
         .where(
           and(
             eq(bookings.payment_status, 'pending'),
             eq(bookings.cancelled, false),
-            sql`${bookings.created_at} <= ${thirtyMinutesAgo.toISOString()}` // Created more than 30 minutes ago
+            sql`${bookings.created_at} <= ${thirtyMinutesAgo.toISOString()}`, // Created more than 30 minutes ago
           ),
         );
+
+      // Group by booking ID
+      const groupedExpiredBookings = expiredPendingBookings.reduce(
+        (acc, item) => {
+          const bookingId = item.booking.id;
+          if (!acc[bookingId]) {
+            acc[bookingId] = {
+              booking: item.booking,
+              roomTypes: [],
+            };
+          }
+          if (item.roomTypes) {
+            acc[bookingId].roomTypes.push(item.roomTypes);
+          }
+          return acc;
+        },
+        {} as Record<string, any>,
+      );
 
       let totalBookingsProcessed = 0;
       let totalRoomsFreed = 0;
 
       // Process each expired booking
-      for (const booking of expiredPendingBookings) {
+      for (const { booking, roomTypes } of Object.values(
+        groupedExpiredBookings,
+      ) as any[]) {
         try {
           // Mark booking as cancelled due to payment timeout
           await database
             .update(bookings)
             .set({
               cancelled: true,
-              payment_status: "failed",
+              payment_status: 'failed',
               cancellation_timestamp: new Date(),
-              cancellation_reason: 'Payment timeout - booking expired after 30 minutes',
+              cancellation_reason:
+                'Payment timeout - booking expired after 30 minutes',
               updated_at: new Date(),
             })
             .where(eq(bookings.id, booking.id));
 
-          // Free up the rooms by increasing available inventory
-          const inventoryUpdated = await roomOperationsRepository.increaseRoomInventory(
-            booking.roomTypeId,
-            booking.num_rooms,
-          );
+          // Free up the rooms by increasing available inventory for each room type
+          for (const roomType of roomTypes) {
+            const inventoryUpdated =
+              await roomOperationsRepository.increaseRoomInventory(
+                roomType.roomTypeId,
+                roomType.num_rooms,
+              );
 
-          if (inventoryUpdated) {
-            totalRoomsFreed += booking.num_rooms;
-            totalBookingsProcessed++;
-
-            console.log(`Expired booking processed: ${booking.id} - ${booking.num_rooms} room(s) freed`);
-          } else {
-            console.error(`Failed to update inventory for expired booking: ${booking.id}`);
+            if (inventoryUpdated) {
+              totalRoomsFreed += roomType.num_rooms;
+            } else {
+              console.error(
+                `Failed to update inventory for expired booking room type: ${roomType.roomTypeId}`,
+              );
+            }
           }
+
+          totalBookingsProcessed++;
+          console.log(
+            `Expired booking processed: ${booking.id} - ${roomTypes.reduce((sum: number, rt: any) => sum + rt.num_rooms, 0)} room(s) freed`,
+          );
         } catch (error) {
-          console.error(`Error processing expired booking ${booking.id}:`, error);
+          console.error(
+            `Error processing expired booking ${booking.id}:`,
+            error,
+          );
         }
       }
 
       if (totalBookingsProcessed > 0) {
         console.log(
-          `Processed ${totalBookingsProcessed} expired bookings, freed up ${totalRoomsFreed} room(s)`
+          `Processed ${totalBookingsProcessed} expired bookings, freed up ${totalRoomsFreed} room(s)`,
         );
       }
 
