@@ -4,6 +4,7 @@ import { videoService } from "../services/Content.videos";
 import { MulterRequest, upload } from "../utils/config/multer";
 import { authMiddleware } from "../middleware/authMiddleware";
 import { videoStreamingController } from "../repository/videostreaming";
+import { rolesAndPermissions } from "../middleware/RolesAndPermissions";
 
 export const VideoRoute = Router();
 
@@ -29,18 +30,19 @@ VideoRoute.post('/upload/:hotelId',
     { name: 'thumbnail', maxCount: 1 }
   ]),
   authMiddleware,
+  rolesAndPermissions.customerNotPermitted,
   (req: Request, res: Response) => {
     return videoService.uploadVideo(req as MulterRequest, res);
   }
 );
 
 // Update video details
-VideoRoute.patch('/update/:videoId', authMiddleware, (req: Request, res: Response) => {
+VideoRoute.patch('/update/:videoId', authMiddleware, rolesAndPermissions.customerNotPermitted, (req: Request, res: Response) => {
   return videoService.updateVideo(req, res);
 });
 
 // Delete video
-VideoRoute.delete('/delete/:videoId', authMiddleware, (req: Request, res: Response) => {
+VideoRoute.delete('/delete/:videoId', authMiddleware, rolesAndPermissions.customerNotPermitted, (req: Request, res: Response) => {
   return videoService.deleteVideo(req, res);
 });
 
