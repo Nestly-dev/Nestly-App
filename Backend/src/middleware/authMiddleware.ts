@@ -10,6 +10,7 @@ declare global {
       user?: {
         id: string;
         email: string;
+        role: string;
         email_verified: boolean;
         username: string;
         preferred_language: string;
@@ -45,6 +46,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       req.user = {
         id: user.id,
         email: user.email,
+        role: user.role,
         email_verified: user.email_verified,
         username: user.username,
         preferred_currency: user.preferred_currency,
