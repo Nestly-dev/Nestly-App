@@ -4,6 +4,7 @@ import { reviewService } from "../services/Hotel.user-reviews";
 import { MulterRequest, upload } from "../utils/config/multer";
 import { authMiddleware } from "../middleware/authMiddleware";
 import contentAwareImageMiddleware from "../middleware/contentAwareImageMiddleware";
+import { rolesAndPermissions } from "../middleware/RolesAndPermissions";
 
 export const ReviewRoute = Router();
 
@@ -23,7 +24,7 @@ ReviewRoute.get('/:hotelId', (req: Request, res: Response) => {
 });
 
 // Create a review
-ReviewRoute.post('/create/:hotelId/', authMiddleware, upload.single('media'), contentAwareImageMiddleware({
+ReviewRoute.post('/create/:hotelId/', authMiddleware, rolesAndPermissions.hotelManagerNotPermitted, upload.single('media'), contentAwareImageMiddleware({
   maxWidth: 1200,
   maxHeight: 1200,
   quality: 85
@@ -32,11 +33,11 @@ ReviewRoute.post('/create/:hotelId/', authMiddleware, upload.single('media'), co
 });
 
 // Update a review
-ReviewRoute.patch('/update/:reviewId', authMiddleware, (req: Request, res: Response) => {
+ReviewRoute.patch('/update/:reviewId', authMiddleware, rolesAndPermissions.hotelManagerNotPermitted, (req: Request, res: Response) => {
   return reviewService.updateReview(req, res);
 });
 
 // Delete a review
-ReviewRoute.delete('/delete/:reviewId', authMiddleware, (req: Request, res: Response) => {
+ReviewRoute.delete('/delete/:reviewId', authMiddleware, rolesAndPermissions.hotelManagerNotPermitted, (req: Request, res: Response) => {
   return reviewService.deleteReview(req, res);
 });
