@@ -82,6 +82,7 @@ export interface existingUserTypes {
 }
 
 export type paymentOptions = "Visa" | "MasterCard" | "Momo" | "Irembo";
+export type RoleOptions = "customer" | "hotel-manager" | "via-admin";
 
 export interface HotelMediaTypes {
   hotel_id: string;
@@ -150,7 +151,7 @@ export interface RoomAvailabilityInfo {
 
 export interface HotelRoomSummary {
   hotel_id: string;
-  hotel_name: string;
+  hotel_name: any;
   total_room_types: number;
   total_rooms: number;
   available_rooms: number;
@@ -192,4 +193,33 @@ export interface IsubAccountInfo {
   split_value?: number,
   subaccount_id: string,
   bank_name?: string
+}
+
+export type CreatedUserType = {
+  id: string;
+  created_at: Date;
+  updated_at: Date;
+  username: string;
+  email: string;
+  password: string | null;
+  auth_provider: string | null;
+  email_verified: boolean | null;
+}
+
+export interface InvitationData {
+  inviteeUsername: string;
+  inviteeEmail: string;
+  inviteeRole: 'customer' | 'hotel-manager' | 'via-admin';
+  hotelId?: string;
+}
+
+export interface InviteEmailData {
+  inviteeUsername: string;
+  inviteeEmail: string;
+  inviterName: string;
+  inviterRole: string;
+  inviteeRole: string;
+  password: string;
+  hotelId?: string;
+  hotelName?: string;
 }
