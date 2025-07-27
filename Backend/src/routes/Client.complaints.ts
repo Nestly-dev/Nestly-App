@@ -5,6 +5,10 @@ const Router = express.Router();
 
 Router.post('/send', async (req: Request, res: Response) => {
   ComplaintService.sendComplaints(req, res);
+});
+
+Router.post('/glitch/send', async (req: Request, res: Response) => {
+  ComplaintService.softwareGlitchComplaints(req, res);
 })
 
 export const complaintsRoutes = Router;
