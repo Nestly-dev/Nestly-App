@@ -2,21 +2,22 @@ import { Request, Response, Router } from "express";
 import { profileService } from "../services/profile";
 import { MulterRequest, upload } from "../utils/config/multer";
 import contentAwareImageMiddleware from "../middleware/contentAwareImageMiddleware";
+import { authMiddleware } from "../middleware/authMiddleware";
 
 export const ProfileRoute = Router();
 
 // get all user profiles
-ProfileRoute.get('/all-profiles', (req: Request, res: Response) => {
+ProfileRoute.get('/all-profiles', authMiddleware, (req: Request, res: Response) => {
   return profileService.getAllProfile(req, res);
 });
 
 // get a specific user profile
-ProfileRoute.get('/:profileId', (req: Request, res: Response) => {
+ProfileRoute.get('/:profileId', authMiddleware, (req: Request, res: Response) => {
   return profileService.getSpecificProfile(req, res);
 });
 
 // Register a user profile
-ProfileRoute.post('/register', upload.single('profilePicture'), contentAwareImageMiddleware({
+ProfileRoute.post('/register', authMiddleware, upload.single('profilePicture'), contentAwareImageMiddleware({
   maxWidth: 500,
   maxHeight: 500,
   quality: 85
@@ -25,11 +26,11 @@ ProfileRoute.post('/register', upload.single('profilePicture'), contentAwareImag
 });
 
 // Update a user Profile
-ProfileRoute.patch('/update/:profileId', (req: Request, res: Response) => {
+ProfileRoute.patch('/update/:profileId', authMiddleware, (req: Request, res: Response) => {
   return profileService.updateProfile(req, res);
 });
 
 // Delete a user Profile
-ProfileRoute.delete('/delete/:profileId', (req: Request, res: Response) => {
+ProfileRoute.delete('/delete/:profileId', authMiddleware, (req: Request, res: Response) => {
   return profileService.deleteProfile(req, res);
 });
