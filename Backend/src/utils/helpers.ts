@@ -11,14 +11,18 @@ type EnvironmentVariables = {
   AWS_ACCESS_KEY_ID: string;
   AWS_SECRET_ACCESS_KEY: string;
   AWS_REGION: string;
-  EMAIL_USER: string
-  EMAIL_PASSWORD: string,
+  // EMAIL_USER: string
+  // EMAIL_PASSWORD: string,
   COMPLAINTS_EMAIL: string,
   FLW_PUBLIC_KEY: string,
   FLW_SECRET_KEY: string,
   FLW_ENCRYPTION_KEY: string,
   FLUTTERWAVE_API_URL: string,
-  FLUTTERWAVE_PAYMENT_VERIFICATION_URL: string
+  FLUTTERWAVE_PAYMENT_VERIFICATION_URL: string,
+  RESEND_API_KEY: string,
+  FROM_EMAIL: string,
+  Node_MailJet_APIKEY_PRIVATE: string,
+  Node_MailJet_APIKEY_PUBLIC: string
 }
 
 export enum HttpStatusCodes {
@@ -52,14 +56,18 @@ export const SECRETS: EnvironmentVariables = {
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID as string,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY as string,
   AWS_REGION: process.env.AWS_REGION as string,
-  EMAIL_USER: process.env.EMAIL_USER as string,
-  EMAIL_PASSWORD: process.env.EMAIL_PASSWORD as string,
+  // EMAIL_USER: process.env.EMAIL_USER as string,
+  // EMAIL_PASSWORD: process.env.EMAIL_PASSWORD as string,
   COMPLAINTS_EMAIL: process.env.COMPLAINTS_EMAIL as string,
   FLW_SECRET_KEY: process.env.FLW_SECRET_KEY as string,
   FLW_PUBLIC_KEY: process.env.FLW_PUBLIC_KEY as string,
   FLW_ENCRYPTION_KEY: process.env.FLW_ENCRYPTION_KEY as string,
   FLUTTERWAVE_API_URL: process.env.FLUTTERWAVE_API_URL as string,
-  FLUTTERWAVE_PAYMENT_VERIFICATION_URL: process.env.FLUTTERWAVE_PAYMENT_VERIFICATION_URL as string
+  FLUTTERWAVE_PAYMENT_VERIFICATION_URL: process.env.FLUTTERWAVE_PAYMENT_VERIFICATION_URL as string,
+  RESEND_API_KEY: process.env.RESEND_API_KEY as string,
+  FROM_EMAIL: process.env.FROM_EMAIL as string,
+  Node_MailJet_APIKEY_PUBLIC: process.env.Node_MailJet_APIKEY_PUBLIC as string,
+  Node_MailJet_APIKEY_PRIVATE: process.env.Node_MailJet_APIKEY_PRIVATE as string
 }
 
 
