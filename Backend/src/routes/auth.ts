@@ -9,12 +9,16 @@ const Router = express.Router();
 const authService = new AuthenticationService();
 
 Router.post('/register', async (req: Request, res: Response) => {
-  authService.register(req, res);
-})
+  authService.register("customer", req, res);
+});
+
+Router.post('/register/via-admin', async (req: Request, res: Response) => {
+  authService.register("via-admin", req, res);
+});
 
 Router.post('/login', async (req: Request, res: Response) => {
   authService.login(req, res);
-})
+});
 
 Router.post('/forgot-password', async (req: Request, res: Response) => {
   authService.forgotPassword(req, res);
@@ -26,6 +30,10 @@ Router.post('/reset-password/:resetToken', async (req: Request, res: Response) =
 
 Router.post('/verify-email/:verifyToken', async (req: Request, res: Response) => {
   authService.verifyEmail(req, res);
+});
+
+Router.patch('/update-password', async (req: Request, res: Response) => {
+  authService.updatePassword(req, res);
 });
 
 Router.post('/logout', authMiddleware, async (req: Request, res: Response) => {
