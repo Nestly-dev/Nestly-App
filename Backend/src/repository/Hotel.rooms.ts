@@ -3,8 +3,8 @@ import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { DataResponse } from "../utils/types";
-import { bookings, hotels, room } from "../utils/config/schema";
-import { RoomAvailabilityInfo, HotelRoomSummary} from "../utils/types";
+import { bookings, bookingRoomTypes, hotels, room } from "../utils/config/schema";
+import { RoomAvailabilityInfo, HotelRoomSummary } from "../utils/types";
 
 // Define types using Drizzle's type inference
 type NewRoom = typeof room.$inferInsert;
@@ -44,6 +44,7 @@ class Rooms {
       };
     }
   }
+
   // Read - Get All Room Types for a Hotel
   async getRoomTypesByHotelId(req: Request): Promise<DataResponse> {
     const hotelId = req.params.hotelId;
@@ -67,7 +68,7 @@ class Rooms {
       };
     }
   }
-  // Read - Get Hotel Room Types and available rooms
+  // Read - Get Hotel Room Types and available rooms (FIXED)
   async getSpecificRoomType(req: Request): Promise<DataResponse> {
     const { hotelId } = req.params;
     const { check_in_date, check_out_date } = req.query;
@@ -121,14 +122,16 @@ class Rooms {
 
       for (const roomType of hotelRooms) {
         // Count bookings that overlap with the requested period
+        // Now we need to join bookings with bookingRoomTypes to get the room type bookings
         const overlappingBookings = await database
           .select({
-            booking_count: sql<number>`count(*)`
+            total_rooms_booked: sql<number>`COALESCE(SUM(${bookingRoomTypes.num_rooms}), 0)`
           })
           .from(bookings)
+          .innerJoin(bookingRoomTypes, eq(bookings.id, bookingRoomTypes.booking_id))
           .where(
             and(
-              eq(bookings.roomTypeId, roomType.room_id),
+              eq(bookingRoomTypes.roomTypeId, roomType.room_id),
               eq(bookings.cancelled, false),
               // Check for date overlap: booking starts before check_out and ends after check_in
               lte(bookings.check_in_date, checkOutDate),
@@ -136,7 +139,7 @@ class Rooms {
             )
           );
 
-        const bookedRoomsCount = Number(overlappingBookings[0]?.booking_count || 0);
+        const bookedRoomsCount = Number(overlappingBookings[0]?.total_rooms_booked || 0);
         const availableRooms = Math.max(0, roomType.total_inventory - bookedRoomsCount);
 
         roomAvailabilityData.push({
@@ -169,7 +172,7 @@ class Rooms {
 
       const summary: HotelRoomSummary = {
         hotel_id: hotelId,
-        hotel_name: hotelInfo?.hotel_name || 'Unknown Hotel',
+        hotel_name: hotelInfo.hotel_name || 'Unknown Hotel',
         total_room_types: roomAvailabilityData.length,
         total_rooms: totalRooms,
         available_rooms: totalAvailableRooms,
@@ -196,6 +199,7 @@ class Rooms {
       };
     }
   }
+
   // Update - Update Room Type
   async updateRoomType(req: Request): Promise<DataResponse> {
     const { hotelId, roomTypeId } = req.params;
@@ -250,11 +254,37 @@ class Rooms {
       };
     }
   }
+
   // Delete - Delete Room Type
   async deleteRoomType(req: Request): Promise<DataResponse> {
     const { hotelId, roomTypeId } = req.params;
 
     try {
+      // Check if there are any active bookings for this room type before deleting
+      const activeBookings = await database
+        .select({
+          count: sql<number>`count(*)`
+        })
+        .from(bookings)
+        .innerJoin(bookingRoomTypes, eq(bookings.id, bookingRoomTypes.booking_id))
+        .where(
+          and(
+            eq(bookingRoomTypes.roomTypeId, roomTypeId),
+            eq(bookings.cancelled, false),
+            gte(bookings.check_out_date, new Date()) // Future or ongoing bookings
+          )
+        );
+
+      const activeBookingCount = Number(activeBookings[0]?.count || 0);
+
+      if (activeBookingCount > 0) {
+        return {
+          data: null,
+          message: `Cannot delete room type. There are ${activeBookingCount} active booking(s) for this room type.`,
+          status: HttpStatusCodes.BAD_REQUEST
+        };
+      }
+
       const [deletedRoomType] = await database
         .delete(room)
         .where(
@@ -289,4 +319,3 @@ class Rooms {
 }
 
 export const roomRepository = new Rooms();
-
