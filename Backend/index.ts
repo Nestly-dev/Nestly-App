@@ -20,6 +20,7 @@ import { HotelMediaRoute } from "./src/routes/Hotel.media";
 import { VideoRoute } from "./src/routes/Content.videos";
 import { HotelPostRoute } from "./src/routes/Hotel.posts";
 import { complaintsRoutes } from "./src/routes/Client.complaints";
+import { InvitationRoutes } from "./src/routes/invitations";
 import { BookingCleanup } from "./src/middleware/booking.cleanup";
 dotenv.config();
 
@@ -41,17 +42,19 @@ app.get('/api/v1/test', (req: Request, res: Response) => {
   res.json('Welcome')
 });
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/profile', authMiddleware, ProfileRoute);
+app.use('/api/v1/profile', ProfileRoute);
 app.use('/api/v1/hotels', HotelBasicDataRoutes);
 app.use('/api/v1/hotels/rooms', HotelRoomsRoutes);
 app.use('/api/v1/hotels/availability', HotelPricingAvailabilityRoutes);
 app.use('/api/v1/hotels/discounts', HotelPriceModifiersRoutes);
-app.use('/api/v1/hotels/booking', authMiddleware, BookingRoutes);
+app.use('/api/v1/hotels/booking', BookingRoutes);
 app.use('/api/v1/hotels/reviews', ReviewRoute);
 app.use('/api/v1/hotels/Media', HotelMediaRoute);
 app.use('/api/v1/hotels/posts', HotelPostRoute);
 app.use('/api/v1/content/videos', VideoRoute);
 app.use('/api/v1/complaints', authMiddleware, complaintsRoutes);
+app.use('/api/v1/invitation', authMiddleware, InvitationRoutes);
+
 
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
