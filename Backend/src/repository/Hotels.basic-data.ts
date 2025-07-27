@@ -2,12 +2,15 @@ import { Request } from 'express';
 import { HttpStatusCodes, SECRETS } from '../utils/helpers';
 import { database } from '../utils/config/database';
 import { eq } from 'drizzle-orm';
-import { DataResponse, IsubAccountInfo } from '../utils/types';
-import { hotelMedia, hotels, room, roomPricing } from '../utils/config/schema';
+import { CreatedUserType, DataResponse, IsubAccountInfo } from '../utils/types';
+import { hotelManagement, hotelMedia, hotels, room, roomPricing, userRolesTable } from '../utils/config/schema';
+import { AuthenticationRepository } from './User';
+import { sendHotelManagementCredentials } from './sendEmails';
 const Flutterwave = require('flutterwave-node-v3');
 
 const flw = new Flutterwave(SECRETS.FLW_PUBLIC_KEY, SECRETS.FLW_SECRET_KEY);
 
+const AuthData = new AuthenticationRepository();
 
 // Define types based on your schema
 type PaymentOption = 'Visa' | 'MasterCard' | 'Momo';
@@ -45,8 +48,9 @@ class Hotels {
         menu_download_url: req.body.menu_download_url,
         sponsored: req.body.sponsored,
         status: req.body.status as HotelStatus,
+        management_email: req.body.management_email,
+        management_name: req.body.management_name
       };
-
 
       const hotelDataSubAccountPayload = {
         account_bank: req.body.account_bank,
@@ -83,14 +87,65 @@ class Hotels {
           split_type: 'percentage',
           split_value: 0.05,
         }
+
         const [createdHotel] = await database
           .insert(hotels)
           .values(hotelPayload)
           .returning();
 
+        const userExists = await AuthData.checkExistingUserWithData(hotelData.management_email as string);
+
+        const { emailValidationMessage, emailValidationStatus, data } = userExists;
+
+        if (emailValidationStatus !== HttpStatusCodes.OK) {
+          // a user exists, we need to update records in the hotel management Table
+          await database.insert(hotelManagement).values({
+            user_id: data?.id as string,
+            hotel_id: createdHotel.id
+          })
+
+          // a user exists, we need to update the roles to hotel manager
+          await database.update(userRolesTable).set({
+            user_id: data?.id as string,
+            roles: "hotel-manager"
+          })
+        }
+
+        // Register user's email and update records in the hotel management
+
+        // Generate password
+        const password = AuthData.generateSecurePassword();
+        const hashedPassword = await AuthData.hashPassword(password)
+        const newUser: CreatedUserType = await AuthData.createUser({
+          username: hotelData.management_name as string,
+          email: hotelData.management_email as string,
+          password: hashedPassword,
+          email_verified: false
+        });
+
+        // Insert Credentials into Hotel Management
+        await database.insert(hotelManagement).values({
+          user_id: newUser.id as string,
+          hotel_id: createdHotel.id
+        });
+
+        await database.insert(userRolesTable).values({
+          user_id: newUser.id as string,
+          roles: "hotel-manager"
+        });
+
+        await sendHotelManagementCredentials({
+          username: newUser.username,
+          password,
+          managerEmail: newUser.email,
+          subject: "Your Hotel Management Access Credentials"
+        });
+
+        console.log("This is the Hotel Manager password ", password);
+
         return {
           data: createdHotel,
-          message: 'Hotel created successfully',
+          message: 'Hotel profile successfully created. Security credentials for hotel management have been sent via email.',
           status: HttpStatusCodes.CREATED,
         };
       }
