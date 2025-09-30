@@ -1,58 +1,57 @@
 import Mailjet from 'node-mailjet';
 import { SECRETS } from '../utils/helpers';
 
-// Create a reusable Mailjet connection
 const mailjet = Mailjet.apiConnect(
-  SECRETS.Node_MailJet_APIKEY_PUBLIC as string,
-  SECRETS.Node_MailJet_APIKEY_PRIVATE as string
+  process.env.MAILJET_API_KEY || '',
+  process.env.MAILJET_API_SECRET || ''
 );
 
-type EmailParams = {
-  toEmail: string;
-  toName: string;
-  fromEmail: string;
-  fromName: string;
+export interface EmailData {
+  to: string;
+  toName?: string;
   subject: string;
-  html: string;
-  text?: string;
-};
+  textPart?: string;
+  htmlPart?: string;
+  templateId?: number;
+  variables?: Record<string, any>;
+}
 
-/**
- * Send an email using Mailjet
- */
-export async function sendMailjetEmail({
-  toEmail,
-  toName,
-  fromEmail,
-  fromName,
-  subject,
-  html,
-  text = '',
-}: EmailParams): Promise<void> {
+export const sendEmail = async (emailData: EmailData) => {
+  if (!process.env.MAILJET_API_KEY || !process.env.MAILJET_API_SECRET) {
+    console.error('Mailjet credentials are not configured');
+    throw new Error('Email service is not configured');
+  }
+
   try {
-    const request = await mailjet.post('send', { version: 'v3.1' }).request({
+    const request = mailjet.post('send', { version: 'v3.1' }).request({
       Messages: [
         {
           From: {
-            Email: fromEmail,
-            Name: fromName,
+            Email: process.env.MAILJET_SENDER_EMAIL || 'noreply@nestly.com',
+            Name: process.env.MAILJET_SENDER_NAME || 'Nestly',
           },
           To: [
             {
-              Email: toEmail,
-              Name: toName,
+              Email: emailData.to,
+              Name: emailData.toName || emailData.to,
             },
           ],
-          Subject: subject,
-          TextPart: text,
-          HTMLPart: html,
+          Subject: emailData.subject,
+          TextPart: emailData.textPart,
+          HTMLPart: emailData.htmlPart,
+          TemplateID: emailData.templateId,
+          TemplateLanguage: emailData.templateId ? true : undefined,
+          Variables: emailData.variables,
         },
       ],
     });
 
-    console.log('Email sent');
+    const result = await request;
+    return result.body;
   } catch (error: any) {
-    console.error('Error sending Mailjet email:', error?.statusCode || error);
-    throw new Error('Failed to send email');
+    console.error('Error sending email:', error.statusCode, error.message);
+    throw error;
   }
-}
+};
+
+export default mailjet;

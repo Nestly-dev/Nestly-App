@@ -1,4 +1,4 @@
-import { sendMailjetEmail } from '../repository/mailjet';
+import { sendEmail } from '../repository/mailjet';
 import { emailingOptions } from '../utils/EmailingTemplates';
 import { SECRETS } from "../utils/helpers";
 
@@ -36,13 +36,11 @@ export async function sendComplainsEmail({
   const viaEmail = "atnestly@gmail.com"
 
   try {
-    await sendMailjetEmail({
-      toEmail: viaEmail,
+    await sendEmail({
+      to: viaEmail,
       toName: "Hotel Complaints Team",
-      fromEmail: SECRETS.FROM_EMAIL,
-      fromName: `${firstname}`,
       subject: subject as string,
-      html: complainsEmails,
+      htmlPart: complainsEmails,
     });
   } catch (error) {
     console.error('Error sending complaint email:', error);
@@ -63,13 +61,11 @@ export async function sendHotelManagementCredentials({
   );
 
   try {
-    await sendMailjetEmail({
-      toEmail: managerEmail as string,
+    await sendEmail({
+      to: managerEmail as string,
       toName: "Hotel Manager",
-      fromEmail: SECRETS.FROM_EMAIL,
-      fromName: "Hotel Management",
       subject: subject || 'Hotel Management Credentials',
-      html: emailTemplateFormat,
+      htmlPart: emailTemplateFormat,
     });
   } catch (error) {
     console.error('Error sending credentials email:', error);
@@ -88,13 +84,11 @@ export async function sendForgotPasswordEmail({
   );
 
   try {
-    await sendMailjetEmail({
-      toEmail: email as string,
+    await sendEmail({
+      to: email as string,
       toName: firstname || "User",
-      fromEmail: SECRETS.FROM_EMAIL,
-      fromName: "Via Password Reset",
       subject: 'Via Password Reset',
-      html: emailTemplate,
+      htmlPart: emailTemplate,
     });
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -113,13 +107,11 @@ export async function sendPasswordUpdateEmail({
   );
 
   try {
-    await sendMailjetEmail({
-      toEmail: email as string,
+    await sendEmail({
+      to: email as string,
       toName: firstname || "User",
-      fromEmail: SECRETS.FROM_EMAIL,
-      fromName: "Via Password Update",
       subject: 'Via Password Updated',
-      html: emailTemplate,
+      htmlPart: emailTemplate,
     });
   } catch (error) {
     console.error('Error sending password update email:', error);
@@ -135,13 +127,11 @@ export async function inviteViaAdmin({
   // Get the credentials email template
 
   try {
-    await sendMailjetEmail({
-      toEmail: inviteeEmail as string,
+    await sendEmail({
+      to: inviteeEmail as string,
       toName: inviteeUsername as string,
-      fromEmail: SECRETS.FROM_EMAIL,
-      fromName: "Via Administration",
       subject: 'Via Admin Credentials',
-      html: emailTemplate as string,
+      htmlPart: emailTemplate as string,
     });
   } catch (error) {
     console.error('Error sending credentials email:', error);
@@ -157,13 +147,11 @@ export async function inviteHotelManager({
   // Get the credentials email template
 
   try {
-    await sendMailjetEmail({
-      toEmail: inviteeEmail as string,
+    await sendEmail({
+      to: inviteeEmail as string,
       toName: inviteeUsername as string,
-      fromEmail: SECRETS.FROM_EMAIL,
-      fromName: "Hotel Management",
       subject: 'Hotel Management Credentials',
-      html: emailTemplate as string,
+      htmlPart: emailTemplate as string,
     });
   } catch (error) {
     console.error('Error sending credentials email:', error);
@@ -179,13 +167,11 @@ export async function inviteCustomer({
   // Get the credentials email template
 
   try {
-    await sendMailjetEmail({
-      toEmail: inviteeEmail as string,
+    await sendEmail({
+      to: inviteeEmail as string,
       toName: inviteeUsername as string,
-      fromEmail: SECRETS.FROM_EMAIL,
-      fromName: "Via Administration",
       subject: 'Customer Login Credentials',
-      html: emailTemplate as string,
+      htmlPart: emailTemplate as string,
     });
   } catch (error) {
     console.error('Error sending credentials email:', error);
@@ -200,13 +186,11 @@ export async function softwareGlitchEmail({
   // Get the credentials email template
 
   try {
-    await sendMailjetEmail({
-      toEmail: "ialainquentin@gmail.com",
+    await sendEmail({
+      to: "ialainquentin@gmail.com",
       toName: username as string,
-      fromEmail: SECRETS.FROM_EMAIL,
-      fromName: "Software Glitch Report",
       subject: '[Action Needed]: Software Glitch Reported',
-      html: emailTemplate as string,
+      htmlPart: emailTemplate as string,
     });
   } catch (error) {
     console.error('Error sending credentials email:', error);
