@@ -102,7 +102,7 @@ useEffect(() =>{
                 Available
                 </Text>
                 <View style={{flexDirection: "row"}}>
-                  <Text style={{ fontSize: 18, fontWeight: 500, marginRight: 10 }}>{room.available_inventory} Rooms</Text>
+                  <Text style={{ fontSize: 18, fontWeight: 500, marginRight: 10 }}>5 Rooms</Text>
                   <View>
                   <MaterialCommunityIcons name="sticker-check" size={24} color="#4cbf04" />
                   </View>

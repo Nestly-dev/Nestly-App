@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View, Image } from "react-native";
 import React, { useState, useContext, useEffect } from "react";
-// import { data } from "../data/reviewdata";
+import { data } from "../data/reviewdata";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
 const Reviews = () => {
  const {ip} = useContext(AuthContext)
-  const [data, setData] = useState();
+  // const [data, setData] = useState();
   useEffect(() =>{
     const smallReviewUrl = `http://${ip}:8000/api/v1/hotels/reviews/all-reviews`
     axios.get(smallReviewUrl)
