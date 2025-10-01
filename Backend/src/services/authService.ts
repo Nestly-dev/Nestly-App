@@ -1,13 +1,15 @@
+// Backend/src/services/authService.ts
+
 import { RoleOptions } from './../utils/types';
-// src/services/AuthenticationService.ts
 import { Request, Response } from 'express';
 import { HttpStatusCodes } from '../utils/helpers';
 import { loginDataType, RegisterUserTypes, resetPasswordDataType, UserDataProfile } from '../utils/types';
 import { AuthenticationRepository } from '../repository/User';
-
+import { sendVerificationEmail } from '../repository/sendEmails';
 
 export class AuthenticationService {
   private repository: AuthenticationRepository = new AuthenticationRepository;
+  
   // Register Service
   async register(roles: RoleOptions, req: Request, res: Response): Promise<Response> {
     const userData: RegisterUserTypes = req.body;
@@ -51,20 +53,47 @@ export class AuthenticationService {
       const verificationToken = await this.repository.generateToken(email);
       const verificationLink = `${req.protocol}://${req.get('host')}/api/v1/auth/verify-email/${verificationToken}`;
 
-      return res.status(HttpStatusCodes.CREATED).json({
-        success: true,
-        status: HttpStatusCodes.CREATED,
-        message: "User registered successfully",
-        data: {
-          user: {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            email_verified: user.email_verified
+      // ✅ ✅ ✅ SEND VERIFICATION EMAIL ✅ ✅ ✅
+      try {
+        await sendVerificationEmail({
+          firstname: user.username,
+          email: user.email,
+          verificationLink: verificationLink
+        });
+        
+        console.log('✅ Verification email sent to:', user.email);
+        
+        return res.status(HttpStatusCodes.CREATED).json({
+          success: true,
+          status: HttpStatusCodes.CREATED,
+          message: "User registered successfully. Please check your email to verify your account.",
+          data: {
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              email_verified: user.email_verified
+            }
           }
-          // emailVerificationLink: verificationLink
-        }
-      });
+        });
+      } catch (emailError) {
+        // Even if email fails, user is registered
+        console.error('❌ Failed to send verification email:', emailError);
+        
+        return res.status(HttpStatusCodes.CREATED).json({
+          success: true,
+          status: HttpStatusCodes.CREATED,
+          message: "User registered successfully. However, we couldn't send the verification email. Please contact support.",
+          data: {
+            user: {
+              id: user.id,
+              username: user.username,
+              email: user.email,
+              email_verified: user.email_verified
+            }
+          }
+        });
+      }
 
     } catch (error) {
       // Log the actual error for debugging

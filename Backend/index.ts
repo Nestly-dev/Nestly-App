@@ -1,8 +1,12 @@
+// Backend/index.ts
+
+// ✅ CRITICAL: Load environment variables FIRST before ANY other imports
+import dotenv from "dotenv";
+dotenv.config();
+
+// Now import everything else
 import express, { Express, Request, Response } from "express";
 import { SECRETS } from "./src/utils/helpers";
-import dotenv from "dotenv";
-const app: Express = express();
-const port = SECRETS.PORT;
 import { authRoutes } from "./src/routes/auth";
 import { authMiddleware } from "./src/middleware/authMiddleware";
 import { ProfileRoute } from "./src/routes/profile";
@@ -22,7 +26,9 @@ import { HotelPostRoute } from "./src/routes/Hotel.posts";
 import { complaintsRoutes } from "./src/routes/Client.complaints";
 import { InvitationRoutes } from "./src/routes/invitations";
 import { BookingCleanup } from "./src/middleware/booking.cleanup";
-dotenv.config();
+
+const app: Express = express();
+const port = SECRETS.PORT;
 
 // Middleware
 app.use(cors());
@@ -36,6 +42,16 @@ app.use(BookingCleanup({
   logActivity: process.env.NODE_ENV === 'development'
 }));
 
+// Health check endpoint
+app.get('/health', (req: Request, res: Response) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    environment: process.env.NODE_ENV || 'development',
+    emailConfigured: !!process.env.FROM_EMAIL,
+    mailjetConfigured: !!(process.env.Node_MailJet_APIKEY_PUBLIC && process.env.Node_MailJet_APIKEY_PRIVATE)
+  });
+});
 
 // Routes
 app.get('/api/v1/test', (req: Request, res: Response) => {
@@ -55,8 +71,9 @@ app.use('/api/v1/content/videos', VideoRoute);
 app.use('/api/v1/complaints', authMiddleware, complaintsRoutes);
 app.use('/api/v1/invitation', authMiddleware, InvitationRoutes);
 
-
 app.listen(port, () => {
   console.log(`[server]: Server is running at http://localhost:${port}`);
+  console.log(`📧 Email service: ${process.env.FROM_EMAIL || '❌ NOT CONFIGURED'}`);
+  console.log(`🔑 Mailjet Keys: ${process.env.Node_MailJet_APIKEY_PUBLIC ? '✅ Configured' : '❌ Missing'}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
 });
-

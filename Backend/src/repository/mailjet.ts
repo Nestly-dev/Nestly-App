@@ -1,10 +1,26 @@
-import Mailjet from 'node-mailjet';
-import { SECRETS } from '../utils/helpers';
+// Backend/src/repository/mailjet.ts
 
-const mailjet = Mailjet.apiConnect(
-  process.env.MAILJET_API_KEY || '',
-  process.env.MAILJET_API_SECRET || ''
-);
+import Mailjet from 'node-mailjet';
+
+// Lazy initialization - only create client when needed
+let mailjetClient: any = null;
+
+const getMailjetClient = () => {
+  if (!mailjetClient) {
+    const publicKey = process.env.Node_MailJet_APIKEY_PUBLIC;
+    const privateKey = process.env.Node_MailJet_APIKEY_PRIVATE;
+
+    if (!publicKey || !privateKey) {
+      throw new Error('Mailjet API keys are not configured. Please check your .env file.');
+    }
+
+    console.log('🔧 Initializing Mailjet client...');
+    console.log(`   Public Key: ${publicKey.substring(0, 8)}...${publicKey.substring(publicKey.length - 4)}`);
+    
+    mailjetClient = Mailjet.apiConnect(publicKey, privateKey);
+  }
+  return mailjetClient;
+};
 
 export interface EmailData {
   to: string;
@@ -16,19 +32,26 @@ export interface EmailData {
   variables?: Record<string, any>;
 }
 
-export const sendEmail = async (emailData: EmailData) => {
-  if (!process.env.MAILJET_API_KEY || !process.env.MAILJET_API_SECRET) {
-    console.error('Mailjet credentials are not configured');
-    throw new Error('Email service is not configured');
+export const sendEmail = async (emailData: EmailData): Promise<any> => {
+  // Validate FROM_EMAIL
+  const fromEmail = process.env.FROM_EMAIL;
+  if (!fromEmail) {
+    console.error('❌ FROM_EMAIL is not configured');
+    throw new Error('Sender email is not configured');
   }
 
   try {
+    console.log(`📧 Sending email to: ${emailData.to}`);
+    console.log(`📬 Subject: ${emailData.subject}`);
+
+    const mailjet = getMailjetClient();
+
     const request = mailjet.post('send', { version: 'v3.1' }).request({
       Messages: [
         {
           From: {
-            Email: process.env.MAILJET_SENDER_EMAIL || 'noreply@nestly.com',
-            Name: process.env.MAILJET_SENDER_NAME || 'Nestly',
+            Email: fromEmail,
+            Name: 'Nestly Hotel Booking',
           },
           To: [
             {
@@ -37,7 +60,7 @@ export const sendEmail = async (emailData: EmailData) => {
             },
           ],
           Subject: emailData.subject,
-          TextPart: emailData.textPart,
+          TextPart: emailData.textPart || 'Please view this email in an HTML-compatible email client.',
           HTMLPart: emailData.htmlPart,
           TemplateID: emailData.templateId,
           TemplateLanguage: emailData.templateId ? true : undefined,
@@ -47,11 +70,23 @@ export const sendEmail = async (emailData: EmailData) => {
     });
 
     const result = await request;
+    
+    console.log('✅ Email sent successfully!');
+    console.log(`   Message ID: ${result.body.Messages[0].To[0].MessageID}`);
+    console.log(`   Status: ${result.body.Messages[0].Status}`);
+    
     return result.body;
   } catch (error: any) {
-    console.error('Error sending email:', error.statusCode, error.message);
-    throw error;
+    console.error('❌ Error sending email:');
+    console.error(`   Status Code: ${error.statusCode}`);
+    console.error(`   Message: ${error.message}`);
+    
+    if (error.response?.body) {
+      console.error(`   Error Details:`, JSON.stringify(error.response.body, null, 2));
+    }
+    
+    throw new Error(`Failed to send email: ${error.message || 'Unknown error'}`);
   }
 };
 
-export default mailjet;
+export default getMailjetClient;
