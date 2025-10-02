@@ -320,3 +320,5 @@ export const helpArticles = pgTable('help_articles', {
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
 */
+
+

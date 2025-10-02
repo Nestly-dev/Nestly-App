@@ -29,6 +29,7 @@ export interface IBookingPayment {
 }
 
 class BookingRepository {
+  
   async createBooking(req: Request): Promise<DataResponse> {
     const { hotelId } = req.params;
     const userId = req.user?.id as string;
@@ -835,6 +836,9 @@ class BookingRepository {
       return 0;
     }
   }
+
+  
 }
+
 
 export const bookingRepository = new BookingRepository();

@@ -156,6 +156,7 @@ class FlutterWavePaymentRepository {
       };
     }
   }
+  
 }
 
 export const paymentRepository = new FlutterWavePaymentRepository();
