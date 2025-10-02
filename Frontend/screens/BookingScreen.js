@@ -58,17 +58,17 @@ const BookingScreen = ({ navigation, route }) => {
         
         // Map the API response to match our expected format
         const formattedRooms = roomsData.map((room) => ({
-          id: room.room_id,
-          type: room.room_type,
+          id: room.id, // Use the actual room ID from API
+          type: room.type,
           description: room.description || "Comfortable room",
           max_occupancy: room.max_occupancy,
           num_beds: room.num_beds,
           room_size: room.room_size,
           total_inventory: room.total_inventory,
           available_inventory: room.available_inventory || room.total_inventory,
-          roomFee: room.roomFee,
-          serviceFee: room.serviceFee,
-          currency: room.currency
+          roomFee: room.roomFee || "50000",
+          serviceFee: room.serviceFee || "5000",
+          currency: room.currency || "RWF"
         }));
         
         setRoomInfo(formattedRooms);
@@ -97,21 +97,26 @@ const BookingScreen = ({ navigation, route }) => {
     }
   };
 
-  // Function to update individual room prices
-  const updateRoomPrice = (roomType, count, pricePerRoom) => {
-    setRoomPrices((prev) => ({
-      ...prev,
-      [roomType]: {
-        count: count,
-        price: pricePerRoom * count,
-      },
-    }));
+  // FIXED: Function to update individual room prices using roomId as key
+  const updateRoomPrice = (roomId, count, pricePerRoom) => {
+    setRoomPrices((prev) => {
+      const updatedPrices = {
+        ...prev,
+        [roomId]: {
+          count: count,
+          pricePerRoom: pricePerRoom,
+          totalPrice: pricePerRoom * count,
+          roomType: roomInfo.find(r => r.id === roomId)?.type || 'Unknown',
+        },
+      };
+      return updatedPrices;
+    });
   };
 
-  // Calculate total whenever roomPrices changes
+  // FIXED: Calculate total using totalPrice property
   useEffect(() => {
     const total = Object.values(roomPrices).reduce(
-      (sum, room) => sum + room.price,
+      (sum, room) => sum + (room.totalPrice || 0),
       0
     );
     setTotalPrice(total);
@@ -140,16 +145,19 @@ const BookingScreen = ({ navigation, route }) => {
     return true;
   };
 
+  // FIXED: Prepare booking data with proper room information
   const onConfirm = () => {
     if (!validateBooking()) return;
 
-    // Prepare booking data
+    // Prepare booking data with all room details
     const selectedRooms = Object.entries(roomPrices)
       .filter(([_, data]) => data.count > 0)
-      .map(([roomType, data]) => ({
-        roomType: roomType,
+      .map(([roomId, data]) => ({
+        roomId: roomId,
+        roomType: data.roomType,
         count: data.count,
-        price: data.price,
+        pricePerRoom: data.pricePerRoom,
+        totalPrice: data.totalPrice,
       }));
 
     const bookingData = {
@@ -165,6 +173,9 @@ const BookingScreen = ({ navigation, route }) => {
       service_fee: serviceFee,
       grand_total: grandTotal,
     };
+
+    // Debug: Log booking data to verify all rooms are included
+    console.log("Booking Data:", JSON.stringify(bookingData, null, 2));
 
     // Navigate to payment screen
     navigation.navigate("Payment", {

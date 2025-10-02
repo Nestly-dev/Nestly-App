@@ -14,14 +14,16 @@ const RoomItem = ({ item, updateRoomPrice }) => {
   const handleIncrement = () => {
     const newCount = roomCount + 1;
     setRoomCount(newCount);
-    updateRoomPrice(item.type, newCount, parseFloat(item.roomFee));
+    // FIXED: Use item.id instead of item.type to prevent overwriting
+    updateRoomPrice(item.id, newCount, parseFloat(item.roomFee));
   };
 
   const handleDecrement = () => {
     if (roomCount > 0) {
       const newCount = roomCount - 1;
       setRoomCount(newCount);
-      updateRoomPrice(item.type, newCount, parseFloat(item.roomFee));
+      // FIXED: Use item.id instead of item.type to prevent overwriting
+      updateRoomPrice(item.id, newCount, parseFloat(item.roomFee));
     }
   };
 
@@ -84,7 +86,7 @@ const RoomItem = ({ item, updateRoomPrice }) => {
         <View style={styles.bottomRow}>
           <View style={styles.priceContainer}>
             <Text style={styles.priceLabel}>Price per night</Text>
-            <Text style={styles.price}>{item.currency} {parseFloat(item.roomFee).toLocaleString()}</Text>
+            <Text style={styles.price}>{item.currency || 'RWF'} {parseFloat(item.roomFee).toLocaleString()}</Text>
           </View>
 
           {item.available_inventory > 0 ? (
@@ -126,7 +128,7 @@ const RoomItem = ({ item, updateRoomPrice }) => {
           <View style={styles.selectedInfo}>
             <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
             <Text style={styles.selectedText}>
-              {roomCount} {roomCount === 1 ? 'room' : 'rooms'} selected - Total: {item.currency}{' '}
+              {roomCount} {roomCount === 1 ? 'room' : 'rooms'} selected - Total: {item.currency || 'RWF'}{' '}
               {(roomCount * parseFloat(item.roomFee)).toLocaleString()}
             </Text>
           </View>
