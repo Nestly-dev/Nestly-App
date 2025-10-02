@@ -1,3 +1,5 @@
+// Frontend/screens/SignUpScreen.js
+
 import {
   StyleSheet,
   Text,
@@ -8,14 +10,15 @@ import {
   TextInput,
   Pressable,
   ActivityIndicator,
-  Alert
+  Alert,
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Entypo from "@expo/vector-icons/Entypo";
-import React, { useState, useContext } from "react";
-import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import React, { useContext, useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthContext from "../context/AuthContext";
 
 const SignUpScreen = () => {
@@ -23,78 +26,85 @@ const SignUpScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-  const { ip } = useContext(AuthContext);
+  const { setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails, ip } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignUp = async () => {
-    // Validation
-    if (!email || !password || !name) {
+    if (!name || !email || !password) {
       Alert.alert("Error", "Please fill up all the details");
       return;
     }
 
-    if (name.trim().length < 2) {
-      Alert.alert("Error", "Name must be at least 2 characters");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address");
-      return;
-    }
-
     if (password.length < 8) {
-      Alert.alert("Error", "Password must be at least 8 characters");
+      Alert.alert("Error", "Password must be at least 8 characters long");
       return;
     }
 
     const url = `http://${ip}:8000/api/v1/auth/register`;
-    const credentials = {
+    const userData = {
       username: name.trim(),
       email: email.trim().toLowerCase(),
       password: password
     };
 
     setIsLoading(true);
+    console.log("Registering user:", userData.email);
 
     try {
-      const response = await axios.post(url, credentials);
+      const response = await axios.post(url, userData);
       const result = response.data;
+      console.log("✅ Registration response:", result);
 
-      if (result.success && (result.status === 201 || result.message?.includes("registered successfully"))) {
+      if (result.success && result.data) {
+        const user = result.data.user;
+
+        // Store user data temporarily
+        await AsyncStorage.setItem('tempUserData', JSON.stringify(user));
+
         Alert.alert(
-          "Success!",
-          "Registration successful! Please check your email to verify your account before logging in.",
+          "Registration Successful! 🎉",
+          "Please check your email to verify your account. Check your spam folder if you don't see it.",
           [
             {
               text: "OK",
               onPress: () => {
-                // Clear form
+                // Clear the form
                 setName("");
                 setEmail("");
                 setPassword("");
+                
+                // Navigate to sign in
                 navigation.navigate("SignIn");
               }
             }
           ]
         );
+
+        // Update context to show not verified status
+        setSignedIn(false);
+        setAuthStatus("notVerified");
+        await saveAuthStatus("isLoggedIn", "notVerified");
+
       } else {
         Alert.alert("Registration Failed", result.message || "Please try again");
       }
     } catch (error) {
-      console.error("Registration error:", error);
-
+      console.error("❌ Registration error:", error);
+      
       if (error.response) {
         const errorMessage = error.response.data?.message || "Registration failed";
-
-        if (error.response.status === 401 && errorMessage.includes("already exists")) {
-          Alert.alert("Account Already Exists", "This email is already registered. Please sign in instead.");
+        const errorStatus = error.response.status;
+        
+        console.log("Error status:", errorStatus);
+        console.log("Error message:", errorMessage);
+        
+        if (errorStatus === 401 && errorMessage.includes("already exists")) {
+          Alert.alert("Error", "An account with this email already exists. Please sign in instead.");
         } else {
           Alert.alert("Error", errorMessage);
         }
       } else if (error.request) {
-        Alert.alert("Network Error", "Please check your internet connection and try again");
+        Alert.alert("Network Error", "Please check your internet connection and make sure the server is running");
       } else {
         Alert.alert("Error", "Something went wrong. Please try again");
       }
@@ -185,8 +195,7 @@ const SignUpScreen = () => {
             style={{ marginTop: 20 }}
           >
             <Text style={{ textAlign: "center", fontWeight: "500", fontSize: 15 }}>
-              Already Have An Account?{" "}
-              <Text style={{ color: "#1995AD", fontWeight: "bold" }}>LogIn</Text>
+              Already Have An Account? <Text style={{ color: "#1995AD", fontWeight: "bold" }}>Sign In</Text>
             </Text>
           </Pressable>
         </View>
@@ -195,44 +204,40 @@ const SignUpScreen = () => {
   );
 };
 
-export default SignUpScreen;
-
 const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
-    gap: 10,
     alignItems: "center",
-    backgroundColor: "rgb(255,255,255)",
-    borderColor: "rgb(233, 233, 233)",
-    borderWidth: 2,
-    width: "87%",
-    marginLeft: 25,
-    height: 60,
-    padding: 10,
-    borderRadius: 20,
-    marginTop: 10,
+    gap: 7,
+    backgroundColor: "#E0E0E0",
+    paddingVertical: 7,
+    borderRadius: 7,
+    marginTop: 15,
+    paddingHorizontal: 10,
   },
   input: {
-    flex: 1,
-    marginVertical: 10,
     color: "gray",
+    marginVertical: 13,
+    width: 300,
     fontSize: 16,
   },
   button: {
+    width: 220,
     backgroundColor: "#1995AD",
-    width: "87%",
-    borderRadius: 6,
-    padding: 15,
+    padding: 17,
     marginLeft: "auto",
     marginRight: "auto",
+    borderRadius: 9,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
     textAlign: "center",
-    fontSize: 16,
     fontWeight: "bold",
+    fontSize: 17,
     color: "white",
   },
 });
+
+export default SignUpScreen;

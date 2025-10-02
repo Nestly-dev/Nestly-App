@@ -72,8 +72,7 @@ const HomeScreen = () => {
     .then((response) =>{
       const result = response.data
       const hotels = result.data
-      saveHotelData("all-Hotels", hotels)
-      setHotelData(hotels)
+      saveHotelData(hotels)
     }).catch((error) => {
       console.log(`The Error we are facing is ${error}`);
     })

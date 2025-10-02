@@ -18,7 +18,7 @@ import axios from "axios";
 import RoomItem from "../components/RoomItem";
 
 const BookingScreen = ({ navigation, route }) => {
-  const { currentID, user, ip, userId, logout } = useContext(AuthContext);
+  const { currentID, user, ip, authToken, isAuthenticated } = useContext(AuthContext);
   const hotelId = currentID;
   
   const [adults, setAdults] = useState(1);
@@ -36,6 +36,17 @@ const BookingScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     fetchHotelAndRoomInfo();
+
+    // Restore booking state if returning from login
+    if (route.params?.bookingData) {
+      const { adults: savedAdults, children: savedChildren, checkInDate: savedCheckIn, checkOutDate: savedCheckOut, roomPrices: savedRoomPrices } = route.params.bookingData;
+
+      if (savedAdults) setAdults(savedAdults);
+      if (savedChildren) setChildren(savedChildren);
+      if (savedCheckIn) setCheckInDate(new Date(savedCheckIn));
+      if (savedCheckOut) setCheckOutDate(new Date(savedCheckOut));
+      if (savedRoomPrices) setRoomPrices(savedRoomPrices);
+    }
   }, []);
 
   const fetchHotelAndRoomInfo = async () => {
@@ -136,14 +147,41 @@ const BookingScreen = ({ navigation, route }) => {
       Alert.alert("Invalid Dates", "Check-out must be after check-in date");
       return false;
     }
-    
-    // Get token from user context
-    if (!user?.token) {
-      Alert.alert("Authentication Required", "Please login to continue");
-      logout();
+
+    // Check if user is authenticated
+    if (!isAuthenticated || !authToken) {
+      Alert.alert(
+        "Login Required",
+        "Please login to proceed with your booking",
+        [
+          {
+            text: "Cancel",
+            style: "cancel"
+          },
+          {
+            text: "Login",
+            onPress: () => {
+              // Save booking state to return here after login
+              navigation.navigate('SignIn', {
+                returnTo: 'Booking',
+                returnParams: {
+                  hotelId: hotelId,
+                  bookingData: {
+                    adults,
+                    children,
+                    checkInDate: checkInDate.toISOString(),
+                    checkOutDate: checkOutDate.toISOString(),
+                    roomPrices
+                  }
+                }
+              });
+            }
+          }
+        ]
+      );
       return false;
     }
-    
+
     return true;
   };
 
@@ -176,7 +214,7 @@ const BookingScreen = ({ navigation, route }) => {
         bookingPayload,
         {
           headers: {
-            'Authorization': `Bearer ${user.token}`,
+            'Authorization': `Bearer ${authToken}`,
             'Content-Type': 'application/json'
           }
         }

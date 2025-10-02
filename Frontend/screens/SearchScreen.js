@@ -25,13 +25,19 @@ const SearchScreen = () => {
 
   useEffect(() => {
     // Initialize filtered hotels with all hotels
-    setFilteredHotels(hotelData);
+    if (hotelData && Array.isArray(hotelData)) {
+      setFilteredHotels(hotelData);
+    }
   }, [hotelData]);
 
   // Function to handle search
   const handleSearch = (text) => {
     setSearchQuery(text);
-    
+
+    if (!hotelData || !Array.isArray(hotelData)) {
+      return;
+    }
+
     if (text.trim() === "") {
       setFilteredHotels(hotelData);
       return;

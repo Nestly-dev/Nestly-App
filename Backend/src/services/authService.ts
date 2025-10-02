@@ -107,9 +107,9 @@ export class AuthenticationService {
     }
   }
 
-  // Login Service
+  // Login Service - FIXED VERSION
   async login(req: Request, res: Response): Promise<Response> {
-    const loginData: loginDataType = req.body
+    const loginData: loginDataType = req.body;
     try {
       const user = await this.repository.findUserByEmail(loginData.email);
       if (!user) {
@@ -129,32 +129,36 @@ export class AuthenticationService {
         });
       }
 
-      // Check if email is verified
+      // ✅ CHECK IF EMAIL IS VERIFIED
       if (!user.email_verified) {
         return res.status(HttpStatusCodes.FORBIDDEN).json({
           success: false,
           status: HttpStatusCodes.FORBIDDEN,
-          message: 'Please verify your email before logging in. Check your inbox for verification link.',
+          message: 'Please verify your email before logging in. Check your inbox for the verification link.',
         });
       }
 
-      // Generate token with expiration
+      // Generate token
       const token = await this.repository.generateToken(loginData.email);
       await res.cookie("access_token", token, {
         httpOnly: true,
-        maxAge: 3600000 * 24 * 7 // 7 days
+        maxAge: 3600000 * 24 * 7
       });
 
-      // Remove password from user object before sending
-      const { password, ...userWithoutPassword } = user;
-
+      // ✅ RETURN CONSISTENT RESPONSE STRUCTURE
       return res.status(HttpStatusCodes.OK).json({
         success: true,
         status: HttpStatusCodes.OK,
         message: 'Login successful',
         data: {
-          token,
-          user: userWithoutPassword
+          token: token,
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            email_verified: user.email_verified,
+            auth_provider: user.auth_provider
+          }
         }
       });
     } catch (error) {
@@ -287,7 +291,7 @@ export class AuthenticationService {
       await this.repository.markEmailAsVerified(payload.email);
 
       return res.status(HttpStatusCodes.OK).json({
-        message: 'Email verified successfully.',
+        message: 'Email verified successfully. You can now log in.',
       });
     } catch (error) {
       return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);

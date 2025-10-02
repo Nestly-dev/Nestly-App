@@ -1,3 +1,5 @@
+// Frontend/screens/SignInScreen.js
+
 import {
   StyleSheet,
   Text,
@@ -9,7 +11,6 @@ import {
   Pressable,
   ActivityIndicator,
   Alert,
-  TouchableOpacity
 } from "react-native";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -18,22 +19,20 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 
-const SignInScreen = () => {
+const SignInScreen = ({ route }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-  const { login: contextLogin, ip } = useContext(AuthContext);
+  const { login, ip } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Get return navigation params if coming from another screen
+  const returnTo = route.params?.returnTo;
+  const returnParams = route.params?.returnParams;
+
   const handleSignIn = async () => {
-    // Validation
     if (!email || !password) {
       Alert.alert("Error", "Please fill up all the details");
-      return;
-    }
-
-    if (!email.includes("@")) {
-      Alert.alert("Error", "Please enter a valid email address");
       return;
     }
 
@@ -44,40 +43,63 @@ const SignInScreen = () => {
     };
 
     setIsLoading(true);
+    console.log("Logging in with:", credentials.email);
 
     try {
       const response = await axios.post(url, credentials);
       const result = response.data;
+      console.log("✅ Login response:", result);
 
       if (result.success && result.data) {
         const { token, user } = result.data;
 
         // Save to context (which also saves to SecureStore)
-        // Navigation will happen automatically via AppNavigation when isAuthenticated changes
-        await contextLogin(token, user);
+        await login(token, user);
+        console.log("✅ Login successful");
+
+        // If returning from another screen (e.g., booking), navigate back there
+        if (returnTo && returnParams) {
+          console.log(`Returning to ${returnTo} with params:`, returnParams);
+          // Small delay to ensure auth state is updated
+          setTimeout(() => {
+            navigation.navigate(returnTo, returnParams);
+          }, 100);
+        } else {
+          // Otherwise, navigation will happen automatically via AppNavigation
+          console.log("Navigation will happen automatically via AppNavigation");
+        }
 
       } else {
         Alert.alert("Login Failed", result.message || "Invalid credentials");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("❌ Login error:", error);
 
       if (error.response) {
         const status = error.response.status;
-        const errorMessage = error.response.data?.message;
+        const errorMessage = error.response.data?.message || error.response.data?.error;
+
+        console.log("Error status:", status);
+        console.log("Error message:", errorMessage);
 
         if (status === 401) {
-          Alert.alert("Login Failed", errorMessage || "Invalid email or password");
+          Alert.alert("Login Failed", "Invalid email or password");
         } else if (status === 403) {
           Alert.alert(
-            "Account Not Verified",
-            errorMessage || "Please check your email to verify your account before logging in."
+            "Account Not Verified", 
+            "Please check your email to verify your account before logging in.",
+            [
+              {
+                text: "OK",
+                onPress: () => console.log("User needs to verify email")
+              }
+            ]
           );
         } else {
           Alert.alert("Error", errorMessage || "Login failed. Please try again");
         }
       } else if (error.request) {
-        Alert.alert("Network Error", "Please check your internet connection and try again");
+        Alert.alert("Network Error", "Please check your internet connection and make sure the server is running");
       } else {
         Alert.alert("Error", "Something went wrong. Please try again");
       }
@@ -164,8 +186,7 @@ const SignInScreen = () => {
             style={{ marginTop: 20 }}
           >
             <Text style={{ textAlign: "center", fontWeight: "500", fontSize: 15 }}>
-              Don't Have An Account?{" "}
-              <Text style={{ color: "#1995AD", fontWeight: "bold" }}>Register</Text>
+              Don't Have An Account? <Text style={{ color: "#1995AD", fontWeight: "bold" }}>Sign Up</Text>
             </Text>
           </Pressable>
         </View>
@@ -174,52 +195,46 @@ const SignInScreen = () => {
   );
 };
 
-export default SignInScreen;
-
 const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
-    gap: 10,
     alignItems: "center",
-    backgroundColor: "rgb(255,255,255)",
-    borderColor: "rgb(233, 233, 233)",
-    borderWidth: 2,
-    width: "85%",
-    marginLeft: 30,
-    height: 60,
-    padding: 10,
-    borderRadius: 20,
+    gap: 7,
+    backgroundColor: "#E0E0E0",
+    paddingVertical: 7,
+    borderRadius: 7,
+    marginTop: 10,
+    paddingHorizontal: 10,
   },
   input: {
-    flex: 1,
-    marginVertical: 10,
     color: "gray",
+    marginVertical: 13,
+    width: 300,
     fontSize: 16,
   },
   optionsContainer: {
+    marginTop: 20,
     flexDirection: "row",
-    marginTop: 15,
     alignItems: "center",
     justifyContent: "space-between",
-    width: "85%",
-    marginLeft: 30,
-    marginTop: 10,
   },
   button: {
+    width: 220,
     backgroundColor: "#1995AD",
-    width: "85%",
-    borderRadius: 6,
-    padding: 15,
+    padding: 17,
     marginLeft: "auto",
     marginRight: "auto",
+    borderRadius: 9,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
     textAlign: "center",
-    fontSize: 16,
     fontWeight: "bold",
+    fontSize: 17,
     color: "white",
   },
 });
+
+export default SignInScreen;

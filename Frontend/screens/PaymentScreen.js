@@ -17,7 +17,7 @@ import axios from 'axios';
 
 const PaymentScreen = ({ route, navigation }) => {
   const { grandTotal, bookingData, bookingId } = route.params;
-  const { user, ip } = useContext(AuthContext);
+  const { user, ip, authToken, isAuthenticated } = useContext(AuthContext);
   
   const [loading, setLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState(bookingData?.checkout_url || null);
@@ -26,12 +26,36 @@ const PaymentScreen = ({ route, navigation }) => {
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const [pollingInterval, setPollingInterval] = useState(null);
 
+  // Check authentication on mount
+  useEffect(() => {
+    if (!isAuthenticated || !authToken) {
+      Alert.alert(
+        'Login Required',
+        'You need to be logged in to access the payment page',
+        [
+          {
+            text: 'Login',
+            onPress: () => navigation.navigate('SignIn', {
+              returnTo: 'Payment',
+              returnParams: { grandTotal, bookingData, bookingId }
+            })
+          },
+          {
+            text: 'Cancel',
+            onPress: () => navigation.goBack(),
+            style: 'cancel'
+          }
+        ]
+      );
+    }
+  }, []);
+
   // Auto-open WebView if checkout URL exists
   useEffect(() => {
-    if (checkoutUrl && !showWebView) {
+    if (checkoutUrl && !showWebView && isAuthenticated) {
       setShowWebView(true);
     }
-  }, [checkoutUrl]);
+  }, [checkoutUrl, isAuthenticated]);
 
   // Poll for payment status
   useEffect(() => {
@@ -53,14 +77,14 @@ const PaymentScreen = ({ route, navigation }) => {
   }, [txRef, paymentStatus, showWebView]);
 
   const checkPaymentStatus = async () => {
-    if (!txRef || !user?.token) return;
+    if (!txRef || !authToken) return;
 
     try {
       const response = await axios.get(
         `http://${ip}:8000/api/v1/payment/verify/${txRef}`,
         {
           headers: {
-            Authorization: `Bearer ${user.token}`
+            Authorization: `Bearer ${authToken}`
           }
         }
       );
@@ -93,7 +117,7 @@ const PaymentScreen = ({ route, navigation }) => {
         `http://${ip}:8000/api/v1/hotels/booking/${bookingId}/verify-payment`,
         {
           headers: {
-            Authorization: `Bearer ${user.token}`
+            Authorization: `Bearer ${authToken}`
           }
         }
       );

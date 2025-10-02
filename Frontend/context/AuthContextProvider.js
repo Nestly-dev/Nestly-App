@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import AuthContext from "./AuthContext";
 import * as SecureStore from "expo-secure-store";
+import { useSafeAreaFrame } from "react-native-safe-area-context";
 
 const UserContexProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [authToken, setAuthToken] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState();
   const [isLoading, setIsLoading] = useState(true);
-  const [hotelData, setHotelData] = useState(null);
+  const [hotelData, setHotelData] = useState([]);
   const [currentID, setCurrentID] = useState(null);
   const [currentRoomId, setCurrentRoomId] = useState(null);
   const [review, setReview] = useState(null);
   const ip = "127.0.0.1"
+  const [signedIn, setSignedIn] = useState(true)
 
 // Initialize auth on app start
   const initializeAuth = async () => {
@@ -123,6 +125,8 @@ const UserContexProvider = ({ children }) => {
     login,
     logout,
     updateUser,
+    signedIn,
+    setSignedIn,
 
     // Hotel data
     hotelData,
