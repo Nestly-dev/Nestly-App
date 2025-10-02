@@ -1,3 +1,4 @@
+// Frontend/screens/BookingScreen.js
 import {
   StyleSheet,
   Text,
@@ -7,6 +8,7 @@ import {
   ScrollView,
   FlatList,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
@@ -16,8 +18,7 @@ import axios from "axios";
 import RoomItem from "../components/RoomItem";
 
 const BookingScreen = ({ navigation, route }) => {
-  // Get hotelId from route params or context (fallback to currentID)
-  const { currentID, user, ip } = useContext(AuthContext);
+  const { currentID, user, ip, userId } = useContext(AuthContext);
   const hotelId = currentID;
   
   const [adults, setAdults] = useState(1);
@@ -25,12 +26,13 @@ const BookingScreen = ({ navigation, route }) => {
   const [checkInDate, setCheckInDate] = useState(new Date());
   const [checkOutDate, setCheckOutDate] = useState(
     new Date(Date.now() + 86400000)
-  ); // Next day
+  );
   const [roomInfo, setRoomInfo] = useState([]);
   const [roomPrices, setRoomPrices] = useState({});
   const [totalPrice, setTotalPrice] = useState(0);
   const [serviceFee] = useState(10);
   const [hotelName, setHotelName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchHotelAndRoomInfo();
@@ -44,21 +46,18 @@ const BookingScreen = ({ navigation, route }) => {
     }
     
     try {
-      // Fetch hotel details first to get hotel name
       const hotelResponse = await axios.get(`http://${ip}:8000/api/v1/hotels/profile/${hotelId}`);
       if (hotelResponse.data && hotelResponse.data.data) {
         setHotelName(hotelResponse.data.data.name);
       }
 
-      // Fetch rooms for this hotel
       const roomsResponse = await axios.get(`http://${ip}:8000/api/v1/hotels/rooms/${hotelId}`);
       
       if (roomsResponse.data && roomsResponse.data.data) {
         const roomsData = roomsResponse.data.data;
         
-        // Map the API response to match our expected format
         const formattedRooms = roomsData.map((room) => ({
-          id: room.id, // Use the actual room ID from API
+          id: room.id,
           type: room.type,
           description: room.description || "Comfortable room",
           max_occupancy: room.max_occupancy,
@@ -82,7 +81,6 @@ const BookingScreen = ({ navigation, route }) => {
   const onChangeCheckIn = (e, selectedDate) => {
     if (selectedDate) {
       setCheckInDate(selectedDate);
-      // Ensure checkout is after checkin
       if (selectedDate >= checkOutDate) {
         setCheckOutDate(new Date(selectedDate.getTime() + 86400000));
       }
@@ -97,7 +95,6 @@ const BookingScreen = ({ navigation, route }) => {
     }
   };
 
-  // FIXED: Function to update individual room prices using roomId as key
   const updateRoomPrice = (roomId, count, pricePerRoom) => {
     setRoomPrices((prev) => {
       const updatedPrices = {
@@ -113,7 +110,6 @@ const BookingScreen = ({ navigation, route }) => {
     });
   };
 
-  // FIXED: Calculate total using totalPrice property
   useEffect(() => {
     const total = Object.values(roomPrices).reduce(
       (sum, room) => sum + (room.totalPrice || 0),
@@ -123,8 +119,6 @@ const BookingScreen = ({ navigation, route }) => {
   }, [roomPrices]);
 
   const grandTotal = totalPrice + serviceFee;
-
-  // Calculate number of nights
   const numberOfNights = Math.ceil(
     (checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)
   );
@@ -142,46 +136,100 @@ const BookingScreen = ({ navigation, route }) => {
       Alert.alert("Invalid Dates", "Check-out must be after check-in date");
       return false;
     }
+    
+    // Get token from user context
+    if (!user?.token) {
+      Alert.alert("Authentication Required", "Please login to continue");
+      navigation.navigate("Login");
+      return false;
+    }
+    
     return true;
   };
 
-  // FIXED: Prepare booking data with proper room information
-  const onConfirm = () => {
+  const createBooking = async () => {
     if (!validateBooking()) return;
 
-    // Prepare booking data with all room details
-    const selectedRooms = Object.entries(roomPrices)
-      .filter(([_, data]) => data.count > 0)
-      .map(([roomId, data]) => ({
-        roomId: roomId,
-        roomType: data.roomType,
-        count: data.count,
-        pricePerRoom: data.pricePerRoom,
-        totalPrice: data.totalPrice,
-      }));
+    setLoading(true);
 
-    const bookingData = {
-      hotel_id: hotelId,
-      hotel_name: hotelName,
-      check_in_date: checkInDate.toISOString(),
-      check_out_date: checkOutDate.toISOString(),
-      adults: adults,
-      children: children,
-      rooms: selectedRooms,
-      nights: numberOfNights,
-      total_price: totalPrice,
-      service_fee: serviceFee,
-      grand_total: grandTotal,
-    };
+    try {
+      // Prepare room types data for backend
+      const roomTypes = Object.entries(roomPrices)
+        .filter(([_, data]) => data.count > 0)
+        .map(([roomId, data]) => ({
+          roomtypeId: roomId,
+          num_rooms: data.count,
+          num_guests: Math.ceil(adults / data.count), // Distribute guests across rooms
+        }));
 
-    // Debug: Log booking data to verify all rooms are included
-    console.log("Booking Data:", JSON.stringify(bookingData, null, 2));
+      const bookingPayload = {
+        check_in_date: checkInDate.toISOString().split('T')[0],
+        check_out_date: checkOutDate.toISOString().split('T')[0],
+        roomTypes: roomTypes,
+        total_price: grandTotal,
+      };
 
-    // Navigate to payment screen
-    navigation.navigate("Payment", {
-      grandTotal: grandTotal,
-      bookingData: bookingData,
-    });
+      console.log('Creating booking with payload:', JSON.stringify(bookingPayload, null, 2));
+
+      const response = await axios.post(
+        `http://${ip}:8000/api/v1/hotels/booking/create/${hotelId}`,
+        bookingPayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${user.token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Booking response:', response.data);
+
+      if (response.data.status === 201 && response.data.data) {
+        const { booking, checkout_url } = response.data.data;
+        
+        // Prepare booking data for payment screen
+        const selectedRooms = Object.entries(roomPrices)
+          .filter(([_, data]) => data.count > 0)
+          .map(([roomId, data]) => ({
+            roomId: roomId,
+            roomType: data.roomType,
+            count: data.count,
+            pricePerRoom: data.pricePerRoom,
+            totalPrice: data.totalPrice,
+          }));
+
+        const bookingData = {
+          booking_id: booking.id,
+          hotel_id: hotelId,
+          hotel_name: hotelName,
+          check_in: checkInDate.toLocaleDateString(),
+          check_out: checkOutDate.toLocaleDateString(),
+          adults: adults,
+          children: children,
+          rooms: selectedRooms,
+          nights: numberOfNights,
+          checkout_url: checkout_url,
+          tx_ref: booking.tx_ref,
+        };
+
+        // Navigate to payment screen
+        navigation.navigate("Payment", {
+          bookingId: booking.id,
+          grandTotal: grandTotal,
+          bookingData: bookingData,
+        });
+      } else {
+        Alert.alert('Booking Failed', response.data.message || 'Failed to create booking');
+      }
+    } catch (error) {
+      console.error('Booking creation error:', error);
+      Alert.alert(
+        'Booking Failed',
+        error.response?.data?.message || 'An error occurred while creating your booking. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -316,8 +364,16 @@ const BookingScreen = ({ navigation, route }) => {
         </View>
 
         {/* Confirm Button */}
-        <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-          <Text style={styles.confirmButtonText}>Proceed to Payment</Text>
+        <TouchableOpacity 
+          style={[styles.confirmButton, loading && styles.confirmButtonDisabled]} 
+          onPress={createBooking}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.confirmButtonText}>Proceed to Payment</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -442,6 +498,9 @@ const styles = StyleSheet.create({
     padding: 18,
     borderRadius: 12,
     alignItems: "center",
+  },
+  confirmButtonDisabled: {
+    backgroundColor: "#A0A0A0",
   },
   confirmButtonText: {
     fontSize: 18,

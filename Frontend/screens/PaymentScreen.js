@@ -1,381 +1,230 @@
-import React, { useState, useContext } from 'react';
+// Frontend/screens/PaymentScreen.js
+import React, { useState, useContext, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   SafeAreaView,
   TouchableOpacity,
-  TextInput,
   ScrollView,
   ActivityIndicator,
   Alert,
-  Image,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 import AuthContext from '../context/AuthContext';
 import axios from 'axios';
 
 const PaymentScreen = ({ route, navigation }) => {
-  const { grandTotal, bookingData } = route.params;
+  const { grandTotal, bookingData, bookingId } = route.params;
   const { user, ip } = useContext(AuthContext);
   
-  const [selectedMethod, setSelectedMethod] = useState(null);
   const [loading, setLoading] = useState(false);
-  
-  // Card payment states
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardholderName, setCardholderName] = useState('');
-  
-  // Mobile money states
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [selectedNetwork, setSelectedNetwork] = useState(null);
+  const [checkoutUrl, setCheckoutUrl] = useState(bookingData?.checkout_url || null);
+  const [txRef, setTxRef] = useState(bookingData?.tx_ref || null);
+  const [showWebView, setShowWebView] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState('pending');
+  const [pollingInterval, setPollingInterval] = useState(null);
 
-  const paymentMethods = [
-    { id: 'card', name: 'Card Payment', icon: 'card', color: '#4A90E2' },
-    { id: 'mtn', name: 'MTN Mobile Money', icon: 'cellphone', color: '#FFCC00' },
-    { id: 'airtel', name: 'Airtel Money', icon: 'cellphone-wireless', color: '#FF0000' },
-  ];
+  // Auto-open WebView if checkout URL exists
+  useEffect(() => {
+    if (checkoutUrl && !showWebView) {
+      setShowWebView(true);
+    }
+  }, [checkoutUrl]);
 
-  const formatCardNumber = (text) => {
-    const cleaned = text.replace(/\s/g, '');
-    const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned;
-    return formatted.substring(0, 19);
-  };
-
-  const formatExpiryDate = (text) => {
-    const cleaned = text.replace(/\D/g, '');
-    if (cleaned.length >= 2) {
-      return cleaned.substring(0, 2) + '/' + cleaned.substring(2, 4);
-    }
-    return cleaned;
-  };
-
-  const formatPhoneNumber = (text) => {
-    // Format to Rwanda phone number (e.g., 250788123456)
-    const cleaned = text.replace(/\D/g, '');
-    if (cleaned.startsWith('0')) {
-      return '250' + cleaned.substring(1);
-    }
-    if (!cleaned.startsWith('250')) {
-      return '250' + cleaned;
-    }
-    return cleaned.substring(0, 12);
-  };
-
-  const validateCardPayment = () => {
-    if (!cardNumber || cardNumber.replace(/\s/g, '').length < 13) {
-      Alert.alert('Invalid Card', 'Please enter a valid card number');
-      return false;
-    }
-    if (!expiryDate || expiryDate.length < 5) {
-      Alert.alert('Invalid Expiry', 'Please enter a valid expiry date (MM/YY)');
-      return false;
-    }
-    if (!cvv || cvv.length < 3) {
-      Alert.alert('Invalid CVV', 'Please enter a valid CVV');
-      return false;
-    }
-    if (!cardholderName) {
-      Alert.alert('Invalid Name', 'Please enter the cardholder name');
-      return false;
-    }
-    return true;
-  };
-
-  const validateMobileMoneyPayment = () => {
-    if (!phoneNumber || phoneNumber.length < 12) {
-      Alert.alert('Invalid Phone', 'Please enter a valid Rwanda phone number');
-      return false;
-    }
-    if (!selectedNetwork) {
-      Alert.alert('Select Network', 'Please select MTN or Airtel');
-      return false;
-    }
-    return true;
-  };
-
-  const processCardPayment = async () => {
-    if (!validateCardPayment()) return;
-
-    setLoading(true);
-    try {
-      const [month, year] = expiryDate.split('/');
+  // Poll for payment status
+  useEffect(() => {
+    let interval;
+    
+    if (txRef && paymentStatus === 'pending' && showWebView) {
+      interval = setInterval(() => {
+        checkPaymentStatus();
+      }, 5000); // Check every 5 seconds
       
-      const payload = {
-        amount: grandTotal,
-        currency: user?.preferred_currency || 'RWF',
-        email: user?.email,
-        phone_number: user?.phone_number || phoneNumber,
-        name: cardholderName,
-        card_number: cardNumber.replace(/\s/g, ''),
-        cvv: cvv,
-        expiry_month: month,
-        expiry_year: '20' + year,
-        redirect_url: 'https://your-app.com/payment/callback',
-        meta: {
-          booking_id: bookingData?.booking_id,
-          hotel_id: bookingData?.hotel_id,
-        },
-      };
-
-      const response = await axios.post(
-        `http://${ip}:8000/api/payment/card`,
-        payload
-      );
-
-      if (response.data.status === 'success') {
-        Alert.alert(
-          'Payment Successful',
-          'Your payment has been processed successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('BookingConfirmation', {
-                transactionData: response.data.data,
-              }),
-            },
-          ]
-        );
-      } else if (response.data.status === 'pending') {
-        // Handle 3D Secure or additional authentication
-        Alert.alert(
-          'Additional Authentication Required',
-          response.data.message,
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Open authentication URL in browser
-                // Linking.openURL(response.data.data.auth_url);
-              },
-            },
-          ]
-        );
-      }
-    } catch (error) {
-      Alert.alert(
-        'Payment Failed',
-        error.response?.data?.message || 'An error occurred during payment'
-      );
-    } finally {
-      setLoading(false);
+      setPollingInterval(interval);
     }
-  };
 
-  const processMobileMoneyPayment = async () => {
-    if (!validateMobileMoneyPayment()) return;
-
-    setLoading(true);
-    try {
-      const payload = {
-        amount: grandTotal,
-        currency: user?.preferred_currency || 'RWF',
-        email: user?.email,
-        phone_number: phoneNumber,
-        name: user?.username,
-        network: selectedNetwork,
-        redirect_url: 'https://your-app.com/payment/callback',
-        meta: {
-          booking_id: bookingData?.booking_id,
-          hotel_id: bookingData?.hotel_id,
-        },
-      };
-
-      const response = await axios.post(
-        `http://${ip}:8000/api/payment/mobile-money`,
-        payload
-      );
-
-      if (response.data.status === 'pending') {
-        Alert.alert(
-          'Payment Initiated',
-          'Please check your phone and enter your PIN to complete the payment',
-          [
-            {
-              text: 'Verify Payment',
-              onPress: () => verifyPayment(response.data.data.tx_ref),
-            },
-          ]
-        );
-      } else if (response.data.status === 'success') {
-        Alert.alert(
-          'Payment Successful',
-          'Your payment has been processed successfully!',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('BookingConfirmation', {
-                transactionData: response.data.data,
-              }),
-            },
-          ]
-        );
+    return () => {
+      if (interval) {
+        clearInterval(interval);
       }
-    } catch (error) {
-      Alert.alert(
-        'Payment Failed',
-        error.response?.data?.message || 'An error occurred during payment'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+  }, [txRef, paymentStatus, showWebView]);
 
-  const verifyPayment = async (txRef) => {
-    setLoading(true);
+  const checkPaymentStatus = async () => {
+    if (!txRef || !user?.token) return;
+
     try {
       const response = await axios.get(
-        `http://${ip}:8000/api/payment/verify/${txRef}`
+        `http://${ip}:8000/api/v1/payment/verify/${txRef}`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        }
       );
 
-      if (response.data.status === 'success') {
-        Alert.alert(
-          'Payment Verified',
-          'Your payment has been confirmed!',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('BookingConfirmation', {
-                transactionData: response.data.data,
-              }),
-            },
-          ]
-        );
-      } else {
-        Alert.alert('Payment Verification Failed', 'Please try again or contact support');
+      if (response.data.status === 200 || response.data.message?.includes('success')) {
+        setPaymentStatus('completed');
+        setShowWebView(false);
+        
+        // Clear polling
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+        }
+        
+        // Verify the booking payment
+        if (bookingId) {
+          await verifyBookingPayment();
+        } else {
+          showSuccessAndNavigate();
+        }
       }
     } catch (error) {
-      Alert.alert('Verification Error', 'Could not verify payment status');
-    } finally {
-      setLoading(false);
+      console.error('Payment status check error:', error);
+      // Don't show error to user during polling
     }
   };
 
-  const handlePayment = () => {
-    if (selectedMethod === 'card') {
-      processCardPayment();
-    } else if (selectedMethod === 'mtn' || selectedMethod === 'airtel') {
-      setSelectedNetwork(selectedMethod);
-      processMobileMoneyPayment();
+  const verifyBookingPayment = async () => {
+    try {
+      const response = await axios.get(
+        `http://${ip}:8000/api/v1/hotels/booking/${bookingId}/verify-payment`,
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        }
+      );
+
+      if (response.data.status === 200) {
+        showSuccessAndNavigate(response.data.data);
+      } else {
+        Alert.alert('Verification Issue', response.data.message || 'Payment verified but booking update failed');
+        navigation.navigate('Bookings');
+      }
+    } catch (error) {
+      console.error('Booking verification error:', error);
+      Alert.alert('Success', 'Payment completed! Your booking will be confirmed shortly.');
+      navigation.navigate('Bookings');
     }
   };
 
-  const renderPaymentMethodSelector = () => (
-    <View style={styles.methodContainer}>
-      <Text style={styles.sectionTitle}>Select Payment Method</Text>
-      {paymentMethods.map((method) => (
-        <TouchableOpacity
-          key={method.id}
-          style={[
-            styles.methodCard,
-            selectedMethod === method.id && styles.methodCardSelected,
-          ]}
-          onPress={() => setSelectedMethod(method.id)}
-        >
-          <View style={styles.methodInfo}>
-            <MaterialCommunityIcons
-              name={method.icon}
-              size={30}
-              color={method.color}
-            />
-            <Text style={styles.methodName}>{method.name}</Text>
-          </View>
-          <View
-            style={[
-              styles.radioButton,
-              selectedMethod === method.id && styles.radioButtonSelected,
-            ]}
+  const showSuccessAndNavigate = (bookingDetails) => {
+    Alert.alert(
+      '🎉 Payment Successful!',
+      'Your booking has been confirmed. Check your email for details.',
+      [
+        {
+          text: 'Go to Bookings',
+          onPress: () => navigation.navigate('Bookings')
+        }
+      ],
+      { cancelable: false }
+    );
+  };
+
+  const handleWebViewNavigationChange = (navState) => {
+    const { url } = navState;
+    
+    console.log('WebView navigation:', url);
+    
+    // Check if payment was completed
+    if (url.includes('status=successful') || url.includes('payment/callback')) {
+      setShowWebView(false);
+      checkPaymentStatus();
+    } else if (url.includes('status=cancelled') || url.includes('status=failed')) {
+      setShowWebView(false);
+      Alert.alert(
+        'Payment Cancelled',
+        'Your payment was not completed. Your booking will expire in 30 minutes if payment is not completed.',
+        [
+          { text: 'Try Again', onPress: () => setShowWebView(true) },
+          { text: 'Cancel', onPress: () => navigation.goBack() }
+        ]
+      );
+    }
+  };
+
+  const manualVerifyPayment = () => {
+    Alert.alert(
+      'Verify Payment',
+      'Have you completed the payment? We will check the status now.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel'
+        },
+        {
+          text: 'Yes, Check Status',
+          onPress: () => {
+            setLoading(true);
+            checkPaymentStatus().finally(() => setLoading(false));
+          }
+        }
+      ]
+    );
+  };
+
+  const handleClosePayment = () => {
+    Alert.alert(
+      'Close Payment',
+      'Are you sure? Your booking will expire in 30 minutes if payment is not completed.',
+      [
+        { text: 'Continue Payment', style: 'cancel' },
+        { 
+          text: 'Close', 
+          onPress: () => {
+            if (pollingInterval) {
+              clearInterval(pollingInterval);
+            }
+            navigation.goBack();
+          },
+          style: 'destructive'
+        }
+      ]
+    );
+  };
+
+  // WebView Display
+  if (showWebView && checkoutUrl) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.webViewHeader}>
+          <TouchableOpacity 
+            onPress={handleClosePayment}
+            style={styles.closeButton}
           >
-            {selectedMethod === method.id && <View style={styles.radioButtonInner} />}
-          </View>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-
-  const renderCardPaymentForm = () => (
-    <View style={styles.formContainer}>
-      <Text style={styles.sectionTitle}>Card Details</Text>
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Card Number</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="1234 5678 9012 3456"
-          value={cardNumber}
-          onChangeText={(text) => setCardNumber(formatCardNumber(text))}
-          keyboardType="numeric"
-          maxLength={19}
-        />
-      </View>
-
-      <View style={styles.row}>
-        <View style={[styles.inputContainer, { flex: 1, marginRight: 10 }]}>
-          <Text style={styles.inputLabel}>Expiry Date</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="MM/YY"
-            value={expiryDate}
-            onChangeText={(text) => setExpiryDate(formatExpiryDate(text))}
-            keyboardType="numeric"
-            maxLength={5}
-          />
+            <Ionicons name="close" size={24} color="#000" />
+          </TouchableOpacity>
+          <Text style={styles.webViewTitle}>Complete Payment</Text>
+          <TouchableOpacity onPress={manualVerifyPayment}>
+            <Text style={styles.verifyText}>Verify</Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={[styles.inputContainer, { flex: 1 }]}>
-          <Text style={styles.inputLabel}>CVV</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="123"
-            value={cvv}
-            onChangeText={setCvv}
-            keyboardType="numeric"
-            maxLength={4}
-            secureTextEntry
-          />
+        
+        <WebView
+          source={{ uri: checkoutUrl }}
+          onNavigationStateChange={handleWebViewNavigationChange}
+          startInLoadingState={true}
+          renderLoading={() => (
+            <View style={styles.webViewLoading}>
+              <ActivityIndicator size="large" color="#1995AD" />
+              <Text style={styles.loadingText}>Loading payment page...</Text>
+            </View>
+          )}
+        />
+        
+        <View style={styles.webViewFooter}>
+          <Ionicons name="shield-checkmark" size={16} color="#4CAF50" />
+          <Text style={styles.secureText}>Secured by Flutterwave</Text>
         </View>
-      </View>
+      </SafeAreaView>
+    );
+  }
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Cardholder Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="John Doe"
-          value={cardholderName}
-          onChangeText={setCardholderName}
-          autoCapitalize="words"
-        />
-      </View>
-    </View>
-  );
-
-  const renderMobileMoneyForm = () => (
-    <View style={styles.formContainer}>
-      <Text style={styles.sectionTitle}>Mobile Money Details</Text>
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Phone Number</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="250788123456"
-          value={phoneNumber}
-          onChangeText={(text) => setPhoneNumber(formatPhoneNumber(text))}
-          keyboardType="phone-pad"
-          maxLength={12}
-        />
-      </View>
-
-      <View style={styles.infoBox}>
-        <Ionicons name="information-circle" size={20} color="#4A90E2" />
-        <Text style={styles.infoText}>
-          You will receive a prompt on your phone to complete the payment
-        </Text>
-      </View>
-    </View>
-  );
-
+  // Payment Summary Display
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -388,35 +237,123 @@ const PaymentScreen = ({ route, navigation }) => {
           <View style={{ width: 24 }} />
         </View>
 
-        {/* Amount Display */}
-        <View style={styles.amountContainer}>
-          <Text style={styles.amountLabel}>Total Amount</Text>
-          <Text style={styles.amountValue}>
-            {user?.preferred_currency || 'RWF'} {grandTotal.toLocaleString()}
-          </Text>
+        {/* Booking Summary */}
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Booking Summary</Text>
+          
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Hotel</Text>
+            <Text style={styles.summaryValue}>{bookingData?.hotel_name}</Text>
+          </View>
+          
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Check-in</Text>
+            <Text style={styles.summaryValue}>{bookingData?.check_in}</Text>
+          </View>
+          
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Check-out</Text>
+            <Text style={styles.summaryValue}>{bookingData?.check_out}</Text>
+          </View>
+          
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Nights</Text>
+            <Text style={styles.summaryValue}>{bookingData?.nights}</Text>
+          </View>
+          
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Guests</Text>
+            <Text style={styles.summaryValue}>{bookingData?.adults} Adults, {bookingData?.children || 0} Children</Text>
+          </View>
+
+          <View style={styles.divider} />
+          
+          <View style={styles.summaryRow}>
+            <Text style={styles.totalLabel}>Total Amount</Text>
+            <Text style={styles.totalValue}>
+              {user?.preferred_currency || 'RWF'} {grandTotal.toLocaleString()}
+            </Text>
+          </View>
         </View>
 
-        {/* Payment Method Selector */}
-        {renderPaymentMethodSelector()}
+        {/* Rooms Booked */}
+        <View style={styles.roomsCard}>
+          <Text style={styles.sectionTitle}>Rooms Booked</Text>
+          {bookingData?.rooms?.map((room, index) => (
+            <View key={index} style={styles.roomItem}>
+              <View style={styles.roomInfo}>
+                <MaterialCommunityIcons name="bed" size={20} color="#1995AD" />
+                <Text style={styles.roomText}>{room.roomType}</Text>
+              </View>
+              <Text style={styles.roomCount}>{room.count} room(s)</Text>
+            </View>
+          ))}
+        </View>
 
-        {/* Payment Form */}
-        {selectedMethod === 'card' && renderCardPaymentForm()}
-        {(selectedMethod === 'mtn' || selectedMethod === 'airtel') && renderMobileMoneyForm()}
+        {/* Payment Method Info */}
+        <View style={styles.paymentMethodCard}>
+          <View style={styles.methodHeader}>
+            <MaterialCommunityIcons name="credit-card" size={24} color="#1995AD" />
+            <Text style={styles.methodTitle}>Flutterwave Payment</Text>
+          </View>
+          
+          <Text style={styles.methodDescription}>
+            Click below to open the secure payment page where you can pay using:
+          </Text>
+          
+          <View style={styles.methodsList}>
+            <View style={styles.methodItem}>
+              <Ionicons name="card" size={20} color="#4A90E2" />
+              <Text style={styles.methodText}>Credit/Debit Cards</Text>
+            </View>
+            
+            <View style={styles.methodItem}>
+              <MaterialCommunityIcons name="cellphone" size={20} color="#FFCC00" />
+              <Text style={styles.methodText}>MTN Mobile Money</Text>
+            </View>
+            
+            <View style={styles.methodItem}>
+              <MaterialCommunityIcons name="cellphone-wireless" size={20} color="#FF0000" />
+              <Text style={styles.methodText}>Airtel Money</Text>
+            </View>
+          </View>
+        </View>
 
-        {/* Payment Button */}
-        {selectedMethod && (
+        {/* Important Notes */}
+        <View style={styles.notesCard}>
+          <Text style={styles.notesTitle}>Important Notes:</Text>
+          <Text style={styles.noteText}>• Complete payment within 30 minutes</Text>
+          <Text style={styles.noteText}>• You will receive confirmation via email</Text>
+          <Text style={styles.noteText}>• Keep your transaction reference safe</Text>
+          <Text style={styles.noteText}>• Contact support if you face any issues</Text>
+        </View>
+
+        {/* Open Payment Button */}
+        {!showWebView && checkoutUrl && (
           <TouchableOpacity
             style={[styles.payButton, loading && styles.payButtonDisabled]}
-            onPress={handlePayment}
+            onPress={() => setShowWebView(true)}
             disabled={loading}
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.payButtonText}>
-                Pay {user?.preferred_currency || 'RWF'} {grandTotal.toLocaleString()}
-              </Text>
+              <>
+                <MaterialCommunityIcons name="lock" size={20} color="#fff" />
+                <Text style={styles.payButtonText}>Open Payment Page</Text>
+              </>
             )}
+          </TouchableOpacity>
+        )}
+
+        {/* Manual Verify Button */}
+        {txRef && (
+          <TouchableOpacity
+            style={styles.verifyButton}
+            onPress={manualVerifyPayment}
+            disabled={loading}
+          >
+            <Text style={styles.verifyButtonText}>Already Paid? Verify Now</Text>
           </TouchableOpacity>
         )}
 
@@ -424,7 +361,7 @@ const PaymentScreen = ({ route, navigation }) => {
         <View style={styles.securityContainer}>
           <Ionicons name="shield-checkmark" size={20} color="#4CAF50" />
           <Text style={styles.securityText}>
-            Secured by Flutterwave. Your payment information is encrypted.
+            Secured by Flutterwave. Your payment information is encrypted and secure.
           </Text>
         </View>
       </ScrollView>
@@ -446,137 +383,204 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: '#000',
   },
-  amountContainer: {
-    backgroundColor: '#1995AD',
-    padding: 30,
-    alignItems: 'center',
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 15,
+  summaryCard: {
+    backgroundColor: '#fff',
+    margin: 20,
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  amountLabel: {
-    fontSize: 16,
-    color: '#fff',
-    opacity: 0.9,
-  },
-  amountValue: {
-    fontSize: 42,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 10,
-  },
-  methodContainer: {
-    marginTop: 30,
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
+  summaryTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#000',
     marginBottom: 15,
   },
-  methodCard: {
+  summaryRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 12,
+    alignItems: 'center',
     marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
   },
-  methodCardSelected: {
-    borderColor: '#1995AD',
-    backgroundColor: '#F0F9FC',
+  summaryLabel: {
+    fontSize: 14,
+    color: '#666',
   },
-  methodInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  methodName: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 15,
-    color: '#000',
-  },
-  radioButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#DDD',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioButtonSelected: {
-    borderColor: '#1995AD',
-  },
-  radioButtonInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#1995AD',
-  },
-  formContainer: {
-    marginTop: 30,
-    paddingHorizontal: 20,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  inputLabel: {
+  summaryValue: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 10,
-    padding: 15,
-    fontSize: 16,
     color: '#000',
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#E3F2FD',
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 10,
-  },
-  infoText: {
+    textAlign: 'right',
     flex: 1,
     marginLeft: 10,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 15,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  totalValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1995AD',
+  },
+  roomsCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 15,
+  },
+  roomItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  roomInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  roomText: {
     fontSize: 14,
-    color: '#1976D2',
+    color: '#333',
+    marginLeft: 8,
+  },
+  roomCount: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1995AD',
+  },
+  paymentMethodCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  methodHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  methodTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginLeft: 10,
+  },
+  methodDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 15,
+    lineHeight: 20,
+  },
+  methodsList: {
+    marginTop: 10,
+  },
+  methodItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  methodText: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 10,
+  },
+  notesCard: {
+    backgroundColor: '#FFF9E6',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 15,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FFB300',
+  },
+  notesTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 10,
+  },
+  noteText: {
+    fontSize: 13,
+    color: '#666',
+    marginBottom: 6,
+    lineHeight: 18,
   },
   payButton: {
     backgroundColor: '#1995AD',
     marginHorizontal: 20,
-    marginTop: 30,
     padding: 18,
     borderRadius: 12,
     alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    shadowColor: '#1995AD',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   payButtonDisabled: {
-    opacity: 0.6,
+    backgroundColor: '#A0A0A0',
   },
   payButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
     color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 10,
+  },
+  verifyButton: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginTop: 15,
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#1995AD',
+  },
+  verifyButtonText: {
+    color: '#1995AD',
+    fontSize: 16,
+    fontWeight: '600',
   },
   securityContainer: {
     flexDirection: 'row',
@@ -586,9 +590,61 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   securityText: {
-    marginLeft: 8,
     fontSize: 12,
     color: '#666',
+    marginLeft: 8,
+    textAlign: 'center',
+    flex: 1,
+  },
+  // WebView Styles
+  webViewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  webViewTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+  },
+  verifyText: {
+    fontSize: 16,
+    color: '#1995AD',
+    fontWeight: '600',
+  },
+  webViewLoading: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#666',
+  },
+  webViewFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    backgroundColor: '#F5F7FA',
+  },
+  secureText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 5,
   },
 });
 
