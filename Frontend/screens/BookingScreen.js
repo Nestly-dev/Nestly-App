@@ -3,431 +3,311 @@ import {
   Text,
   View,
   SafeAreaView,
-  Image,
-  Modal,
   TouchableOpacity,
   ScrollView,
-  Button,
   FlatList,
-  TextInput
+  Alert,
 } from "react-native";
 import React, { useContext, useEffect, useState } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { LinearGradient } from "expo-linear-gradient";
-import "react-native-gesture-handler";
-import Payment from "../components/Payment";
 import AuthContext from "../context/AuthContext";
 import axios from "axios";
 import RoomItem from "../components/RoomItem";
 
-const BookingScreen = () => {
-  const [name, setName] = useState();
-  const [province, setProvince] = useState();
-  const [country, setCountry] = useState();
-  const [bg, setBg] = useState();
-  const [adults, setAdults] = useState(0);
+const BookingScreen = ({ navigation, route }) => {
+  // Get hotelId from route params or context (fallback to currentID)
+  const { currentID, user, ip } = useContext(AuthContext);
+  const hotelId = currentID;
+  
+  const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
-  const [room, setRoom] = useState("Default");
-  const [singles, setSingles] = useState(0);
-  const [doubles, setDoubles] = useState(0);
   const [checkInDate, setCheckInDate] = useState(new Date());
-  const [checkOutDate, setCheckOutDate] = useState(new Date());
-  const { showConfirmation, setShowConfirmation, currentID, ip } =
-    useContext(AuthContext);
-  const [roomInfo, setRoomInfo] = useState();
+  const [checkOutDate, setCheckOutDate] = useState(
+    new Date(Date.now() + 86400000)
+  ); // Next day
+  const [roomInfo, setRoomInfo] = useState([]);
   const [roomPrices, setRoomPrices] = useState({});
   const [totalPrice, setTotalPrice] = useState(0);
   const [serviceFee] = useState(10);
+  const [hotelName, setHotelName] = useState("");
+
+  useEffect(() => {
+    fetchHotelAndRoomInfo();
+  }, []);
+
+  const fetchHotelAndRoomInfo = async () => {
+    if (!hotelId) {
+      Alert.alert("Error", "Hotel information is missing. Please select a hotel first.");
+      navigation.goBack();
+      return;
+    }
+    
+    try {
+      // Fetch hotel details first to get hotel name
+      const hotelResponse = await axios.get(`http://${ip}:8000/api/v1/hotels/profile/${hotelId}`);
+      if (hotelResponse.data && hotelResponse.data.data) {
+        setHotelName(hotelResponse.data.data.name);
+      }
+
+      // Fetch rooms for this hotel
+      const roomsResponse = await axios.get(`http://${ip}:8000/api/v1/hotels/rooms/${hotelId}`);
+      
+      if (roomsResponse.data && roomsResponse.data.data) {
+        const roomsData = roomsResponse.data.data;
+        
+        // Map the API response to match our expected format
+        const formattedRooms = roomsData.map((room) => ({
+          id: room.room_id,
+          type: room.room_type,
+          description: room.description || "Comfortable room",
+          max_occupancy: room.max_occupancy,
+          num_beds: room.num_beds,
+          room_size: room.room_size,
+          total_inventory: room.total_inventory,
+          available_inventory: room.available_inventory || room.total_inventory,
+          roomFee: room.roomFee,
+          serviceFee: room.serviceFee,
+          currency: room.currency
+        }));
+        
+        setRoomInfo(formattedRooms);
+      }
+    } catch (error) {
+      console.error("Error fetching hotel/room info:", error);
+      Alert.alert("Error", "Failed to load room information. Please try again.");
+    }
+  };
 
   const onChangeCheckIn = (e, selectedDate) => {
-    setCheckInDate(selectedDate);
-    console.log(checkInDate);
-  };
-  
-  const onChangeCheckOut = (e, selectedDate) => {
-    setCheckOutDate(selectedDate);
-    console.log(checkOutDate);
-  };
-  
-  const onConfirm = () => {
-    console.log(adults);
-    console.log(children);
-    console.log(room);
-    console.log(checkInDate.toLocaleDateString());
-    console.log(checkOutDate.toLocaleDateString());
-    console.log(`you have booked (${singles}) Single rooms`);
-    console.log(`you have booked (${doubles}) Double rooms`);
-    setShowConfirmation(true);
+    if (selectedDate) {
+      setCheckInDate(selectedDate);
+      // Ensure checkout is after checkin
+      if (selectedDate >= checkOutDate) {
+        setCheckOutDate(new Date(selectedDate.getTime() + 86400000));
+      }
+    }
   };
 
-  // Function to update individual room prices and recalculate total
-  const updateRoomPrice = (roomType, price) => {
-    setRoomPrices(prevPrices => {
-      const newPrices = { ...prevPrices, [roomType]: price };
-      
-      // Calculate new total price from all room prices
-      const newTotal = Object.values(newPrices).reduce((sum, price) => sum + price, 0);
-      setTotalPrice(newTotal);
-      
-      return newPrices;
+  const onChangeCheckOut = (e, selectedDate) => {
+    if (selectedDate && selectedDate > checkInDate) {
+      setCheckOutDate(selectedDate);
+    } else {
+      Alert.alert("Invalid Date", "Check-out must be after check-in date");
+    }
+  };
+
+  // Function to update individual room prices
+  const updateRoomPrice = (roomType, count, pricePerRoom) => {
+    setRoomPrices((prev) => ({
+      ...prev,
+      [roomType]: {
+        count: count,
+        price: pricePerRoom * count,
+      },
+    }));
+  };
+
+  // Calculate total whenever roomPrices changes
+  useEffect(() => {
+    const total = Object.values(roomPrices).reduce(
+      (sum, room) => sum + room.price,
+      0
+    );
+    setTotalPrice(total);
+  }, [roomPrices]);
+
+  const grandTotal = totalPrice + serviceFee;
+
+  // Calculate number of nights
+  const numberOfNights = Math.ceil(
+    (checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)
+  );
+
+  const validateBooking = () => {
+    if (totalPrice === 0) {
+      Alert.alert("No Rooms Selected", "Please select at least one room");
+      return false;
+    }
+    if (adults === 0) {
+      Alert.alert("No Guests", "Please add at least one adult guest");
+      return false;
+    }
+    if (checkInDate >= checkOutDate) {
+      Alert.alert("Invalid Dates", "Check-out must be after check-in date");
+      return false;
+    }
+    return true;
+  };
+
+  const onConfirm = () => {
+    if (!validateBooking()) return;
+
+    // Prepare booking data
+    const selectedRooms = Object.entries(roomPrices)
+      .filter(([_, data]) => data.count > 0)
+      .map(([roomType, data]) => ({
+        roomType: roomType,
+        count: data.count,
+        price: data.price,
+      }));
+
+    const bookingData = {
+      hotel_id: hotelId,
+      hotel_name: hotelName,
+      check_in_date: checkInDate.toISOString(),
+      check_out_date: checkOutDate.toISOString(),
+      adults: adults,
+      children: children,
+      rooms: selectedRooms,
+      nights: numberOfNights,
+      total_price: totalPrice,
+      service_fee: serviceFee,
+      grand_total: grandTotal,
+    };
+
+    // Navigate to payment screen
+    navigation.navigate("Payment", {
+      grandTotal: grandTotal,
+      bookingData: bookingData,
     });
   };
 
-  useEffect(() => {
-    const url = `http://${ip}:8000/api/v1/hotels/profile/${currentID}`;
-    axios
-      .get(url)
-      .then((response) => {
-        const result = response.data;
-        const hotelInfo = result.data;
-        setName(hotelInfo.name);
-        setProvince(hotelInfo.province);
-        setCountry(hotelInfo.country);
-        setBg(hotelInfo.media[1].url);
-        setRoomInfo(hotelInfo.rooms);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  }, []);
-
-  // Calculate the grand total including service fee
-  const grandTotal = totalPrice + serviceFee;
-
   return (
-    <SafeAreaView>
+    <SafeAreaView style={styles.container}>
       <ScrollView>
-        <View>
-          {/* Hotels Name Box */}
+        {/* Hotel Name */}
+        <View style={styles.section}>
+          <Text style={styles.hotelName}>{hotelName}</Text>
+        </View>
 
-          <View
-            style={{
-              width: "100%",
-              borderRadius: 10,
-              marginBottom: 25,
-              height: 240,
-            }}
-          >
-            <View
-              style={{ width: "100%", height: "100%", position: "absolute" }}
-            >
-              <Image
-                source={{ uri: `${bg}` }}
-                style={{ width: "100%", height: 250 }}
+        {/* Date Selection */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Select Dates</Text>
+          
+          <View style={styles.dateContainer}>
+            <View style={styles.dateBox}>
+              <Text style={styles.dateLabel}>Check-in</Text>
+              <DateTimePicker
+                value={checkInDate}
+                mode="date"
+                display="default"
+                onChange={onChangeCheckIn}
+                minimumDate={new Date()}
+                style={styles.datePicker}
               />
             </View>
-            <LinearGradient
-              colors={["rgba(0, 0, 0, 0.5)", "rgba(0,0,0, 0.4)"]}
-              style={{
-                width: "100%",
-                height: 80,
-                top: 170,
-                position: "absolute",
-              }}
-            ></LinearGradient>
-            <Text
-              style={{
-                fontSize: 25,
-                top: 170,
-                color: "white",
-                marginLeft: 20,
-                fontWeight: "bold",
-              }}
-            >
-              {name}
-            </Text>
-            <Text
-              style={{
-                fontSize: 20,
-                top: 180,
-                color: "white",
-                marginLeft: 20,
-                fontWeight: "bold",
-              }}
-            >
-              {province}, {country}
-            </Text>
-          </View>
 
-          <View
-            style={{
-              width: "90%",
-              borderColor: "black",
-              borderWidth: 0.3,
-              marginTop: 30,
-              marginLeft: 20,
-            }}
-          ></View>
-
-          {/* Inputs */}
-
-          {/* Check In / Check out Date */}
-
-          <Text
-            style={{
-              color: "black",
-              fontSize: 23,
-              marginTop: 30,
-              marginLeft: 15,
-              fontFamily: "Inter",
-              fontWeight: "500",
-            }}
-          >
-            Schedule Time
-          </Text>
-          <View
-            style={{
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
-              marginLeft: 20,
-              marginTop: 30,
-              marginRight: 20,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: 500 }}>Check In</Text>
-            <DateTimePicker
-              value={checkInDate}
-              date="date"
-              is24Hour={true}
-              onChange={onChangeCheckIn}
-            />
-          </View>
-          <View
-            style={{
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
-              marginLeft: 20,
-              marginTop: 30,
-              marginRight: 20,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: 500 }}>Check Out</Text>
-            <DateTimePicker
-              value={checkOutDate}
-              date="date"
-              is24Hour={true}
-              onChange={onChangeCheckOut}
-            />
-          </View>
-
-          <View
-            style={{
-              width: "90%",
-              borderColor: "black",
-              borderWidth: 0.3,
-              marginTop: 30,
-              marginLeft: 20,
-            }}
-          ></View>
-
-          {/* Room Details */}
-          <View>
-            <Text
-              style={{
-                color: "black",
-                fontSize: 23,
-                marginTop: 30,
-                marginLeft: 15,
-                fontFamily: "Inter",
-                fontWeight: "500",
-              }}
-            >
-              Room Detail
-            </Text>
-            {roomInfo && (
-              <FlatList 
-                data={roomInfo}
-                keyExtractor={(item) => item.roomType}
-                renderItem={({item}) => (
-                  <RoomItem 
-                    item={item} 
-                    updateRoomPrice={updateRoomPrice} 
-                  />
-                )}
+            <View style={styles.dateBox}>
+              <Text style={styles.dateLabel}>Check-out</Text>
+              <DateTimePicker
+                value={checkOutDate}
+                mode="date"
+                display="default"
+                onChange={onChangeCheckOut}
+                minimumDate={new Date(checkInDate.getTime() + 86400000)}
+                style={styles.datePicker}
               />
-            )}
-           </View>
-        
-
-          {/* Guest Details */}
-
-          <Text
-            style={{
-              color: "black",
-              fontSize: 23,
-              marginTop: 30,
-              marginLeft: 15,
-              fontFamily: "Inter",
-              fontWeight: "500",
-            }}
-          >
-            Guest List
-          </Text>
-          <View
-            style={{
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
-              marginLeft: 20,
-              marginTop: 20,
-              marginRight: 20,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: 500 }}>Adults</Text>
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity
-                style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                onPress={() => {
-                  setAdults(adults + 1);
-                }}
-              >
-                <Entypo name="plus" size={24} color="white" />
-              </TouchableOpacity>
-              <Text
-                style={{
-                  fontSize: 20,
-                  color: "gray",
-                  marginLeft: 10,
-                  marginRight: 10,
-                }}
-              >
-                {adults}
-              </Text>
-              <TouchableOpacity
-                style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                onPress={() => {
-                  if (adults > 0) {
-                    setAdults(adults - 1);
-                  } else {
-                    return adults;
-                  }
-                }}
-              >
-                <Entypo name="minus" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View
-            style={{
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexDirection: "row",
-              marginLeft: 20,
-              marginTop: 20,
-              marginRight: 20,
-            }}
-          >
-            <Text style={{ fontSize: 18, fontWeight: 500 }}>Children</Text>
-            <View style={{ flexDirection: "row" }}>
-              <TouchableOpacity
-                style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                onPress={() => {
-                  setChildren(children + 1);
-                }}
-              >
-                <Entypo name="plus" size={24} color="white" />
-              </TouchableOpacity>
-              <Text
-                style={{
-                  fontSize: 20,
-                  color: "gray",
-                  marginLeft: 10,
-                  marginRight: 10,
-                }}
-              >
-                {children}
-              </Text>
-              <TouchableOpacity
-                style={{ backgroundColor: "#1995AD", borderRadius: 5 }}
-                onPress={() => {
-                  if (children > 0) {
-                    setChildren(children - 1);
-                  } else {
-                    return adults;
-                  }
-                }}
-              >
-                <Entypo name="minus" size={24} color="white" />
-              </TouchableOpacity>
-              
             </View>
           </View>
 
-          {/* price details */}
-
-          <Text
-            style={{
-              color: "black",
-              fontSize: 23,
-              marginTop: 30,
-              marginLeft: 15,
-              fontFamily: "Inter",
-              fontWeight: "500",
-            }}
-          >
-            Prices Details
+          <Text style={styles.nightsText}>
+            {numberOfNights} {numberOfNights === 1 ? "night" : "nights"}
           </Text>
         </View>
-        <View
-          style={{
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexDirection: "row",
-            marginLeft: 20,
-            marginTop: 20,
-            marginRight: 20,
-          }}
-        >
-          <Text style={{ fontSize: 18, fontWeight: 500 }}>Room Fee</Text>
-          <Text style={{ fontSize: 18, color: "gray" }}>${totalPrice}</Text>
-        </View>
-        <View
-          style={{
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexDirection: "row",
-            marginLeft: 20,
-            marginTop: 20,
-            marginRight: 20,
-          }}
-        >
-          <Text style={{ fontSize: 18, fontWeight: 500 }}>Service Fee</Text>
-          <Text style={{ fontSize: 18, color: "gray" }}>${serviceFee}</Text>
-        </View>
-        <View
-          style={{
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexDirection: "row",
-            marginLeft: 20,
-            marginTop: 20,
-            marginRight: 20,
-          }}
-        >
-          <Text style={{ fontSize: 20, fontWeight: 500 }}>Total Price</Text>
-          <Text style={{ fontSize: 18, color: "gray" }}>${grandTotal}</Text>
-        </View>
-        <View
-          style={{
-            backgroundColor: "#1995AD",
-            marginLeft: 20,
-            marginRight: 20,
-            marginTop: 30,
-            height: 60,
-            padding: 10,
-            borderRadius: 50,
-            marginBottom: 20,
-          }}
-        >
-          <Button title="Confirm" color="white" onPress={onConfirm} />
+
+        {/* Room Details */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Select Rooms</Text>
+          {roomInfo && roomInfo.length > 0 ? (
+            <FlatList
+              data={roomInfo}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <RoomItem item={item} updateRoomPrice={updateRoomPrice} />
+              )}
+              scrollEnabled={false}
+            />
+          ) : (
+            <Text style={styles.noRoomsText}>No rooms available</Text>
+          )}
         </View>
 
-        <Modal visible={showConfirmation} animationType="slide">
-          return <Payment grandTotal={grandTotal}/>
-        </Modal>
+        {/* Guest Details */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Guests</Text>
+          
+          <View style={styles.guestRow}>
+            <Text style={styles.guestLabel}>Adults</Text>
+            <View style={styles.counterContainer}>
+              <TouchableOpacity
+                style={styles.counterButton}
+                onPress={() => adults > 1 && setAdults(adults - 1)}
+              >
+                <Entypo name="minus" size={20} color="white" />
+              </TouchableOpacity>
+              <Text style={styles.counterText}>{adults}</Text>
+              <TouchableOpacity
+                style={styles.counterButton}
+                onPress={() => setAdults(adults + 1)}
+              >
+                <Entypo name="plus" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.guestRow}>
+            <Text style={styles.guestLabel}>Children</Text>
+            <View style={styles.counterContainer}>
+              <TouchableOpacity
+                style={styles.counterButton}
+                onPress={() => children > 0 && setChildren(children - 1)}
+              >
+                <Entypo name="minus" size={20} color="white" />
+              </TouchableOpacity>
+              <Text style={styles.counterText}>{children}</Text>
+              <TouchableOpacity
+                style={styles.counterButton}
+                onPress={() => setChildren(children + 1)}
+              >
+                <Entypo name="plus" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Price Details */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Price Details</Text>
+          
+          <View style={styles.priceRow}>
+            <Text style={styles.priceLabel}>Room Fee</Text>
+            <Text style={styles.priceValue}>
+              {user?.preferred_currency || "RWF"} {totalPrice.toLocaleString()}
+            </Text>
+          </View>
+
+          <View style={styles.priceRow}>
+            <Text style={styles.priceLabel}>Service Fee</Text>
+            <Text style={styles.priceValue}>
+              {user?.preferred_currency || "RWF"} {serviceFee.toLocaleString()}
+            </Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.priceRow}>
+            <Text style={styles.totalLabel}>Total Price</Text>
+            <Text style={styles.totalValue}>
+              {user?.preferred_currency || "RWF"} {grandTotal.toLocaleString()}
+            </Text>
+          </View>
+        </View>
+
+        {/* Confirm Button */}
+        <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
+          <Text style={styles.confirmButtonText}>Proceed to Payment</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -435,4 +315,126 @@ const BookingScreen = () => {
 
 export default BookingScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F7FA",
+  },
+  section: {
+    backgroundColor: "#fff",
+    marginHorizontal: 15,
+    marginTop: 15,
+    padding: 20,
+    borderRadius: 12,
+  },
+  hotelName: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 15,
+  },
+  dateContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  dateBox: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  dateLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+  },
+  datePicker: {
+    width: "100%",
+  },
+  nightsText: {
+    fontSize: 16,
+    color: "#1995AD",
+    marginTop: 10,
+    fontWeight: "500",
+  },
+  noRoomsText: {
+    fontSize: 16,
+    color: "#999",
+    textAlign: "center",
+    padding: 20,
+  },
+  guestRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  guestLabel: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#000",
+  },
+  counterContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  counterButton: {
+    backgroundColor: "#1995AD",
+    borderRadius: 8,
+    padding: 8,
+  },
+  counterText: {
+    fontSize: 18,
+    color: "#000",
+    marginHorizontal: 20,
+    minWidth: 30,
+    textAlign: "center",
+  },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  priceLabel: {
+    fontSize: 16,
+    color: "#666",
+  },
+  priceValue: {
+    fontSize: 16,
+    color: "#000",
+    fontWeight: "500",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#E0E0E0",
+    marginVertical: 15,
+  },
+  totalLabel: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#000",
+  },
+  totalValue: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1995AD",
+  },
+  confirmButton: {
+    backgroundColor: "#1995AD",
+    marginHorizontal: 15,
+    marginTop: 20,
+    marginBottom: 30,
+    padding: 18,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  confirmButtonText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+  },
+});

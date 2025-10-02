@@ -1,7 +1,5 @@
 import React from "react";
-import {
-  NavigationContainer,
-} from "@react-navigation/native";
+import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import HomeScreen from "../screens/HomeScreen";
@@ -12,13 +10,13 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import Gallery from "../screens/Gallery";
 import ReviewsScreen from "../screens/ReviewsScreen";
 import TicketScreen from "../screens/TicketScreen";
-import TopPlacesGallery from "../screens/TopPlacesGallery"
+import TopPlacesGallery from "../screens/TopPlacesGallery";
 import SearchScreen from "../screens/SearchScreen";
 import BookingScreen from "../screens/BookingScreen";
-import NotificationScreen from "../screens/NotificationScreen"
+import NotificationScreen from "../screens/NotificationScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-import SignInScreen from '../screens/SigninScreen';
-import SignUpScreen from '../screens/SignUpScreen'
+import SignInScreen from "../screens/SigninScreen";
+import SignUpScreen from "../screens/SignUpScreen";
 import PersonalDetails from "../components/PersonalDetails";
 import loading from "../screens/LoadingScreen";
 import PrivacyScreen from "../screens/PrivacyScreen";
@@ -26,14 +24,15 @@ import HelpSupportScreen from "../screens/HelpSupportScreen";
 import TermsConditionsScreen from "../screens/TermsConditionsScreen";
 import ReportProblemScreen from "../screens/ReportProblem";
 import SecurityScreen from "../screens/SecurityScreen";
-
+import PaymentScreen from "../screens/PaymentScreen";
+import BookingConfirmationScreen from "../selection/BookingConfirmationScreen";
 
 // Screen names
 const HomeScreenName = "Home";
 const ExploreScreenName = "Explore";
 const ReservationScreenName = "My Trips";
-const SearchScreenName = "Search"
-const ProfileScreenName = "Profile"
+const SearchScreenName = "Search";
+const ProfileScreenName = "Profile";
 
 // Static Navigation
 
@@ -53,10 +52,10 @@ const TabNavigator = () => {
             iconName = focused ? "compass" : "compass-outline";
           } else if (route.name === ReservationScreenName) {
             iconName = focused ? "bookmarks" : "bookmarks-outline";
-          } else if (route.name === SearchScreenName){
+          } else if (route.name === SearchScreenName) {
             iconName = focused ? "search" : "search-outline";
-          } else if (route.name === ProfileScreenName){
-            iconName = focused ? "person" : "person-outline"
+          } else if (route.name === ProfileScreenName) {
+            iconName = focused ? "person" : "person-outline";
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -72,9 +71,11 @@ const TabNavigator = () => {
       <Tab.Screen name={HomeScreenName} component={HomeStackNavigator} />
       <Tab.Screen name={SearchScreenName} component={SearchNavigator} />
       <Tab.Screen name={ExploreScreenName} component={ExploreScreen} />
-      <Tab.Screen name={ReservationScreenName} component={MyTripsStackNavigator2} />
+      <Tab.Screen
+        name={ReservationScreenName}
+        component={MyTripsStackNavigator2}
+      />
       <Tab.Screen name={ProfileScreenName} component={ProfileNavigator} />
-      
     </Tab.Navigator>
   );
 };
@@ -110,35 +111,61 @@ const HomeStackNavigator = () => {
       <Stack.Screen
         name="Booking"
         component={BookingScreen}
-        options={{ headerTransparent: true, headerShown: true, title: "Booking Details" }}
+        options={{
+          headerTransparent: true,
+          headerShown: true,
+          title: "Booking Details",
+        }}
       />
       <Stack.Screen
         name="Notification"
         component={NotificationScreen}
-        options={{ headerTransparent: true, headerShown: true, title: "Notification" }}
+        options={{
+          headerTransparent: true,
+          headerShown: true,
+          title: "Notification",
+        }}
       />
-      <Stack.Screen name="SignIn" component={SignInScreen} options={{headerShown: false}} />
-      <Stack.Screen name="SignUp" component={SignUpScreen} options={{headerShown: false}} />
-      <Stack.Screen name="Main Page" component={HomeScreen} options={{headerShown: false}} />
+      <Stack.Screen
+        name="SignIn"
+        component={SignInScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SignUp"
+        component={SignUpScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Main Page"
+        component={HomeScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };
 
-const SearchNavigator = () =>{
-  return(
+const SearchNavigator = () => {
+  return (
     <Stack.Navigator initialRouteName={SearchScreenName}>
-      <Stack.Screen 
-      name={SearchScreenName} 
-      component={SearchScreen} 
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
-      <Stack.Screen 
-      name="Hotel Profile" 
-      component={HotelProfile} 
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen
+        name={SearchScreenName}
+        component={SearchScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="Hotel Profile"
+        component={HotelProfile}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
       <Stack.Screen
         name="Booking"
         component={BookingScreen}
-        options={{ headerTransparent: true, headerShown: true, title: "Booking Details" }}
+        options={{
+          headerTransparent: true,
+          headerShown: true,
+          title: "Booking Details",
+        }}
       />
       <Stack.Screen
         name="Reviews"
@@ -150,9 +177,26 @@ const SearchNavigator = () =>{
         component={Gallery}
         options={{ headerTransparent: true, headerShown: true, title: "" }}
       />
+      <Stack.Screen
+        name="Payment"
+        component={PaymentScreen}
+        options={{
+          headerTransparent: true,
+          headerShown: true,
+          title: "Payment",
+        }}
+      />
+
+      <Stack.Screen
+        name="BookingConfirmation"
+        component={BookingConfirmationScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
-  )
-}
+  );
+};
 
 const MyTripsStackNavigator2 = () => {
   return (
@@ -165,40 +209,57 @@ const MyTripsStackNavigator2 = () => {
       <Stack.Screen
         name="Tickets Screen"
         component={TicketScreen}
-        options={{ headerTransparent: true, headerShown: true, title: "Booking Ticket" }}
+        options={{
+          headerTransparent: true,
+          headerShown: true,
+          title: "Booking Ticket",
+        }}
       />
     </Stack.Navigator>
   );
 };
 
-
-const ProfileNavigator = () =>{
-  return(
+const ProfileNavigator = () => {
+  return (
     <Stack.Navigator>
-      <Stack.Screen name={ProfileScreenName}
-      component={ProfileScreen}
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
-      <Stack.Screen name="Personal Info"
-      component={PersonalDetails}
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
-      <Stack.Screen name="HelpSupport"
-      component={HelpSupportScreen}
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
-      <Stack.Screen name="Privacy"
-      component={PrivacyScreen}
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
-      <Stack.Screen name="ReportProblem"
-      component={ReportProblemScreen}
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
-      <Stack.Screen name="Security"
-      component={SecurityScreen}
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
-      <Stack.Screen name="TermsCondition"
-      component={TermsConditionsScreen}
-      options={{ headerTransparent: true, headerShown: true, title: "" }}/>
+      <Stack.Screen
+        name={ProfileScreenName}
+        component={ProfileScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="Personal Info"
+        component={PersonalDetails}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="HelpSupport"
+        component={HelpSupportScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="Privacy"
+        component={PrivacyScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="ReportProblem"
+        component={ReportProblemScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="Security"
+        component={SecurityScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
+      <Stack.Screen
+        name="TermsCondition"
+        component={TermsConditionsScreen}
+        options={{ headerTransparent: true, headerShown: true, title: "" }}
+      />
     </Stack.Navigator>
-  )
-}
+  );
+};
 
 export default function AppNavigation() {
   return (

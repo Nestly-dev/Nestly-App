@@ -1,5 +1,3 @@
-// Backend/index.ts
-
 // ✅ CRITICAL: Load environment variables FIRST before ANY other imports
 import dotenv from "dotenv";
 dotenv.config();

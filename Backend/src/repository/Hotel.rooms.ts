@@ -3,7 +3,7 @@ import { HttpStatusCodes } from "../utils/helpers";
 import { database } from "../utils/config/database";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { DataResponse } from "../utils/types";
-import { bookings, bookingRoomTypes, hotels, room } from "../utils/config/schema";
+import { bookings, bookingRoomTypes, hotels, room, roomPricing } from "../utils/config/schema";
 import { RoomAvailabilityInfo, HotelRoomSummary } from "../utils/types";
 
 // Define types using Drizzle's type inference
@@ -46,13 +46,35 @@ class Rooms {
   }
 
   // Read - Get All Room Types for a Hotel
+ // Read - Get All Room Types for a Hotel WITH PRICING
   async getRoomTypesByHotelId(req: Request): Promise<DataResponse> {
     const hotelId = req.params.hotelId;
 
     try {
+      // Join room with roomPricing to get pricing information
       const hotelRoomTypes = await database
-        .select()
+        .select({
+          // Room details
+          id: room.id,
+          hotel_id: room.hotel_id,
+          type: room.type,
+          description: room.description,
+          max_occupancy: room.max_occupancy,
+          num_beds: room.num_beds,
+          room_size: room.room_size,
+          total_inventory: room.total_inventory,
+          available_inventory: room.available_inventory,
+          created_at: room.created_at,
+          updated_at: room.updated_at,
+          // Pricing details (will be null if no pricing set)
+          roomFee: roomPricing.roomFee,
+          serviceFee: roomPricing.serviceFee,
+          currency: roomPricing.currency,
+          tax_percentage: roomPricing.tax_percentage,
+          child_policy: roomPricing.child_policy,
+        })
         .from(room)
+        .leftJoin(roomPricing, eq(room.id, roomPricing.roomTypeId))
         .where(eq(room.hotel_id, hotelId));
 
       return {
