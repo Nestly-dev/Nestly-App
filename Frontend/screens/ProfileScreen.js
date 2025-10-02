@@ -10,6 +10,7 @@ import {
   StatusBar,
   Dimensions,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState } from "react"
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -28,25 +29,56 @@ import WelcomeScreen from "./WelcomeScreen";
 const { width } = Dimensions.get('window');
 
 const ProfileScreen = () => {
-  const { user, setSignedIn, signedIn, saveAuthStatus, ip } = useContext(AuthContext);
+  const { user, isAuthenticated, logout, authToken, ip } = useContext(AuthContext);
   const navigation = useNavigation();
-  
-  const handleLogOut = () => {
-    const url = `http://${ip}/api/v1/auth/logout`;
-    axios.post(url).then(() => {
-      setSignedIn(false);
-    });
-    saveAuthStatus("isLoggedIn", "notLoggedin")
-    return(
-      <Modal visible={true} animationType="slide">
-        <WelcomeScreen />
-      </Modal>
-    )
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogOut = async () => {
+    try {
+      setIsLoggingOut(true);
+
+      // Call backend logout endpoint with token
+      try {
+        await axios.post(
+          `http://${ip}:8000/api/v1/auth/logout`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`
+            }
+          }
+        );
+        console.log('✅ Logout API call successful');
+      } catch (apiError) {
+        console.warn('⚠️ Logout API call failed (continuing with local logout):', apiError.message);
+        // Continue with local logout even if API fails
+      }
+
+      // Clear local auth state
+      await logout();
+
+      // Navigate to Welcome screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Welcome' }],
+      });
+
+    } catch (error) {
+      console.error('❌ Logout error:', error);
+      // Even if there's an error, try to clear local state
+      await logout();
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Welcome' }],
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
-  if (!signedIn) {
+  if (!isAuthenticated) {
     return (
-      <Modal visible={!signedIn} animationType="slide">
+      <Modal visible={!isAuthenticated} animationType="slide">
         <WelcomeScreen />
       </Modal>
     );
@@ -141,9 +173,22 @@ const ProfileScreen = () => {
             </View>
 
             {/* Logout Button */}
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogOut}>
-              <MaterialIcons name="logout" size={20} color="white" />
-              <Text style={styles.logoutButtonText}>Log Out</Text>
+            <TouchableOpacity
+              style={[styles.logoutButton, isLoggingOut && styles.logoutButtonDisabled]}
+              onPress={handleLogOut}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? (
+                <>
+                  <ActivityIndicator color="white" size={20} />
+                  <Text style={styles.logoutButtonText}>Logging Out...</Text>
+                </>
+              ) : (
+                <>
+                  <MaterialIcons name="logout" size={20} color="white" />
+                  <Text style={styles.logoutButtonText}>Log Out</Text>
+                </>
+              )}
             </TouchableOpacity>
             
             <View style={styles.bottomSpacing} />
@@ -339,6 +384,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+  },
+  logoutButtonDisabled: {
+    opacity: 0.6,
   },
   logoutButtonText: {
     color: "white",

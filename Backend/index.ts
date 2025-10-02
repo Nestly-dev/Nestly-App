@@ -18,6 +18,7 @@ import { VideoRoute } from './src/routes/Content.videos';
 import { complaintsRoutes } from './src/routes/Client.complaints';
 import { InvitationRoutes } from './src/routes/invitations';
 import { PaymentRoutes } from './src/routes/payment.routes';
+import { bookingRoutes } from './src/routes/bookings';
 
 config();
 
@@ -61,8 +62,11 @@ app.use('/api/v1/content/videos', VideoRoute);
 app.use('/api/v1/complaints', authMiddleware, complaintsRoutes);
 app.use('/api/v1/invitation', authMiddleware, InvitationRoutes);
 
-// Payment routes - NEW
+// Payment routes
 app.use('/api/v1/payment', PaymentRoutes);
+
+// User bookings routes - NEW
+app.use('/api/v1/my-bookings', bookingRoutes);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: any) => {

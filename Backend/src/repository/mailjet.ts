@@ -41,12 +41,14 @@ export const sendEmail = async (emailData: EmailData): Promise<any> => {
   }
 
   try {
-    console.log(`📧 Sending email to: ${emailData.to}`);
-    console.log(`📬 Subject: ${emailData.subject}`);
+    console.log('📧 ============ EMAIL SENDING START ============');
+    console.log(`   From: ${fromEmail}`);
+    console.log(`   To: ${emailData.to}`);
+    console.log(`   Subject: ${emailData.subject}`);
 
     const mailjet = getMailjetClient();
 
-    const request = mailjet.post('send', { version: 'v3.1' }).request({
+    const messagePayload = {
       Messages: [
         {
           From: {
@@ -67,24 +69,38 @@ export const sendEmail = async (emailData: EmailData): Promise<any> => {
           Variables: emailData.variables,
         },
       ],
-    });
+    };
+
+    console.log('📤 Sending request to Mailjet...');
+    const request = mailjet.post('send', { version: 'v3.1' }).request(messagePayload);
 
     const result = await request;
-    
+
     console.log('✅ Email sent successfully!');
     console.log(`   Message ID: ${result.body.Messages[0].To[0].MessageID}`);
     console.log(`   Status: ${result.body.Messages[0].Status}`);
-    
+    console.log('============ EMAIL SENDING END ============\n');
+
     return result.body;
   } catch (error: any) {
-    console.error('❌ Error sending email:');
+    console.error('❌ ============ EMAIL SENDING FAILED ============');
     console.error(`   Status Code: ${error.statusCode}`);
+    console.error(`   Error Name: ${error.name}`);
     console.error(`   Message: ${error.message}`);
-    
+
     if (error.response?.body) {
-      console.error(`   Error Details:`, JSON.stringify(error.response.body, null, 2));
+      console.error(`   Mailjet Error Response:`, JSON.stringify(error.response.body, null, 2));
     }
-    
+
+    // Check for specific errors
+    if (error.statusCode === 401) {
+      console.error('   ⚠️  API Keys are invalid or not properly configured');
+    } else if (error.statusCode === 400) {
+      console.error('   ⚠️  Invalid email format or sender email not verified with Mailjet');
+    }
+
+    console.error('============ EMAIL ERROR END ============\n');
+
     throw new Error(`Failed to send email: ${error.message || 'Unknown error'}`);
   }
 };

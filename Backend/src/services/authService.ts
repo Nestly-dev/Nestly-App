@@ -114,29 +114,56 @@ export class AuthenticationService {
       const user = await this.repository.findUserByEmail(loginData.email);
       if (!user) {
         return res.status(HttpStatusCodes.UNAUTHORIZED).json({
-          message: 'Invalid email',
+          success: false,
+          status: HttpStatusCodes.UNAUTHORIZED,
+          message: 'Invalid email or password',
         });
       }
 
       const isPasswordValid = await this.repository.comparePasswords(loginData.password, user.password);
       if (!isPasswordValid) {
         return res.status(HttpStatusCodes.UNAUTHORIZED).json({
-          message: 'Invalid password',
+          success: false,
+          status: HttpStatusCodes.UNAUTHORIZED,
+          message: 'Invalid email or password',
         });
       }
-      // Generate token
+
+      // Check if email is verified
+      if (!user.email_verified) {
+        return res.status(HttpStatusCodes.FORBIDDEN).json({
+          success: false,
+          status: HttpStatusCodes.FORBIDDEN,
+          message: 'Please verify your email before logging in. Check your inbox for verification link.',
+        });
+      }
+
+      // Generate token with expiration
       const token = await this.repository.generateToken(loginData.email);
       await res.cookie("access_token", token, {
         httpOnly: true,
-        maxAge: 3600000 * 24 * 7
+        maxAge: 3600000 * 24 * 7 // 7 days
       });
 
+      // Remove password from user object before sending
+      const { password, ...userWithoutPassword } = user;
+
       return res.status(HttpStatusCodes.OK).json({
+        success: true,
+        status: HttpStatusCodes.OK,
         message: 'Login successful',
-        user
+        data: {
+          token,
+          user: userWithoutPassword
+        }
       });
     } catch (error) {
-      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json(error);
+      console.error('Login error:', error);
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+        message: 'An error occurred during login'
+      });
     }
   }
 

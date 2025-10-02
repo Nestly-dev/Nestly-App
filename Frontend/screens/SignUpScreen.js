@@ -16,7 +16,6 @@ import React, { useState, useContext } from "react";
 import { useNavigation } from "@react-navigation/native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthContext from "../context/AuthContext";
 
 const SignUpScreen = () => {
@@ -24,12 +23,18 @@ const SignUpScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-  const { setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails, ip } = useContext(AuthContext);
+  const { ip } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignUp = async () => {
+    // Validation
     if (!email || !password || !name) {
       Alert.alert("Error", "Please fill up all the details");
+      return;
+    }
+
+    if (name.trim().length < 2) {
+      Alert.alert("Error", "Name must be at least 2 characters");
       return;
     }
 
@@ -46,55 +51,50 @@ const SignUpScreen = () => {
 
     const url = `http://${ip}:8000/api/v1/auth/register`;
     const credentials = {
-      username: name,
-      email: email,
+      username: name.trim(),
+      email: email.trim().toLowerCase(),
       password: password
     };
 
     setIsLoading(true);
-    console.log("Registering user:", credentials);
 
     try {
       const response = await axios.post(url, credentials);
       const result = response.data;
-      console.log("Registration response:", result);
 
-      if (result.status === 201 || result.message?.includes("registered successfully")) {
-        const userData = result.data?.user || result.user;
-        
-        if (result.data?.token) {
-          await AsyncStorage.setItem('authToken', result.data.token);
-        }
-
-        setUser(userData);
-        
+      if (result.success && (result.status === 201 || result.message?.includes("registered successfully"))) {
         Alert.alert(
           "Success!",
-          "Registration successful! Please check your email to verify your account.",
+          "Registration successful! Please check your email to verify your account before logging in.",
           [
             {
               text: "OK",
-              onPress: () => navigation.navigate("SignIn")
+              onPress: () => {
+                // Clear form
+                setName("");
+                setEmail("");
+                setPassword("");
+                navigation.navigate("SignIn");
+              }
             }
           ]
         );
-
-        setSignedIn(false);
-        setAuthStatus("notVerified");
-        saveAuthStatus("isLoggedIn", "notVerified");
-        saveUserDetails("CurrentUser", userData);
-
       } else {
         Alert.alert("Registration Failed", result.message || "Please try again");
       }
     } catch (error) {
       console.error("Registration error:", error);
-      
+
       if (error.response) {
         const errorMessage = error.response.data?.message || "Registration failed";
-        Alert.alert("Error", errorMessage);
+
+        if (error.response.status === 401 && errorMessage.includes("already exists")) {
+          Alert.alert("Account Already Exists", "This email is already registered. Please sign in instead.");
+        } else {
+          Alert.alert("Error", errorMessage);
+        }
       } else if (error.request) {
-        Alert.alert("Network Error", "Please check your internet connection");
+        Alert.alert("Network Error", "Please check your internet connection and try again");
       } else {
         Alert.alert("Error", "Something went wrong. Please try again");
       }

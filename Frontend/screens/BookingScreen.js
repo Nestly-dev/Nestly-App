@@ -18,7 +18,7 @@ import axios from "axios";
 import RoomItem from "../components/RoomItem";
 
 const BookingScreen = ({ navigation, route }) => {
-  const { currentID, user, ip, userId } = useContext(AuthContext);
+  const { currentID, user, ip, userId, logout } = useContext(AuthContext);
   const hotelId = currentID;
   
   const [adults, setAdults] = useState(1);
@@ -140,7 +140,7 @@ const BookingScreen = ({ navigation, route }) => {
     // Get token from user context
     if (!user?.token) {
       Alert.alert("Authentication Required", "Please login to continue");
-      navigation.navigate("Login");
+      logout();
       return false;
     }
     
@@ -229,6 +229,9 @@ const BookingScreen = ({ navigation, route }) => {
       );
     } finally {
       setLoading(false);
+      console.log('User object:', user);
+console.log('User token:', user?.token);
+console.log('User ID:', userId);
     }
   };
 

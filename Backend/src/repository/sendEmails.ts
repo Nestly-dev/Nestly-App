@@ -1,4 +1,5 @@
 import { sendEmail } from '../repository/mailjet';
+import { sendEmailViaNodemailer } from '../repository/nodemailer';
 import { emailingOptions } from '../utils/EmailingTemplates';
 import { SECRETS } from "../utils/helpers";
 
@@ -212,22 +213,22 @@ export async function sendVerificationEmail({
     <html>
     <head>
       <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          line-height: 1.6; 
-          color: #333; 
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
           margin: 0;
           padding: 0;
         }
-        .container { 
-          max-width: 600px; 
-          margin: 0 auto; 
-          padding: 20px; 
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
         }
-        .header { 
+        .header {
           background: linear-gradient(135deg, #1995AD 0%, #13677c 100%);
-          color: white; 
-          padding: 30px 20px; 
+          color: white;
+          padding: 30px 20px;
           text-align: center;
           border-radius: 10px 10px 0 0;
         }
@@ -235,33 +236,33 @@ export async function sendVerificationEmail({
           margin: 0;
           font-size: 28px;
         }
-        .content { 
-          padding: 30px; 
-          background-color: #f9f9f9; 
+        .content {
+          padding: 30px;
+          background-color: #f9f9f9;
           border-left: 3px solid #1995AD;
           border-right: 3px solid #1995AD;
         }
-        .button { 
-          display: inline-block; 
-          padding: 15px 40px; 
-          background-color: #1995AD; 
-          color: white !important; 
-          text-decoration: none; 
-          border-radius: 8px; 
+        .button {
+          display: inline-block;
+          padding: 15px 40px;
+          background-color: #1995AD;
+          color: white !important;
+          text-decoration: none;
+          border-radius: 8px;
           margin: 20px 0;
           font-weight: bold;
           font-size: 16px;
         }
-        .footer { 
-          padding: 20px; 
-          text-align: center; 
-          color: #666; 
+        .footer {
+          padding: 20px;
+          text-align: center;
+          color: #666;
           font-size: 12px;
           background-color: #f0f0f0;
           border-radius: 0 0 10px 10px;
         }
         .link-text {
-          word-break: break-all; 
+          word-break: break-all;
           color: #1995AD;
           font-size: 12px;
           background-color: #e8f4f8;
@@ -287,20 +288,20 @@ export async function sendVerificationEmail({
           <h2>Hi ${firstname},</h2>
           <p>Thank you for registering with <strong>Nestly</strong> - Your trusted hotel booking platform!</p>
           <p>Please verify your email address by clicking the button below:</p>
-          
+
           <div style="text-align: center; margin: 30px 0;">
             <a href="${verificationLink}" class="button">✅ Verify Email Address</a>
           </div>
-          
+
           <p style="text-align: center; color: #666; font-size: 14px;">Or copy and paste this link:</p>
           <div class="link-text">${verificationLink}</div>
-          
+
           <div class="warning">
             <strong>⚠️ Important:</strong> This verification link will expire in <strong>24 hours</strong>.
           </div>
-          
+
           <p style="margin-top: 30px;">If you didn't create a Nestly account, please ignore this email.</p>
-          
+
           <p>Best regards,<br><strong>The Nestly Team</strong></p>
         </div>
         <div class="footer">
@@ -311,17 +312,34 @@ export async function sendVerificationEmail({
     </html>
   `;
 
+  // Try Mailjet first, fallback to Nodemailer (Gmail) if it fails
   try {
+    console.log('📧 Attempting to send via Mailjet...');
     await sendEmail({
       to: email,
       toName: firstname,
       subject: '✉️ Verify Your Nestly Email Address',
       htmlPart: emailTemplate,
     });
-    
-    console.log('✅ Verification email sent successfully to:', email);
-  } catch (error) {
-    console.error('❌ Error sending verification email:', error);
-    throw new Error('Failed to send verification email');
+
+    console.log('✅ Verification email sent successfully via Mailjet to:', email);
+  } catch (mailjetError) {
+    console.warn('⚠️  Mailjet failed, trying Nodemailer (Gmail) fallback...');
+    console.error('Mailjet error:', mailjetError);
+
+    try {
+      await sendEmailViaNodemailer({
+        to: email,
+        toName: firstname,
+        subject: '✉️ Verify Your Nestly Email Address',
+        htmlPart: emailTemplate,
+      });
+
+      console.log('✅ Verification email sent successfully via Nodemailer to:', email);
+    } catch (nodemailerError) {
+      console.error('❌ Both Mailjet and Nodemailer failed!');
+      console.error('Nodemailer error:', nodemailerError);
+      throw new Error('Failed to send verification email with both services');
+    }
   }
 }

@@ -1,6 +1,3 @@
-// Frontend/screens/SignInScreen.js
-// REPLACE YOUR ENTIRE SignInScreen.js FILE WITH THIS CODE
-
 import {
   StyleSheet,
   Text,
@@ -19,55 +16,45 @@ import Entypo from "@expo/vector-icons/Entypo";
 import React, { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthContext from "../context/AuthContext";
 
 const SignInScreen = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-  const { setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails, ip } = useContext(AuthContext);
+  const { login: contextLogin, ip } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignIn = async () => {
+    // Validation
     if (!email || !password) {
       Alert.alert("Error", "Please fill up all the details");
       return;
     }
 
+    if (!email.includes("@")) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
     const url = `http://${ip}:8000/api/v1/auth/login`;
     const credentials = {
-      email: email,
+      email: email.trim().toLowerCase(),
       password: password
     };
 
     setIsLoading(true);
-    console.log("Logging in:", credentials);
 
     try {
       const response = await axios.post(url, credentials);
       const result = response.data;
-      console.log("Login response:", result);
 
-      if (result.status === 200 || result.message === "Login successful") {
-        const { token, user } = result.data || result;
+      if (result.success && result.data) {
+        const { token, user } = result.data;
 
-        if (token) {
-          await AsyncStorage.setItem('authToken', token);
-          console.log("Auth token stored successfully");
-        } else {
-          console.warn("No token received from backend");
-        }
-
-        await AsyncStorage.setItem('userData', JSON.stringify(user));
-
-        setUser(user);
-        setSignedIn(true);
-        setAuthStatus("loggedIn");
-        await saveAuthStatus("isLoggedIn", "loggedIn");
-        await saveUserDetails("CurrentUser", user);
-
-        navigation.replace("Home");
+        // Save to context (which also saves to SecureStore)
+        // Navigation will happen automatically via AppNavigation when isAuthenticated changes
+        await contextLogin(token, user);
 
       } else {
         Alert.alert("Login Failed", result.message || "Invalid credentials");
@@ -80,14 +67,17 @@ const SignInScreen = () => {
         const errorMessage = error.response.data?.message;
 
         if (status === 401) {
-          Alert.alert("Login Failed", "Invalid email or password");
+          Alert.alert("Login Failed", errorMessage || "Invalid email or password");
         } else if (status === 403) {
-          Alert.alert("Account Not Verified", "Please check your email to verify your account");
+          Alert.alert(
+            "Account Not Verified",
+            errorMessage || "Please check your email to verify your account before logging in."
+          );
         } else {
           Alert.alert("Error", errorMessage || "Login failed. Please try again");
         }
       } else if (error.request) {
-        Alert.alert("Network Error", "Please check your internet connection");
+        Alert.alert("Network Error", "Please check your internet connection and try again");
       } else {
         Alert.alert("Error", "Something went wrong. Please try again");
       }

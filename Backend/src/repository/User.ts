@@ -193,7 +193,7 @@ export class AuthenticationRepository {
   }
 
   async generateToken(email: string): Promise<string> {
-    const token = jwt.sign({ email }, SECRETS.ACCESS_TOKEN_SECRET);
+    const token = jwt.sign({ email }, SECRETS.ACCESS_TOKEN_SECRET, { expiresIn: '7d' });
     return token;
   }
 

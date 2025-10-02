@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
@@ -26,6 +26,9 @@ import ReportProblemScreen from "../screens/ReportProblem";
 import SecurityScreen from "../screens/SecurityScreen";
 import PaymentScreen from "../screens/PaymentScreen";
 import BookingConfirmationScreen from "../selection/BookingConfirmationScreen";
+import WelcomeScreen from "../screens/WelcomeScreen";
+import AuthContext from "../context/AuthContext";
+import { ActivityIndicator, View } from "react-native";
 
 // Screen names
 const HomeScreenName = "Home";
@@ -125,21 +128,6 @@ const HomeStackNavigator = () => {
           headerShown: true,
           title: "Notification",
         }}
-      />
-      <Stack.Screen
-        name="SignIn"
-        component={SignInScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="SignUp"
-        component={SignUpScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Main Page"
-        component={HomeScreen}
-        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
@@ -262,11 +250,23 @@ const ProfileNavigator = () => {
 };
 
 export default function AppNavigation() {
+  const { isAuthenticated, isLoading } = useContext(AuthContext);
+
   return (
-    <>
-      <NavigationContainer>
+    <NavigationContainer>
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
+          <ActivityIndicator size="large" color="#1995AD" />
+        </View>
+      ) : isAuthenticated ? (
         <TabNavigator />
-      </NavigationContainer>
-    </>
+      ) : (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
+          <Stack.Screen name="SignIn" component={SignInScreen} />
+          <Stack.Screen name="SignUp" component={SignUpScreen} />
+        </Stack.Navigator>
+      )}
+    </NavigationContainer>
   );
 }

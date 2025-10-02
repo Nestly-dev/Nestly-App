@@ -3,156 +3,139 @@ import AuthContext from "./AuthContext";
 import * as SecureStore from "expo-secure-store";
 
 const UserContexProvider = ({ children }) => {
-  const [user, setUser] = useState();
-  const [signedIn, setSignedIn] = useState(false);
-  const [authStatus, setAuthStatus] = useState("notLoggedIn");
-  const [showLogIn, setShowLogIn] = useState(true)
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [hotelData, setHotelData] = useState()
-  const [currentID, setCurrentID] = useState()
-  const [currentRoomId, setCurrentRoomId] = useState()
-  const [review, setReview] = useState()
+  const [user, setUser] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState();
+  const [isLoading, setIsLoading] = useState(true);
+  const [hotelData, setHotelData] = useState(null);
+  const [currentID, setCurrentID] = useState(null);
+  const [currentRoomId, setCurrentRoomId] = useState(null);
+  const [review, setReview] = useState(null);
   const ip = "127.0.0.1"
 
-// initialising the app
-
-const initializeAuth = async () => {
+// Initialize auth on app start
+  const initializeAuth = async () => {
     try {
-      // Load auth status
-      const storedAuthStatus = await SecureStore.getItemAsync("isLoggedIn");
-      if (storedAuthStatus === "loggedIn") {
-        setAuthStatus("loggedIn");
-        setSignedIn(true);
-        
+      setIsLoading(true);
+
+      // Load token
+      const storedToken = await SecureStore.getItemAsync("authToken");
+
+      if (storedToken) {
         // Load user data
-        const storedUserData = await SecureStore.getItemAsync("CurrentUser");
+        const storedUserData = await SecureStore.getItemAsync("userData");
+
         if (storedUserData) {
           const userData = JSON.parse(storedUserData);
           setUser(userData);
+          setAuthToken(storedToken);
+          setIsAuthenticated(true);
+          console.log("✅ User session restored");
+        } else {
+          // Token exists but no user data - clear token
+          await SecureStore.deleteItemAsync("authToken");
         }
       }
-      // load hotel data
-      const storedHotelDetail = await SecureStore.getItemAsync("all-Hotels")
-      if (storedHotelDetail){
-        const hotelData = JSON.parse(storedHotelDetail)
-        setHotelData(hotelData)
-        console.log("Hotel Detail retreaved successfull 👍");
+
+      // Load hotel data
+      const storedHotelDetail = await SecureStore.getItemAsync("hotelData");
+      if (storedHotelDetail) {
+        const hotelData = JSON.parse(storedHotelDetail);
+        setHotelData(hotelData);
+        console.log("✅ Hotel data loaded");
       }
     } catch (error) {
-      console.error("Error initializing auth:", error);
+      console.error("❌ Error initializing auth:", error);
+      // Clear corrupted data
+      await logout();
+    } finally {
+      setIsLoading(false);
     }
   };
 
-useEffect(() =>{
-    initializeAuth()
-}, [])
+  useEffect(() => {
+    initializeAuth();
+  }, [])
 
-// all the savings
+// Auth functions
 
-  const saveAuthStatus = async (key, value) => {
-    const valueToStore = typeof value === 'string' ? value : JSON.stringify(value);
+  const login = async (token, userData) => {
     try {
-      await SecureStore.setItemAsync(key, valueToStore);
+      await SecureStore.setItemAsync("authToken", token);
+      await SecureStore.setItemAsync("userData", JSON.stringify(userData));
+
+      setAuthToken(token);
+      setUser(userData);
+      setIsAuthenticated(true);
+
+      console.log("✅ Login successful");
     } catch (error) {
-      console.error("Error saving auth status:", error);
+      console.error("❌ Error saving login data:", error);
+      throw error;
     }
   };
 
-
-  const saveUserDetails = async (key, value) =>{
-    const valueToStore = typeof value === "string" ? value : JSON.stringify(value)
+  const logout = async () => {
     try {
-        await SecureStore.setItemAsync(key, valueToStore);
-        console.log("The user details saved are successfully loaded");
-    } catch (error) {
-        console.error("Error saving the user", error);
-    }
-  }
+      await SecureStore.deleteItemAsync("authToken");
+      await SecureStore.deleteItemAsync("userData");
 
-  const saveHotelData = async (key, value) =>{
-    const valueToStore = typeof value == "string" ? value : JSON.stringify(value)
-    try {
-      await SecureStore.setItemAsync(key, valueToStore);
-      console.log("The hotel details saved successfully")
-    } catch (error) {
-      console.log("There is an Error which has occured", error)
-    }
-  }
+      setAuthToken(null);
+      setUser(null);
+      setIsAuthenticated(false);
 
-  // all the loads and data retrieving
-
-  const loadAuthStatus = async (key) => {
-    try {
-      let result = await SecureStore.getItemAsync(key);
-      console.log("Loaded auth status:", result);
-      if (result) {
-        setAuthStatus(result);
-      }
+      console.log("✅ Logout successful");
     } catch (error) {
-      console.error("Error loading auth status:", error);
+      console.error("❌ Error during logout:", error);
     }
   };
 
-  const loadUserDetails = async (key) =>{
+  const updateUser = async (userData) => {
     try {
-        let result = await SecureStore.getItemAsync(key)
-        console.log("Raw stored user data:", result)
-        if(result) {
-          // Parse the JSON string back to an object
-          const userData = JSON.parse(result)
-          console.log("Parsed user data:", userData)
-          setUser(userData)
-        }
-      } catch (error) {
-        console.error("Error loading user details", error);
-      }
-  }
-  const loadHotelData = async (key) =>{
-    try {
-        let result = await SecureStore.getItemAsync(key)
-        // console.log("This is the hotels data that has been stored lately", result)
-        if (result){
-          // Reversing the JSON string back to an object
-          const hotelData = JSON.parse(result)
-          //console.log("The parsed hotel data", hotelData);
-          setHotelData(hotelData)
-        }
+      await SecureStore.setItemAsync("userData", JSON.stringify(userData));
+      setUser(userData);
     } catch (error) {
-      console.log("Error loading the hotel data", error);
+      console.error("❌ Error updating user:", error);
     }
-  }
+  };
+
+  // Hotel data functions
+
+  const saveHotelData = async (data) => {
+    try {
+      await SecureStore.setItemAsync("hotelData", JSON.stringify(data));
+      setHotelData(data);
+      console.log("✅ Hotel data saved");
+    } catch (error) {
+      console.error("❌ Error saving hotel data:", error);
+    }
+  };
 
 
   const value = {
-    // User's Details
+    // Auth state
     user,
-    setUser,
-    setSignedIn,
-    signedIn,
-    authStatus,
-    setAuthStatus,
-    saveAuthStatus,
-    loadAuthStatus,
-    saveUserDetails,
-    loadUserDetails,
-    showConfirmation,
-    setShowConfirmation,
+    authToken,
+    isAuthenticated,
+    isLoading,
 
-    //Hotel's details
+    // Auth actions
+    login,
+    logout,
+    updateUser,
+
+    // Hotel data
     hotelData,
-    setHotelData,
     saveHotelData,
-    loadHotelData,
-    currentID, 
+    currentID,
     setCurrentID,
-    currentRoomId, 
+    currentRoomId,
     setCurrentRoomId,
     review,
     setReview,
 
-    //IP address
+    // API config
     ip
-
   };
 
   return (
