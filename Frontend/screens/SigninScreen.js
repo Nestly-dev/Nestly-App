@@ -19,7 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 
-const SignInScreen = ({ route }) => {
+const SignInScreen = ({ route = {} }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();

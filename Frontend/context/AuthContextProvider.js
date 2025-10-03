@@ -6,7 +6,7 @@ import { useSafeAreaFrame } from "react-native-safe-area-context";
 const UserContexProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [authToken, setAuthToken] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hotelData, setHotelData] = useState([]);
   const [currentID, setCurrentID] = useState(null);
@@ -36,7 +36,11 @@ const UserContexProvider = ({ children }) => {
         } else {
           // Token exists but no user data - clear token
           await SecureStore.deleteItemAsync("authToken");
+          setIsAuthenticated(false);
         }
+      } else {
+        // No token found - user is not authenticated
+        setIsAuthenticated(false);
       }
 
       // Load hotel data

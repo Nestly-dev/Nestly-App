@@ -4,308 +4,411 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Button,
   Image,
   ScrollView,
-  SafeAreaView
+  SafeAreaView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Toast from "react-native-toast-message";
 import axios from "axios";
+import * as ImagePicker from 'expo-image-picker';
 import AuthContext from "../context/AuthContext";
-
+import { useCurrency } from "../context/CurrencyContext";
+import { useTheme } from "../context/ThemeContext";
+import { CurrencySelector } from "./CurrencySelector";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 const PersonalDetails = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [birthDate, setBirthDate] = useState(new Date());
-  const [avatar, setAvatar] = useState("");
-  const [language, setLanguage] = useState("");
-  const [currency, setCurrency] = useState("");
-  const [isFirstTime, setIsFirstTime] = useState(false)
-  const {user, ip} = useContext(AuthContext)
+  const [avatar, setAvatar] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
+
+  const { user, ip, authToken } = useContext(AuthContext);
+  const { selectedCurrency, changeCurrency } = useCurrency();
+  const { theme } = useTheme();
+
+  // Load user data on mount
+  useEffect(() => {
+    if (user) {
+      setFirstName(user.first_name || "");
+      setLastName(user.last_name || "");
+      setPhoneNumber(user.phone_number || "");
+      if (user.date_of_birth) {
+        setBirthDate(new Date(user.date_of_birth));
+      }
+      if (user.avatar_url) {
+        setAvatar(user.avatar_url);
+      }
+      if (user.preferred_currency) {
+        changeCurrency(user.preferred_currency);
+      }
+    }
+  }, [user]);
+
   const onChangeBirthdate = (e, selectedDate) => {
-    setBirthDate(selectedDate);
+    if (selectedDate) {
+      setBirthDate(selectedDate);
+    }
   };
 
-  const changedToUsd = () => {
-    Toast.show({
-      type: "success",
-      text1: "Currency Changed to:",
-      text2: "USD",
-    });
-    setCurrency("USD");
-  };
-  const changedToFrw = () => {
-    Toast.show({
-      type: "success",
-      text1: "Currency Changed to:",
-      text2: "FRW",
-    });
-    setCurrency("FRW");
-  };
-  const infoSaved = () => {
-    Toast.show({
-      type: "success",
-      text1: "Your Profile has been updated",
-      text2: "Complete 💯",
-    });
-    setCurrency("FRW");
+  const pickImage = async () => {
+    try {
+      // Request permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please grant camera roll permissions to change your profile picture'
+        );
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setAvatar(result.assets[0].uri);
+        Toast.show({
+          type: "success",
+          text1: "Photo Selected",
+          text2: "Don't forget to save your changes",
+        });
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
   };
 
-
-  const handleSubmit = () =>{
-    
-    if(isFirstTime){
-    const url = `http://${ip}:8000/api/v1/profile/register`
-    const info ={
-    "first_name": firstName,
-    "last_name": lastName,
-    "phone_number": phoneNumber,
-    "date_of_birth":birthDate,
-    "avatar_url": "kevin_pic",
-    "preferred_language": "en",
-    "preferred_currency": currency
+  const handleSubmit = async () => {
+    // Validation
+    if (!firstName.trim()) {
+      Alert.alert("Error", "Please enter your first name");
+      return;
     }
 
-    axios.post(url, info)
-    .then(() =>{
-        infoSaved;
-        setIsFirstTime(false)
-    }).catch(error =>{
-        console.log(error);
-    })
-    } else{
-      const updateUrl = `http://${ip}:8000/api/v1/profile/update/${user.id}`
-      const updateInfo ={
-        "first_name": firstName,
-        "last_name": lastName,
-        "phone_number": phoneNumber,
-        "date_of_birth":birthDate,
-        "avatar_url": "kevin_pic",
-        "preferred_language": "en",
-        "preferred_currency": currency
+    if (!lastName.trim()) {
+      Alert.alert("Error", "Please enter your last name");
+      return;
+    }
+
+    if (!phoneNumber.trim()) {
+      Alert.alert("Error", "Please enter your phone number");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const formData = new FormData();
+
+      // Add image if it's a new local file
+      if (avatar && avatar.startsWith('file://')) {
+        formData.append('profilePicture', {
+          uri: avatar,
+          type: 'image/jpeg',
+          name: 'profile.jpg',
+        });
+      }
+
+      // Add other fields
+      formData.append('first_name', firstName.trim());
+      formData.append('last_name', lastName.trim());
+      formData.append('phone_number', phoneNumber.trim());
+      formData.append('date_of_birth', birthDate.toISOString().split('T')[0]);
+      formData.append('preferred_language', 'en');
+      formData.append('preferred_currency', selectedCurrency);
+
+      const response = await axios.patch(
+        `http://${ip}:8000/api/v1/profile/update/${user.id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${authToken}`
+          }
         }
+      );
 
-        axios.patch(updateUrl, updateInfo)
-        .then(
-          infoSaved
-        )
-        .catch(error => {
-          console.log(error);
-        })
-
+      if (response.data.success || response.status === 200) {
+        Toast.show({
+          type: "success",
+          text1: "Profile Updated",
+          text2: "Your changes have been saved successfully",
+        });
+        console.log('✅ Profile updated successfully');
+      }
+    } catch (error) {
+      console.error('❌ Profile update error:', error);
+      Alert.alert(
+        "Update Failed",
+        error.response?.data?.message || "Failed to update profile. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
-    <Toast style={{flex:1}}/>
-    <SafeAreaView></SafeAreaView>
-    <ScrollView>
-      
-      <View style={{ alignItems: "center", marginTop: "2%" }}>
-        <Text
-          style={{
-            fontSize: 26,
-            fontWeight: "bold",
-            marginBottom: 30,
-            color: "#1995AD",
-          }}
-        >
-          Edit Profile
-        </Text>
+      <Toast />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]} />
+      <ScrollView style={{ backgroundColor: theme.colors.background }}>
+        <View style={styles.container}>
+          <Text style={[styles.title, { color: theme.colors.primary }]}>
+            Edit Profile
+          </Text>
 
-        {/* Profile Picture */}
-        <View>
-          <Image
-            source={require("../assets/images/me.jpg")}
-            style={{
-              width: 120,
-              height: 120,
-              borderRadius: 100,
-            }}
-          />
-
-          <View>
-            <Button title="Change Photo" color="#1995AD" />
-          </View>
-        </View>
-        {/* First Name Input */}
-        <Text style={{alignSelf:"flex-start", marginLeft:"10%", fontSize: 18, fontWeight: 500, marginTop: 20}}>First Name</Text>
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 10,
-            alignItems: "center",
-            backgroundColor: "rgb(255,255,255)",
-            borderColor: "rgb(233, 233, 233)",
-            borderWidth: 2,
-            width: "85%",
-            height: 60,
-            padding: 10,
-            borderRadius: 20,
-            marginTop: 15,
-          }}
-        >
-          <TextInput
-            placeholder="First Name"
-            style={{
-              marginVertical: 10,
-              color: "gray",
-              fontSize: lastName ? 16 : 16,
-              width: 330,
-            }}
-            value={firstName}
-            onChangeText={text => setFirstName(text)}
-          />
-        </View>
-
-        {/* Second Name Input */}
-        <Text style={{alignSelf:"flex-start", marginLeft:"10%", fontSize: 18, fontWeight: 500, marginTop: 20}}>Last Name</Text>
-
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 10,
-            alignItems: "center",
-            backgroundColor: "rgb(255,255,255)",
-            borderColor: "rgb(233, 233, 233)",
-            borderWidth: 2,
-            width: "85%",
-            height: 60,
-            padding: 10,
-            borderRadius: 20,
-            marginTop: 15,
-          }}
-        >
-          <TextInput
-            placeholder="Second Name"
-            style={{
-              marginVertical: 10,
-              color: "gray",
-              fontSize: firstName ? 16 : 16,
-              width: 330,
-            }}
-            value={lastName}
-            onChangeText={text => setLastName(text)}
-          />
-        </View>
-
-        {/* Phone Input */}
-        <Text style={{alignSelf:"flex-start", marginLeft:"10%", fontSize: 18, fontWeight: 500, marginTop: 20}}>Phone</Text>
-
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 10,
-            alignItems: "center",
-            backgroundColor: "rgb(255,255,255)",
-            borderColor: "rgb(233, 233, 233)",
-            borderWidth: 2,
-            width: "85%",
-            height: 60,
-            padding: 10,
-            borderRadius: 20,
-            marginTop: 15,
-          }}
-        >
-          <TextInput
-            placeholder="Phone Number(+1)"
-            style={{
-              marginVertical: 10,
-              color: "gray",
-              fontSize: phoneNumber ? 16 : 16,
-              width: 330,
-            }}
-            value={phoneNumber}
-            onChangeText={text => setPhoneNumber(text)}
-          />
-        </View>
-
-        {/* Birthday Input */}
-        <Text style={{alignSelf:"flex-start", marginLeft:"10%", fontSize: 18, fontWeight: 500, marginTop: 20}}>Birthday</Text>
-
-        <View
-          style={{
-            justifyContent: "space-between",
-            alignItems: "center",
-            flexDirection: "row",
-            marginTop: 15,
-            gap: "40%",
-            backgroundColor: "rgb(255,255,255)",
-            borderColor: "rgb(233, 233, 233)",
-            borderWidth: 2,
-            width: "85%",
-            height: 60,
-            padding: 10,
-            borderRadius: 20,
-          }}
-        >
-          <Text style={{ fontSize: 16, color: "gray" }}>Birthday</Text>
-          <DateTimePicker
-            value={birthDate}
-            date="date"
-            is24Hour={true}
-            onChange={onChangeBirthdate}
-          />
-        </View>
-
-        {/* Currency Input */}
-        <Text style={{alignSelf:"flex-start", marginLeft:"10%", fontSize: 18, fontWeight: 500, marginTop: 20}}>Preffered Currency</Text>
-
-        <View
-          style={{
-            flexDirection: "row",
-            gap: 10,
-            alignItems: "center",
-            backgroundColor: "rgb(255,255,255)",
-            borderColor: "rgb(233, 233, 233)",
-            borderWidth: 2,
-            width: "85%",
-            height: 60,
-            padding: 10,
-            borderRadius: 20,
-            marginTop: 15,
-            justifyContent: "space-between",
-          }}
-        >
-          <Text>Currency</Text>
-          <View style={{ flexDirection: "row" }}>
-            <View>
-              <Button title="USD" onPress={changedToUsd} color="#1995AD" />
+          {/* Profile Picture */}
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatarWrapper}>
+              {avatar ? (
+                <Image
+                  source={{ uri: avatar }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: theme.colors.card }]}>
+                  <MaterialIcons name="person" size={60} color={theme.colors.textSecondary} />
+                </View>
+              )}
+              <TouchableOpacity
+                style={[styles.cameraButton, { backgroundColor: theme.colors.primary }]}
+                onPress={pickImage}
+              >
+                <MaterialIcons name="camera-alt" size={20} color="white" />
+              </TouchableOpacity>
             </View>
-            <View>
-              <Button title="FRW" onPress={changedToFrw} color="#1995AD" />
-            </View>
-          </View>
-        </View>
 
-        {/* Save Button */}
-        <TouchableOpacity
-        onPress={handleSubmit}
-          style={{
-            backgroundColor: "#1995AD",
-            marginTop: 25,
-            width: "85%",
-            height: 50,
-            borderRadius: 10,
-          }}
-        >
-          <View style={{ padding: 10, alignItems: "center" }}>
-            <Text style={{ fontSize: 20, color: "white", fontWeight: "bold" }}>
-              Save
+            <TouchableOpacity onPress={pickImage} style={styles.changePhotoButton}>
+              <Text style={{ color: theme.colors.primary, fontWeight: "600" }}>
+                Change Photo
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* First Name Input */}
+          <Text style={[styles.label, { color: theme.colors.text }]}>First Name</Text>
+          <View style={[styles.inputContainer, {
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border
+          }]}>
+            <MaterialIcons name="person-outline" size={20} color={theme.colors.textSecondary} />
+            <TextInput
+              placeholder="First Name"
+              placeholderTextColor={theme.colors.textSecondary}
+              style={[styles.input, { color: theme.colors.text }]}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+          </View>
+
+          {/* Last Name Input */}
+          <Text style={[styles.label, { color: theme.colors.text }]}>Last Name</Text>
+          <View style={[styles.inputContainer, {
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border
+          }]}>
+            <MaterialIcons name="person-outline" size={20} color={theme.colors.textSecondary} />
+            <TextInput
+              placeholder="Last Name"
+              placeholderTextColor={theme.colors.textSecondary}
+              style={[styles.input, { color: theme.colors.text }]}
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
+
+          {/* Phone Input */}
+          <Text style={[styles.label, { color: theme.colors.text }]}>Phone</Text>
+          <View style={[styles.inputContainer, {
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border
+          }]}>
+            <MaterialIcons name="phone" size={20} color={theme.colors.textSecondary} />
+            <TextInput
+              placeholder="Phone Number (+250...)"
+              placeholderTextColor={theme.colors.textSecondary}
+              style={[styles.input, { color: theme.colors.text }]}
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          {/* Birthday Input */}
+          <Text style={[styles.label, { color: theme.colors.text }]}>Birthday</Text>
+          <View style={[styles.inputContainer, {
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border
+          }]}>
+            <MaterialIcons name="cake" size={20} color={theme.colors.textSecondary} />
+            <Text style={[styles.dateText, { color: theme.colors.text }]}>
+              {birthDate.toLocaleDateString()}
             </Text>
+            <DateTimePicker
+              value={birthDate}
+              mode="date"
+              display="default"
+              onChange={onChangeBirthdate}
+              maximumDate={new Date()}
+              style={styles.datePicker}
+            />
           </View>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+
+          {/* Currency Selector */}
+          <Text style={[styles.label, { color: theme.colors.text }]}>Preferred Currency</Text>
+          <TouchableOpacity
+            style={[styles.inputContainer, {
+              backgroundColor: theme.colors.card,
+              borderColor: theme.colors.border
+            }]}
+            onPress={() => setShowCurrencyPicker(true)}
+          >
+            <MaterialIcons name="attach-money" size={20} color={theme.colors.textSecondary} />
+            <Text style={[styles.input, { color: theme.colors.text }]}>
+              {selectedCurrency}
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+
+          {/* Save Button */}
+          <TouchableOpacity
+            onPress={handleSubmit}
+            disabled={isLoading}
+            style={[styles.saveButton, {
+              backgroundColor: theme.colors.primary,
+              opacity: isLoading ? 0.7 : 1
+            }]}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <>
+                <MaterialIcons name="save" size={20} color="white" />
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          <View style={{ height: 40 }} />
+        </View>
+      </ScrollView>
+
+      <CurrencySelector
+        visible={showCurrencyPicker}
+        onClose={() => setShowCurrencyPicker(false)}
+      />
     </>
   );
 };
 
 export default PersonalDetails;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  safeArea: {
+    paddingTop: 0,
+  },
+  container: {
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 30,
+  },
+  avatarContainer: {
+    alignItems: "center",
+    marginBottom: 30,
+  },
+  avatarWrapper: {
+    position: "relative",
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cameraButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "white",
+  },
+  changePhotoButton: {
+    marginTop: 12,
+    paddingVertical: 8,
+  },
+  label: {
+    alignSelf: "flex-start",
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    width: "100%",
+    height: 56,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+  },
+  dateText: {
+    flex: 1,
+    fontSize: 16,
+  },
+  datePicker: {
+    height: 30,
+  },
+  saveButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 32,
+    width: "100%",
+    height: 56,
+    borderRadius: 12,
+    gap: 8,
+  },
+  saveButtonText: {
+    fontSize: 18,
+    color: "white",
+    fontWeight: "bold",
+  },
+});

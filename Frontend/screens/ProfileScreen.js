@@ -12,12 +12,15 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react"
+import React, { useState, useContext } from "react"
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useContext } from "react";
 import { useNavigation } from "@react-navigation/native";
 import AuthContext from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import { useCurrency } from "../context/CurrencyContext";
+import { CurrencySelector } from "../components/CurrencySelector";
 import axios from "axios";
+import { Alert } from "react-native";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -30,8 +33,11 @@ const { width } = Dimensions.get('window');
 
 const ProfileScreen = () => {
   const { user, isAuthenticated, logout, authToken, ip } = useContext(AuthContext);
+  const { theme, isDark, toggleTheme } = useTheme();
+  const { selectedCurrency } = useCurrency();
   const navigation = useNavigation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
   const handleLogOut = async () => {
     try {
@@ -120,6 +126,20 @@ const ProfileScreen = () => {
 
         <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
           <SafeAreaView style={styles.contentArea}>
+            {/* My Trips Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>My Trips</Text>
+              <View style={styles.menuContainer}>
+                <MenuItem
+                  icon={<MaterialCommunityIcons name="calendar-check" size={22} color="#1995AD" />}
+                  title="My Bookings"
+                  subtitle="View your reservations"
+                  onPress={() => navigation.navigate("My Trips")}
+                  showBorder={false}
+                />
+              </View>
+            </View>
+
             {/* Account Section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Account</Text>
@@ -142,6 +162,43 @@ const ProfileScreen = () => {
                 />
               </View>
             </View>
+
+            {/* Preferences Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Preferences</Text>
+              <View style={[styles.menuContainer, { backgroundColor: theme.colors.card }]}>
+                <MenuItem
+                  icon={<Ionicons name={isDark ? "moon" : "sunny"} size={22} color={theme.colors.primary} />}
+                  title="Dark Mode"
+                  subtitle={isDark ? "Enabled" : "Disabled"}
+                  onPress={toggleTheme}
+                />
+                <MenuItem
+                  icon={<MaterialIcons name="attach-money" size={22} color={theme.colors.primary} />}
+                  title="Currency"
+                  subtitle={selectedCurrency}
+                  onPress={() => setShowCurrencyPicker(true)}
+                />
+                <MenuItem
+                  icon={<Ionicons name="notifications" size={22} color={theme.colors.primary} />}
+                  title="Notifications"
+                  subtitle="Manage notification settings"
+                  onPress={() => Alert.alert('Coming Soon', 'Notification settings will be available soon!')}
+                />
+                <MenuItem
+                  icon={<Entypo name="language" size={20} color={theme.colors.primary} />}
+                  title="Language"
+                  subtitle="English (US)"
+                  onPress={() => Alert.alert('Coming Soon', 'Language settings coming soon!')}
+                  showBorder={false}
+                />
+              </View>
+            </View>
+
+            <CurrencySelector
+              visible={showCurrencyPicker}
+              onClose={() => setShowCurrencyPicker(false)}
+            />
 
             {/* Support & About Section */}
             <View style={styles.section}>
@@ -200,10 +257,10 @@ const ProfileScreen = () => {
 };
 
 // Reusable MenuItem Component
-const MenuItem = ({ icon, title, onPress, showBorder = true }) => {
+const MenuItem = ({ icon, title, subtitle, onPress, showBorder = true }) => {
   return (
-    <TouchableOpacity 
-      style={[styles.menuItem, showBorder && styles.menuItemBorder]} 
+    <TouchableOpacity
+      style={[styles.menuItem, showBorder && styles.menuItemBorder]}
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -211,7 +268,10 @@ const MenuItem = ({ icon, title, onPress, showBorder = true }) => {
         <View style={styles.iconContainer}>
           {icon}
         </View>
-        <Text style={styles.menuItemText}>{title}</Text>
+        <View style={styles.menuItemTextContainer}>
+          <Text style={styles.menuItemText}>{title}</Text>
+          {subtitle && <Text style={styles.menuItemSubtitle}>{subtitle}</Text>}
+        </View>
       </View>
       <Ionicons name="chevron-forward" size={20} color="#8E8E93" />
     </TouchableOpacity>
@@ -348,10 +408,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
+  menuItemTextContainer: {
+    flex: 1,
+  },
   menuItemText: {
     fontSize: 16,
     fontWeight: "500",
     color: "#1C1C1E",
+  },
+  menuItemSubtitle: {
+    fontSize: 13,
+    color: "#8E8E93",
+    marginTop: 2,
   },
   appInfoSection: {
     alignItems: "center",

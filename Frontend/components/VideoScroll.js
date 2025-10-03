@@ -7,25 +7,32 @@ import {
   useWindowDimensions,
   Image,
   StatusBar,
-  ActivityIndicator
+  ActivityIndicator,
+  TouchableOpacity
 } from "react-native";
 import { Video, ResizeMode, Audio } from "expo-av";
 import { useCallback, useState, useRef, useEffect, memo, useContext } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import Feather from '@expo/vector-icons/Feather';
-import { useIsFocused } from '@react-navigation/native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
 
 // Memoized Video Item Component
-const VideoItem = memo(({ 
-  item, 
-  index, 
-  width, 
-  height, 
-  videoRef, 
-  onPress, 
-  isActive 
+const VideoItem = memo(({
+  item,
+  index,
+  width,
+  height,
+  videoRef,
+  onPress,
+  isActive,
+  onLike,
+  onSave,
+  onBook,
+  isLiked,
+  isSaved
 }) => {
   return (
     <View style={{ width, height }}>
@@ -42,7 +49,7 @@ const VideoItem = memo(({
         posterSource={item.thumbnail ? { uri: item.thumbnail } : null}
         usePoster={!!item.thumbnail}
       />
-      
+
       <Pressable onPress={() => onPress(index)} style={styles.content}>
         <LinearGradient
           colors={["transparent", "rgba(0,0,0,0.9)"]}
@@ -50,46 +57,85 @@ const VideoItem = memo(({
         >
           {/* Top header */}
           <View style={styles.header}>
-            <Text style={styles.headerText}>Reels</Text>
+            <Text style={styles.headerText}>Explore</Text>
             <Feather name="camera" size={24} color="white" />
           </View>
-          
+
           {/* Right sidebar with actions */}
           <View style={styles.sidebar}>
-            <View style={styles.sidebarItem}>
-              <Feather name="heart" size={28} color="white" />
-              <Text style={styles.iconText}>{item.likes || "0"}</Text>
-            </View>
-            <View style={styles.sidebarItem}>
-              <Feather name="bookmark" size={28} color="white" />
-            </View>
-            <View style={styles.sidebarItem}>
+            {/* Like Button */}
+            <TouchableOpacity style={styles.sidebarItem} onPress={() => onLike(item.id)}>
+              <MaterialIcons
+                name={isLiked ? "favorite" : "favorite-border"}
+                size={32}
+                color={isLiked ? "#FF3B30" : "white"}
+              />
+              <Text style={styles.iconText}>{item.likes_count || 0}</Text>
+            </TouchableOpacity>
+
+            {/* Save Button */}
+            <TouchableOpacity style={styles.sidebarItem} onPress={() => onSave(item.id)}>
+              <MaterialIcons
+                name={isSaved ? "bookmark" : "bookmark-border"}
+                size={32}
+                color={isSaved ? "#FFD700" : "white"}
+              />
+            </TouchableOpacity>
+
+            {/* Share Button */}
+            <TouchableOpacity style={styles.sidebarItem}>
+              <Feather name="share-2" size={28} color="white" />
+            </TouchableOpacity>
+
+            {/* More Options */}
+            <TouchableOpacity style={styles.sidebarItem}>
               <Feather name="more-vertical" size={28} color="white" />
-            </View>
+            </TouchableOpacity>
           </View>
-          
+
           {/* Bottom content info */}
           <View style={styles.contentContainer}>
             <View style={styles.userInfoContainer}>
               <View style={styles.profileContainer}>
-                <Image 
-                  source={item.profile_image ? { uri: item.profile_image } : require("../assets/images/profile.webp")}
+                {/* Hotel Profile Image */}
+                <Image
+                  source={
+                    item.hotel?.logo_url
+                      ? { uri: item.hotel.logo_url }
+                      : require("../assets/images/profile.webp")
+                  }
                   style={styles.profileImage}
                 />
+                {/* Hotel Name */}
                 <Text style={styles.nameText}>
-                  {item.username || "User"}
+                  {item.hotel?.name || item.hotel_name || "Hotel"}
                 </Text>
-                <Pressable style={styles.followButton}>
-                  <Text style={styles.followText}>Follow</Text>
-                </Pressable>
+                {/* Book Button */}
+                <TouchableOpacity
+                  style={styles.bookButton}
+                  onPress={() => onBook(item.hotel_id || item.hotel?.id)}
+                >
+                  <MaterialIcons name="hotel" size={14} color="white" />
+                  <Text style={styles.bookText}>Book</Text>
+                </TouchableOpacity>
               </View>
+
+              {/* Caption/Description */}
               <Text style={styles.captionText}>
-                {item.caption || ""}
+                {item.caption || item.description || ""}
               </Text>
-              
+
+              {/* Location Info */}
+              {item.hotel?.location && (
+                <View style={styles.locationContainer}>
+                  <MaterialIcons name="location-on" size={14} color="white" />
+                  <Text style={styles.locationText}>{item.hotel.location}</Text>
+                </View>
+              )}
+
               {/* Music info */}
               <View style={styles.musicContainer}>
-                <Feather name="music" size={16} color="white" />
+                <Feather name="music" size={14} color="white" />
                 <Text style={styles.musicText}>{item.audio_title || "Original Audio"}</Text>
               </View>
             </View>
@@ -104,19 +150,24 @@ const VideoItem = memo(({
     prevProps.isActive === nextProps.isActive &&
     prevProps.width === nextProps.width &&
     prevProps.height === nextProps.height &&
-    prevProps.item.id === nextProps.item.id
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.isLiked === nextProps.isLiked &&
+    prevProps.isSaved === nextProps.isSaved
   );
 });
 
 const VideoScroll = () => {
   const { width, height } = useWindowDimensions();
   const isFocused = useIsFocused();
+  const navigation = useNavigation();
   const videoRefs = useRef([]);
   const [activePostId, setActivePostId] = useState(null);
   const [videoFeed, setVideoFeed] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const {ip} = useContext(AuthContext);
+  const [likedVideos, setLikedVideos] = useState(new Set());
+  const [savedVideos, setSavedVideos] = useState(new Set());
+  const { ip, authToken, setCurrentID } = useContext(AuthContext);
 
   // Setup audio mode for proper playback on mobile devices
   useEffect(() => {
@@ -132,7 +183,7 @@ const VideoScroll = () => {
         console.error('Failed to configure audio mode:', e);
       }
     };
-    
+
     setupAudio();
   }, []);
 
@@ -144,7 +195,7 @@ const VideoScroll = () => {
         const videoSource = `http://${ip}:8000/api/v1/content/videos/all`;
         const response = await axios.get(videoSource);
         const result = response.data;
-        
+
         if (result && result.data) {
           setVideoFeed(result.data);
           // Set first video as active once data is loaded
@@ -165,10 +216,41 @@ const VideoScroll = () => {
     fetchVideos();
   }, []);
 
+  // Load liked and saved videos
+  useEffect(() => {
+    const loadUserPreferences = async () => {
+      if (!authToken) return;
+
+      try {
+        // Fetch liked videos
+        const likedResponse = await axios.get(
+          `http://${ip}:8000/api/v1/videos/liked`,
+          { headers: { Authorization: `Bearer ${authToken}` }}
+        );
+        if (likedResponse.data.success && likedResponse.data.data) {
+          setLikedVideos(new Set(likedResponse.data.data.map(v => v.id)));
+        }
+
+        // Fetch saved videos
+        const savedResponse = await axios.get(
+          `http://${ip}:8000/api/v1/videos/saved`,
+          { headers: { Authorization: `Bearer ${authToken}` }}
+        );
+        if (savedResponse.data.success && savedResponse.data.data) {
+          setSavedVideos(new Set(savedResponse.data.data.map(v => v.id)));
+        }
+      } catch (err) {
+        console.log("Could not load user preferences:", err.message);
+      }
+    };
+
+    loadUserPreferences();
+  }, [authToken]);
+
   useEffect(() => {
     // Hide status bar when component mounts
     StatusBar.setHidden(true);
-    
+
     return () => {
       // Show status bar when component unmounts
       StatusBar.setHidden(false);
@@ -215,6 +297,98 @@ const VideoScroll = () => {
     });
   }, []);
 
+  const handleLike = useCallback(async (videoId) => {
+    if (!authToken) {
+      // TODO: Show login prompt
+      console.log("Please login to like videos");
+      return;
+    }
+
+    try {
+      const isLiked = likedVideos.has(videoId);
+      const endpoint = isLiked ? 'unlike' : 'like';
+
+      await axios.post(
+        `http://${ip}:8000/api/v1/videos/${videoId}/${endpoint}`,
+        {},
+        { headers: { Authorization: `Bearer ${authToken}` }}
+      );
+
+      // Update local state
+      setLikedVideos(prev => {
+        const newSet = new Set(prev);
+        if (isLiked) {
+          newSet.delete(videoId);
+        } else {
+          newSet.add(videoId);
+        }
+        return newSet;
+      });
+
+      // Update video feed likes count
+      setVideoFeed(prev => prev.map(video => {
+        if (video.id === videoId) {
+          return {
+            ...video,
+            likes_count: isLiked
+              ? (video.likes_count || 1) - 1
+              : (video.likes_count || 0) + 1
+          };
+        }
+        return video;
+      }));
+    } catch (error) {
+      console.error('Like error:', error);
+    }
+  }, [authToken, likedVideos, ip]);
+
+  const handleSave = useCallback(async (videoId) => {
+    if (!authToken) {
+      console.log("Please login to save videos");
+      return;
+    }
+
+    try {
+      const isSaved = savedVideos.has(videoId);
+      const endpoint = isSaved ? 'unsave' : 'save';
+
+      await axios.post(
+        `http://${ip}:8000/api/v1/videos/${videoId}/${endpoint}`,
+        {},
+        { headers: { Authorization: `Bearer ${authToken}` }}
+      );
+
+      // Update local state
+      setSavedVideos(prev => {
+        const newSet = new Set(prev);
+        if (isSaved) {
+          newSet.delete(videoId);
+        } else {
+          newSet.add(videoId);
+        }
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Save error:', error);
+    }
+  }, [authToken, savedVideos, ip]);
+
+  const handleBook = useCallback((hotelId) => {
+    if (!hotelId) {
+      console.log("Hotel ID not available");
+      return;
+    }
+
+    // Set the current hotel ID in context
+    setCurrentID(hotelId);
+
+    // Navigate to hotel profile
+    navigation.navigate('Places', {
+      screen: 'Hotel Profile',
+      params: { hotelId }
+    });
+  }, [navigation, setCurrentID]);
+
   const onViewableItemsChanged = useCallback(({ viewableItems }) => {
     if (viewableItems.length > 0 && videoFeed.length > 0) {
       const currentActiveId = viewableItems[0].item.id;
@@ -248,8 +422,13 @@ const VideoScroll = () => {
       videoRef={(ref) => (videoRefs.current[index] = ref)}
       onPress={onPress}
       isActive={item.id === activePostId && isFocused}
+      onLike={handleLike}
+      onSave={handleSave}
+      onBook={handleBook}
+      isLiked={likedVideos.has(item.id)}
+      isSaved={savedVideos.has(item.id)}
     />
-  ), [width, height, activePostId, isFocused, onPress]);
+  ), [width, height, activePostId, isFocused, onPress, handleLike, handleSave, handleBook, likedVideos, savedVideos]);
 
   const keyExtractor = useCallback((item) => item.id.toString(), []);
 
@@ -273,12 +452,11 @@ const VideoScroll = () => {
       <View style={styles.errorContainer}>
         <Feather name="alert-circle" size={50} color="#FFFFFF" />
         <Text style={styles.errorText}>{error}</Text>
-        <Pressable 
+        <Pressable
           style={styles.retryButton}
           onPress={() => {
             setError(null);
             setIsLoading(true);
-            // Retry fetching videos
             axios.get(`http://${ip}:8000/api/v1/content/videos/all`)
               .then(response => {
                 if (response.data && response.data.data) {
@@ -416,12 +594,13 @@ const styles = StyleSheet.create({
   },
   sidebarItem: {
     alignItems: 'center',
-    marginVertical: 16,
+    marginVertical: 12,
   },
   iconText: {
     color: 'white',
     fontSize: 12,
     marginTop: 4,
+    fontWeight: '600',
   },
   contentContainer: {
     paddingHorizontal: 16,
@@ -437,9 +616,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   profileImage: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 2,
     borderColor: 'white',
   },
@@ -447,36 +626,52 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-    marginLeft: 8,
-  },
-  followButton: {
-    borderColor: 'white',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
     marginLeft: 10,
+    flex: 1,
   },
-  followText: {
+  bookButton: {
+    backgroundColor: '#1995AD',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    gap: 4,
+  },
+  bookText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   captionText: {
     color: "white",
     fontSize: 14,
-    marginBottom: 10,
+    marginBottom: 8,
     fontWeight: "400",
-    width: '90%',
+    width: '85%',
+    lineHeight: 18,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  locationText: {
+    color: 'white',
+    fontSize: 13,
+    marginLeft: 4,
+    opacity: 0.9,
   },
   musicContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 4,
   },
   musicText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 13,
     marginLeft: 6,
+    opacity: 0.8,
   },
 });
 
