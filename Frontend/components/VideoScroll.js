@@ -8,16 +8,51 @@ import {
   Image,
   StatusBar,
   ActivityIndicator,
-  TouchableOpacity
+  TouchableOpacity,
+  Animated,
 } from "react-native";
 import { Video, ResizeMode, Audio } from "expo-av";
 import { useCallback, useState, useRef, useEffect, memo, useContext } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { BlurView } from 'expo-blur';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import axios from "axios";
 import AuthContext from "../context/AuthContext";
+
+// Animated Like Button Component
+const AnimatedLikeButton = ({ isLiked, onPress, likesCount }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePress = () => {
+    Animated.sequence([
+      Animated.spring(scaleAnim, {
+        toValue: 1.3,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    onPress();
+  };
+
+  return (
+    <TouchableOpacity style={styles.sidebarItem} onPress={handlePress}>
+      <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+        <MaterialIcons
+          name={isLiked ? "favorite" : "favorite-border"}
+          size={32}
+          color={isLiked ? "#FF3B30" : "white"}
+        />
+      </Animated.View>
+      <Text style={styles.iconText}>{likesCount || 0}</Text>
+    </TouchableOpacity>
+  );
+};
 
 // Memoized Video Item Component
 const VideoItem = memo(({
@@ -52,25 +87,36 @@ const VideoItem = memo(({
 
       <Pressable onPress={() => onPress(index)} style={styles.content}>
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.9)"]}
+          colors={["rgba(0,0,0,0.3)", "transparent", "rgba(0,0,0,0.95)"]}
           style={styles.gradientOverlay}
         >
-          {/* Top header */}
-          <View style={styles.header}>
-            <Text style={styles.headerText}>Explore</Text>
-            <Feather name="camera" size={24} color="white" />
+          {/* Top header with blur effect */}
+          <View style={styles.headerContainer}>
+            <BlurView intensity={20} tint="dark" style={styles.headerBlur}>
+              <View style={styles.header}>
+                <Text style={styles.headerText}>Discover</Text>
+                <TouchableOpacity style={styles.cameraButton}>
+                  <Feather name="camera" size={22} color="white" />
+                </TouchableOpacity>
+              </View>
+            </BlurView>
           </View>
 
           {/* Right sidebar with actions */}
           <View style={styles.sidebar}>
             {/* Like Button */}
-            <TouchableOpacity style={styles.sidebarItem} onPress={() => onLike(item.id)}>
-              <MaterialIcons
-                name={isLiked ? "favorite" : "favorite-border"}
-                size={32}
-                color={isLiked ? "#FF3B30" : "white"}
-              />
-              <Text style={styles.iconText}>{item.likes_count || 0}</Text>
+            <AnimatedLikeButton
+              isLiked={isLiked}
+              onPress={() => onLike(item.id)}
+              likesCount={item.likes_count}
+            />
+
+            {/* Comment Button */}
+            <TouchableOpacity style={styles.sidebarItem}>
+              <Ionicons name="chatbubble-outline" size={30} color="white" />
+              <Text style={styles.iconText}>
+                {item.comments_count || 0}
+              </Text>
             </TouchableOpacity>
 
             {/* Save Button */}
@@ -87,56 +133,80 @@ const VideoItem = memo(({
               <Feather name="share-2" size={28} color="white" />
             </TouchableOpacity>
 
-            {/* More Options */}
-            <TouchableOpacity style={styles.sidebarItem}>
-              <Feather name="more-vertical" size={28} color="white" />
-            </TouchableOpacity>
+            {/* Hotel Logo */}
+            <View style={styles.hotelLogoContainer}>
+              <Image
+                source={
+                  item.hotel?.logo_url
+                    ? { uri: item.hotel.logo_url }
+                    : require("../assets/images/profile.webp")
+                }
+                style={styles.sidebarHotelLogo}
+              />
+            </View>
           </View>
 
           {/* Bottom content info */}
           <View style={styles.contentContainer}>
             <View style={styles.userInfoContainer}>
-              <View style={styles.profileContainer}>
-                {/* Hotel Profile Image */}
-                <Image
-                  source={
-                    item.hotel?.logo_url
-                      ? { uri: item.hotel.logo_url }
-                      : require("../assets/images/profile.webp")
-                  }
-                  style={styles.profileImage}
-                />
-                {/* Hotel Name */}
-                <Text style={styles.nameText}>
-                  {item.hotel?.name || item.hotel_name || "Hotel"}
-                </Text>
+              {/* Hotel Info Row */}
+              <View style={styles.hotelInfoRow}>
+                <View style={styles.profileContainer}>
+                  <Image
+                    source={
+                      item.hotel?.logo_url
+                        ? { uri: item.hotel.logo_url }
+                        : require("../assets/images/profile.webp")
+                    }
+                    style={styles.profileImage}
+                  />
+                  <View style={styles.nameContainer}>
+                    <Text style={styles.nameText}>
+                      {item.hotel?.name || item.hotel_name || "Hotel"}
+                    </Text>
+                    {item.hotel?.location && (
+                      <View style={styles.locationRow}>
+                        <MaterialIcons name="location-on" size={12} color="white" />
+                        <Text style={styles.locationText}>
+                          {item.hotel.location}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                
                 {/* Book Button */}
                 <TouchableOpacity
                   style={styles.bookButton}
                   onPress={() => onBook(item.hotel_id || item.hotel?.id)}
                 >
-                  <MaterialIcons name="hotel" size={14} color="white" />
-                  <Text style={styles.bookText}>Book</Text>
+                  <LinearGradient
+                    colors={['#1995AD', '#148899']}
+                    style={styles.bookGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <MaterialIcons name="hotel" size={16} color="white" />
+                    <Text style={styles.bookText}>Book</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
 
               {/* Caption/Description */}
-              <Text style={styles.captionText}>
-                {item.caption || item.description || ""}
-              </Text>
-
-              {/* Location Info */}
-              {item.hotel?.location && (
-                <View style={styles.locationContainer}>
-                  <MaterialIcons name="location-on" size={14} color="white" />
-                  <Text style={styles.locationText}>{item.hotel.location}</Text>
-                </View>
-              )}
+              {item.caption || item.description ? (
+                <Text style={styles.captionText} numberOfLines={2}>
+                  {item.caption || item.description}
+                </Text>
+              ) : null}
 
               {/* Music info */}
               <View style={styles.musicContainer}>
-                <Feather name="music" size={14} color="white" />
-                <Text style={styles.musicText}>{item.audio_title || "Original Audio"}</Text>
+                <View style={styles.musicDisc}>
+                  <Feather name="music" size={12} color="white" />
+                </View>
+                <Text style={styles.musicText} numberOfLines={1}>
+                  {item.audio_title || "Original Audio"}
+                </Text>
               </View>
             </View>
           </View>
@@ -145,7 +215,6 @@ const VideoItem = memo(({
     </View>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison for memo
   return (
     prevProps.isActive === nextProps.isActive &&
     prevProps.width === nextProps.width &&
@@ -169,7 +238,6 @@ const VideoScroll = () => {
   const [savedVideos, setSavedVideos] = useState(new Set());
   const { ip, authToken, setCurrentID } = useContext(AuthContext);
 
-  // Setup audio mode for proper playback on mobile devices
   useEffect(() => {
     const setupAudio = async () => {
       try {
@@ -183,11 +251,9 @@ const VideoScroll = () => {
         console.error('Failed to configure audio mode:', e);
       }
     };
-
     setupAudio();
   }, []);
 
-  // Fetch videos from API
   useEffect(() => {
     const fetchVideos = async () => {
       setIsLoading(true);
@@ -198,9 +264,7 @@ const VideoScroll = () => {
 
         if (result && result.data) {
           setVideoFeed(result.data);
-          // Debug: Check video data structure
           if (result.data.length > 0) {
-            console.log('📹 Sample video data:', JSON.stringify(result.data[0], null, 2));
             setActivePostId(result.data[0].id);
           }
         } else {
@@ -217,45 +281,15 @@ const VideoScroll = () => {
     fetchVideos();
   }, []);
 
-  // Load liked and saved videos - disabled until backend endpoints are ready
-  // useEffect(() => {
-  //   const loadUserPreferences = async () => {
-  //     if (!authToken) return;
-  //     try {
-  //       const likedResponse = await axios.get(
-  //         `http://${ip}:8000/api/v1/content/videos/liked`,
-  //         { headers: { Authorization: `Bearer ${authToken}` }}
-  //       );
-  //       if (likedResponse.data.success && likedResponse.data.data) {
-  //         setLikedVideos(new Set(likedResponse.data.data.map(v => v.id)));
-  //       }
-  //       const savedResponse = await axios.get(
-  //         `http://${ip}:8000/api/v1/content/videos/saved`,
-  //         { headers: { Authorization: `Bearer ${authToken}` }}
-  //       );
-  //       if (savedResponse.data.success && savedResponse.data.data) {
-  //         setSavedVideos(new Set(savedResponse.data.data.map(v => v.id)));
-  //       }
-  //     } catch (err) {
-  //       console.log("Could not load user preferences:", err.message);
-  //     }
-  //   };
-  //   loadUserPreferences();
-  // }, [authToken]);
-
   useEffect(() => {
-    // Hide status bar when component mounts
     StatusBar.setHidden(true);
-
     return () => {
-      // Show status bar when component unmounts
       StatusBar.setHidden(false);
     };
   }, []);
 
   useEffect(() => {
     if (!isFocused) {
-      // Pause all videos when screen is not focused
       videoRefs.current.forEach(async (video) => {
         if (video) {
           try {
@@ -266,7 +300,6 @@ const VideoScroll = () => {
         }
       });
     } else if (activePostId !== null && videoFeed.length > 0) {
-      // Play active video when screen is focused
       const activeIndex = videoFeed.findIndex(item => item.id === activePostId);
       if (activeIndex !== -1 && videoRefs.current[activeIndex]) {
         try {
@@ -294,12 +327,6 @@ const VideoScroll = () => {
   }, []);
 
   const handleLike = useCallback(async (videoId) => {
-    if (!authToken) {
-      console.log("Please login to like videos");
-      return;
-    }
-
-    // Update local state immediately for better UX
     const isLiked = likedVideos.has(videoId);
 
     setLikedVideos(prev => {
@@ -312,7 +339,6 @@ const VideoScroll = () => {
       return newSet;
     });
 
-    // Update video feed likes count
     setVideoFeed(prev => prev.map(video => {
       if (video.id === videoId) {
         return {
@@ -324,39 +350,9 @@ const VideoScroll = () => {
       }
       return video;
     }));
-
-    // TODO: Uncomment when backend endpoints are ready
-    /*
-    try {
-      const endpoint = isLiked ? 'unlike' : 'like';
-      await axios.post(
-        `http://${ip}:8000/api/v1/content/videos/${videoId}/${endpoint}`,
-        {},
-        { headers: { Authorization: `Bearer ${authToken}` }}
-      );
-    } catch (error) {
-      console.error('Like API error:', error);
-      // Revert on error
-      setLikedVideos(prev => {
-        const newSet = new Set(prev);
-        if (isLiked) {
-          newSet.add(videoId);
-        } else {
-          newSet.delete(videoId);
-        }
-        return newSet;
-      });
-    }
-    */
-  }, [authToken, likedVideos, ip]);
+  }, [likedVideos]);
 
   const handleSave = useCallback(async (videoId) => {
-    if (!authToken) {
-      console.log("Please login to save videos");
-      return;
-    }
-
-    // Update local state immediately
     const isSaved = savedVideos.has(videoId);
 
     setSavedVideos(prev => {
@@ -368,31 +364,7 @@ const VideoScroll = () => {
       }
       return newSet;
     });
-
-    // TODO: Uncomment when backend endpoints are ready
-    /*
-    try {
-      const endpoint = isSaved ? 'unsave' : 'save';
-      await axios.post(
-        `http://${ip}:8000/api/v1/content/videos/${videoId}/${endpoint}`,
-        {},
-        { headers: { Authorization: `Bearer ${authToken}` }}
-      );
-    } catch (error) {
-      console.error('Save API error:', error);
-      // Revert on error
-      setSavedVideos(prev => {
-        const newSet = new Set(prev);
-        if (isSaved) {
-          newSet.add(videoId);
-        } else {
-          newSet.delete(videoId);
-        }
-        return newSet;
-      });
-    }
-    */
-  }, [authToken, savedVideos, ip]);
+  }, [savedVideos]);
 
   const handleBook = useCallback((hotelId) => {
     if (!hotelId) {
@@ -400,12 +372,10 @@ const VideoScroll = () => {
       return;
     }
 
-    // Set the current hotel ID in context
     if (setCurrentID) {
       setCurrentID(hotelId);
     }
 
-    // Navigate to hotel profile in Home tab
     navigation.navigate('Home', {
       screen: 'Hotel Profile',
       params: { hotelId }
@@ -459,23 +429,21 @@ const VideoScroll = () => {
     itemVisiblePercentThreshold: 50,
   }).current;
 
-  // Loading state
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color="#1995AD" />
         <Text style={styles.loadingText}>Loading videos...</Text>
       </View>
     );
   }
 
-  // Error state
   if (error) {
     return (
       <View style={styles.errorContainer}>
         <Feather name="alert-circle" size={50} color="#FFFFFF" />
         <Text style={styles.errorText}>{error}</Text>
-        <Pressable
+        <TouchableOpacity
           style={styles.retryButton}
           onPress={() => {
             setError(null);
@@ -498,12 +466,11 @@ const VideoScroll = () => {
           }}
         >
           <Text style={styles.retryText}>Retry</Text>
-        </Pressable>
+        </TouchableOpacity>
       </View>
     );
   }
 
-  // Empty state
   if (videoFeed.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -567,14 +534,14 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     backgroundColor: '#1995AD',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 25,
   },
   retryText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   emptyContainer: {
     flex: 1,
@@ -597,104 +564,158 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "space-between",
   },
+  headerContainer: {
+    paddingTop: 40,
+    paddingHorizontal: 16,
+  },
+  headerBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 40,
+    paddingVertical: 12,
   },
   headerText: {
     color: "white",
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 22,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  cameraButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sidebar: {
     position: 'absolute',
     right: 12,
-    bottom: 120,
+    bottom: 140,
     alignItems: 'center',
   },
   sidebarItem: {
     alignItems: 'center',
-    marginVertical: 12,
+    marginVertical: 14,
   },
   iconText: {
     color: 'white',
     fontSize: 12,
     marginTop: 4,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  hotelLogoContainer: {
+    marginTop: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: 'white',
+    overflow: 'hidden',
+  },
+  sidebarHotelLogo: {
+    width: '100%',
+    height: '100%',
   },
   contentContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 24,
-    justifyContent: 'flex-end',
+    paddingBottom: 32,
   },
   userInfoContainer: {
-    marginBottom: 16,
+    gap: 12,
+  },
+  hotelInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    flex: 1,
   },
   profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 2,
     borderColor: 'white',
+  },
+  nameContainer: {
+    marginLeft: 12,
+    flex: 1,
   },
   nameText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
-    marginLeft: 10,
-    flex: 1,
+    fontWeight: "700",
+    marginBottom: 2,
   },
-  bookButton: {
-    backgroundColor: '#1995AD',
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    gap: 4,
+  },
+  locationText: {
+    color: 'white',
+    fontSize: 12,
+    marginLeft: 4,
+    opacity: 0.9,
+  },
+  bookButton: {
+    borderRadius: 22,
+    overflow: 'hidden',
+    shadowColor: '#1995AD',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  bookGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    gap: 6,
   },
   bookText: {
     color: 'white',
-    fontSize: 13,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '700',
   },
   captionText: {
     color: "white",
     fontSize: 14,
-    marginBottom: 8,
     fontWeight: "400",
-    width: '85%',
-    lineHeight: 18,
-  },
-  locationContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  locationText: {
-    color: 'white',
-    fontSize: 13,
-    marginLeft: 4,
-    opacity: 0.9,
+    lineHeight: 20,
   },
   musicContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  musicDisc: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
   },
   musicText: {
     color: 'white',
     fontSize: 13,
-    marginLeft: 6,
-    opacity: 0.8,
+    fontWeight: '600',
+    maxWidth: 200,
   },
 });
 
