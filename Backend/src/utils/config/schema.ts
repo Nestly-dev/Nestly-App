@@ -254,6 +254,20 @@ export const videos = pgTable('videos', {
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });
 
+export const videoLikes = pgTable('video_likes', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  video_id: uuid('video_id').references(() => videos.id, { onDelete: 'cascade' }).notNull(),
+  user_id: uuid('user_id').references(() => userTable.id, { onDelete: 'cascade' }).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull()
+});
+
+export const videoSaves = pgTable('video_saves', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  video_id: uuid('video_id').references(() => videos.id, { onDelete: 'cascade' }).notNull(),
+  user_id: uuid('user_id').references(() => userTable.id, { onDelete: 'cascade' }).notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull()
+});
+
 // Algorithm-based but can be added manually
 /*
 export const deals = pgTable('deals', {

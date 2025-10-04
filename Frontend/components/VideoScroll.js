@@ -198,8 +198,9 @@ const VideoScroll = () => {
 
         if (result && result.data) {
           setVideoFeed(result.data);
-          // Set first video as active once data is loaded
+          // Debug: Check video data structure
           if (result.data.length > 0) {
+            console.log('📹 Sample video data:', JSON.stringify(result.data[0], null, 2));
             setActivePostId(result.data[0].id);
           }
         } else {
@@ -216,36 +217,31 @@ const VideoScroll = () => {
     fetchVideos();
   }, []);
 
-  // Load liked and saved videos
-  useEffect(() => {
-    const loadUserPreferences = async () => {
-      if (!authToken) return;
-
-      try {
-        // Fetch liked videos
-        const likedResponse = await axios.get(
-          `http://${ip}:8000/api/v1/videos/liked`,
-          { headers: { Authorization: `Bearer ${authToken}` }}
-        );
-        if (likedResponse.data.success && likedResponse.data.data) {
-          setLikedVideos(new Set(likedResponse.data.data.map(v => v.id)));
-        }
-
-        // Fetch saved videos
-        const savedResponse = await axios.get(
-          `http://${ip}:8000/api/v1/videos/saved`,
-          { headers: { Authorization: `Bearer ${authToken}` }}
-        );
-        if (savedResponse.data.success && savedResponse.data.data) {
-          setSavedVideos(new Set(savedResponse.data.data.map(v => v.id)));
-        }
-      } catch (err) {
-        console.log("Could not load user preferences:", err.message);
-      }
-    };
-
-    loadUserPreferences();
-  }, [authToken]);
+  // Load liked and saved videos - disabled until backend endpoints are ready
+  // useEffect(() => {
+  //   const loadUserPreferences = async () => {
+  //     if (!authToken) return;
+  //     try {
+  //       const likedResponse = await axios.get(
+  //         `http://${ip}:8000/api/v1/content/videos/liked`,
+  //         { headers: { Authorization: `Bearer ${authToken}` }}
+  //       );
+  //       if (likedResponse.data.success && likedResponse.data.data) {
+  //         setLikedVideos(new Set(likedResponse.data.data.map(v => v.id)));
+  //       }
+  //       const savedResponse = await axios.get(
+  //         `http://${ip}:8000/api/v1/content/videos/saved`,
+  //         { headers: { Authorization: `Bearer ${authToken}` }}
+  //       );
+  //       if (savedResponse.data.success && savedResponse.data.data) {
+  //         setSavedVideos(new Set(savedResponse.data.data.map(v => v.id)));
+  //       }
+  //     } catch (err) {
+  //       console.log("Could not load user preferences:", err.message);
+  //     }
+  //   };
+  //   loadUserPreferences();
+  // }, [authToken]);
 
   useEffect(() => {
     // Hide status bar when component mounts
@@ -299,47 +295,59 @@ const VideoScroll = () => {
 
   const handleLike = useCallback(async (videoId) => {
     if (!authToken) {
-      // TODO: Show login prompt
       console.log("Please login to like videos");
       return;
     }
 
-    try {
-      const isLiked = likedVideos.has(videoId);
-      const endpoint = isLiked ? 'unlike' : 'like';
+    // Update local state immediately for better UX
+    const isLiked = likedVideos.has(videoId);
 
+    setLikedVideos(prev => {
+      const newSet = new Set(prev);
+      if (isLiked) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+      }
+      return newSet;
+    });
+
+    // Update video feed likes count
+    setVideoFeed(prev => prev.map(video => {
+      if (video.id === videoId) {
+        return {
+          ...video,
+          likes_count: isLiked
+            ? Math.max(0, (video.likes_count || 1) - 1)
+            : (video.likes_count || 0) + 1
+        };
+      }
+      return video;
+    }));
+
+    // TODO: Uncomment when backend endpoints are ready
+    /*
+    try {
+      const endpoint = isLiked ? 'unlike' : 'like';
       await axios.post(
-        `http://${ip}:8000/api/v1/videos/${videoId}/${endpoint}`,
+        `http://${ip}:8000/api/v1/content/videos/${videoId}/${endpoint}`,
         {},
         { headers: { Authorization: `Bearer ${authToken}` }}
       );
-
-      // Update local state
+    } catch (error) {
+      console.error('Like API error:', error);
+      // Revert on error
       setLikedVideos(prev => {
         const newSet = new Set(prev);
         if (isLiked) {
-          newSet.delete(videoId);
-        } else {
           newSet.add(videoId);
+        } else {
+          newSet.delete(videoId);
         }
         return newSet;
       });
-
-      // Update video feed likes count
-      setVideoFeed(prev => prev.map(video => {
-        if (video.id === videoId) {
-          return {
-            ...video,
-            likes_count: isLiked
-              ? (video.likes_count || 1) - 1
-              : (video.likes_count || 0) + 1
-          };
-        }
-        return video;
-      }));
-    } catch (error) {
-      console.error('Like error:', error);
     }
+    */
   }, [authToken, likedVideos, ip]);
 
   const handleSave = useCallback(async (videoId) => {
@@ -348,29 +356,42 @@ const VideoScroll = () => {
       return;
     }
 
-    try {
-      const isSaved = savedVideos.has(videoId);
-      const endpoint = isSaved ? 'unsave' : 'save';
+    // Update local state immediately
+    const isSaved = savedVideos.has(videoId);
 
+    setSavedVideos(prev => {
+      const newSet = new Set(prev);
+      if (isSaved) {
+        newSet.delete(videoId);
+      } else {
+        newSet.add(videoId);
+      }
+      return newSet;
+    });
+
+    // TODO: Uncomment when backend endpoints are ready
+    /*
+    try {
+      const endpoint = isSaved ? 'unsave' : 'save';
       await axios.post(
-        `http://${ip}:8000/api/v1/videos/${videoId}/${endpoint}`,
+        `http://${ip}:8000/api/v1/content/videos/${videoId}/${endpoint}`,
         {},
         { headers: { Authorization: `Bearer ${authToken}` }}
       );
-
-      // Update local state
+    } catch (error) {
+      console.error('Save API error:', error);
+      // Revert on error
       setSavedVideos(prev => {
         const newSet = new Set(prev);
         if (isSaved) {
-          newSet.delete(videoId);
-        } else {
           newSet.add(videoId);
+        } else {
+          newSet.delete(videoId);
         }
         return newSet;
       });
-    } catch (error) {
-      console.error('Save error:', error);
     }
+    */
   }, [authToken, savedVideos, ip]);
 
   const handleBook = useCallback((hotelId) => {
@@ -380,10 +401,12 @@ const VideoScroll = () => {
     }
 
     // Set the current hotel ID in context
-    setCurrentID(hotelId);
+    if (setCurrentID) {
+      setCurrentID(hotelId);
+    }
 
-    // Navigate to hotel profile
-    navigation.navigate('Places', {
+    // Navigate to hotel profile in Home tab
+    navigation.navigate('Home', {
       screen: 'Hotel Profile',
       params: { hotelId }
     });

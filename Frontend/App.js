@@ -2,6 +2,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import AppNavigation from "./Navigation/AppNavigation"
 import React, { useState } from "react";
 import UserContexProvider from './context/AuthContextProvider';
+import { CurrencyProvider } from './context/CurrencyContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 
 
@@ -9,10 +11,14 @@ export default function App() {
   const [showSplashScreen, setShowSplashScreen] = useState(true)
 
   return (
-    <GestureHandlerRootView>
-    <UserContexProvider>
-      <AppNavigation />
-    </UserContexProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <UserContexProvider>
+        <CurrencyProvider>
+          <ThemeProvider>
+            <AppNavigation />
+          </ThemeProvider>
+        </CurrencyProvider>
+      </UserContexProvider>
     </GestureHandlerRootView>
   );
 }

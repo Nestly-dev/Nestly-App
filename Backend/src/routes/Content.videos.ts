@@ -50,3 +50,33 @@ VideoRoute.delete('/delete/:videoId', authMiddleware, rolesAndPermissions.custom
 VideoRoute.patch('/:videoId/views', authMiddleware, (req: Request, res: Response) => {
   return videoService.incrementViewCount(req, res);
 });
+
+// Like video
+VideoRoute.post('/:videoId/like', authMiddleware, (req: Request, res: Response) => {
+  return videoService.likeVideo(req, res);
+});
+
+// Unlike video
+VideoRoute.post('/:videoId/unlike', authMiddleware, (req: Request, res: Response) => {
+  return videoService.unlikeVideo(req, res);
+});
+
+// Save video
+VideoRoute.post('/:videoId/save', authMiddleware, (req: Request, res: Response) => {
+  return videoService.saveVideo(req, res);
+});
+
+// Unsave video
+VideoRoute.post('/:videoId/unsave', authMiddleware, (req: Request, res: Response) => {
+  return videoService.unsaveVideo(req, res);
+});
+
+// Get user's liked videos
+VideoRoute.get('/user/liked', authMiddleware, (req: Request, res: Response) => {
+  return videoService.getUserLikedVideos(req, res);
+});
+
+// Get user's saved videos
+VideoRoute.get('/user/saved', authMiddleware, (req: Request, res: Response) => {
+  return videoService.getUserSavedVideos(req, res);
+});

@@ -26,8 +26,12 @@ ProfileRoute.post('/register', authMiddleware, upload.single('profilePicture'), 
 });
 
 // Update a user Profile
-ProfileRoute.patch('/update/:profileId', authMiddleware, (req: Request, res: Response) => {
-  return profileService.updateProfile(req, res);
+ProfileRoute.patch('/update/:profileId', authMiddleware, upload.single('profilePicture'), contentAwareImageMiddleware({
+  maxWidth: 500,
+  maxHeight: 500,
+  quality: 85
+}), (req: Request, res: Response) => {
+  return profileService.updateProfile(req as MulterRequest, res);
 });
 
 // Delete a user Profile

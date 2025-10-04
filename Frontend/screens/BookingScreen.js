@@ -33,6 +33,7 @@ const BookingScreen = ({ navigation, route }) => {
   const [serviceFee] = useState(10);
   const [hotelName, setHotelName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
 
   useEffect(() => {
     fetchHotelAndRoomInfo();
@@ -55,7 +56,8 @@ const BookingScreen = ({ navigation, route }) => {
       navigation.goBack();
       return;
     }
-    
+
+    setIsLoadingRooms(true);
     try {
       const hotelResponse = await axios.get(`http://${ip}:8000/api/v1/hotels/profile/${hotelId}`);
       if (hotelResponse.data && hotelResponse.data.data) {
@@ -86,6 +88,8 @@ const BookingScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error("Error fetching hotel/room info:", error);
       Alert.alert("Error", "Failed to load room information. Please try again.");
+    } finally {
+      setIsLoadingRooms(false);
     }
   };
 
@@ -273,6 +277,17 @@ console.log('User ID:', userId);
     }
   };
 
+  if (isLoadingRooms) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1995AD" />
+          <Text style={styles.loadingText}>Loading rooms...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
@@ -427,6 +442,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F7FA",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F7FA",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "500",
   },
   section: {
     backgroundColor: "#fff",

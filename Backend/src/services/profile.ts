@@ -29,11 +29,11 @@ class ProfileService {
     }
   }
 
-  async updateProfile(req: Request, res: Response): Promise<Response> {
+  async updateProfile(req: MulterRequest, res: Response): Promise<Response> {
     try {
       const profileData: updateProfileDataTypes = req.body;
       // send the data to profile Repository
-      const { data, status, message } = await profileRepository.updateProfile(req, res, profileData);
+      const { data, status, message } = await profileRepository.updateProfile(req as MulterRequest, res, profileData);
 
       if (status === HttpStatusCodes.OK) {
         return res.status(status).json({

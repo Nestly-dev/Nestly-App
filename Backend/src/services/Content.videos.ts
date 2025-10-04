@@ -146,6 +146,96 @@ class VideoService {
       });
     }
   }
+
+  async likeVideo(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await videoRepository.likeVideo(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
+  async unlikeVideo(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await videoRepository.unlikeVideo(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
+  async saveVideo(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await videoRepository.saveVideo(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
+  async unsaveVideo(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await videoRepository.unsaveVideo(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
+  async getUserLikedVideos(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await videoRepository.getUserLikedVideos(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
+
+  async getUserSavedVideos(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, status, message } = await videoRepository.getUserSavedVideos(req, res);
+
+      return res.status(status).json({
+        message,
+        data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: `Server error, ${error}`
+      });
+    }
+  }
 }
 
 export const videoService = new VideoService();
