@@ -4,7 +4,8 @@ import * as SecureStore from "expo-secure-store";
 import { useSafeAreaFrame } from "react-native-safe-area-context";
 
 // Get API base URL from environment variable (Expo convention)
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.65:8001/api/v1';
+// Default uses port 8000 to match backend default (Backend/index.ts: process.env.PORT || 8000)
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.65:8000/api/v1';
 
 const UserContexProvider = ({ children }) => {
   const [user, setUser] = useState(null);

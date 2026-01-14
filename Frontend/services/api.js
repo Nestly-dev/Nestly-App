@@ -2,7 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Get base URL from environment or default
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.65:8001/api/v1';
+// Default uses port 8000 to match backend default (Backend/index.ts: process.env.PORT || 8000)
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.65:8000/api/v1';
 
 class ApiService {
   constructor() {
