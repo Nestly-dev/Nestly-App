@@ -4,11 +4,11 @@
     "slug": "Nestly",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/Nestly-Main.png",
+    "icon": "./assets/adaptive-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/Nestly.png",
+      "image": "./assets/images/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#1995AD"
     },

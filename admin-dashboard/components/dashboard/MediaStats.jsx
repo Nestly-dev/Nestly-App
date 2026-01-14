@@ -5,58 +5,41 @@ import { formatNumber } from "@/lib/utils";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Eye, ArrowUpRight } from "lucide-react";
 
-// Sample data for media stats
-const mediaData = [
-  {
-    name: "Hotel Exterior",
-    type: "photo",
-    views: 4500,
-    change: "+15%",
-  },
-  {
-    name: "Lobby Tour",
-    type: "video",
-    views: 3200,
-    change: "+22%",
-  },
-  {
-    name: "Suite Room",
-    type: "photo",
-    views: 2800,
-    change: "+8%",
-  },
-  {
-    name: "Restaurant",
-    type: "photo",
-    views: 2400,
-    change: "+12%",
-  },
-  {
-    name: "Swimming Pool",
-    type: "photo",
-    views: 2100,
-    change: "+5%",
-  },
-  {
-    name: "Virtual Tour",
-    type: "video",
-    views: 1800,
-    change: "+19%",
-  },
-];
+const MediaStats = ({ media = [] }) => {
+  // Process media data
+  const mediaItems = Array.isArray(media)
+    ? media
+        .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
+        .slice(0, 6)
+        .map(item => ({
+          name: item.title || item.file_name || `Media ${item.id}`,
+          type: item.media_type || (item.file_name?.includes('.mp4') || item.file_name?.includes('.mov') ? 'video' : 'photo'),
+          views: item.view_count || 0,
+          change: "+0%",
+        }))
+    : [];
 
-// Chart data
-const chartData = [
-  { name: 'Mon', views: 1200 },
-  { name: 'Tue', views: 1800 },
-  { name: 'Wed', views: 1500 },
-  { name: 'Thu', views: 2200 },
-  { name: 'Fri', views: 2800 },
-  { name: 'Sat', views: 3500 },
-  { name: 'Sun', views: 3200 },
-];
+  // Generate chart data for last 7 days (mock for now since we don't track daily views)
+  const generateChartData = () => {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const totalViews = media.reduce((sum, item) => sum + (item.view_count || 0), 0);
+    const avgViews = totalViews / 7;
 
-const MediaStats = () => {
+    return days.map(name => ({
+      name,
+      views: Math.floor(avgViews * (0.8 + Math.random() * 0.4)),
+    }));
+  };
+
+  const chartData = generateChartData();
+
+  if (mediaItems.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No media data available
+      </div>
+    );
+  }
   return (
     <div>
       {/* Mini chart at the top */}
@@ -90,7 +73,7 @@ const MediaStats = () => {
       <div className="mt-4">
         <h3 className="text-sm font-medium mb-2">Top Media Items</h3>
         <div className="space-y-2">
-          {mediaData.map((item, index) => (
+          {mediaItems.map((item, index) => (
             <div 
               key={index} 
               className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors"

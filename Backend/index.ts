@@ -19,6 +19,7 @@ import { complaintsRoutes } from './src/routes/Client.complaints';
 import { InvitationRoutes } from './src/routes/invitations';
 import { PaymentRoutes } from './src/routes/payment.routes';
 import { bookingRoutes } from './src/routes/bookings';
+import hotelAuthRoutes from './src/routes/hotelAuth';
 
 config();
 
@@ -49,6 +50,7 @@ app.get('/api/v1/test', (req: Request, res: Response) => {
 });
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/hotel-auth', hotelAuthRoutes);
 app.use('/api/v1/profile', ProfileRoute);
 app.use('/api/v1/hotels', HotelBasicDataRoutes);
 app.use('/api/v1/hotels/rooms', HotelRoomsRoutes);

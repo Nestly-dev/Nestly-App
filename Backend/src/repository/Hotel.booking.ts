@@ -837,7 +837,40 @@ class BookingRepository {
     }
   }
 
-  
+  async getHotelBookings(req: Request): Promise<DataResponse> {
+    try {
+      const { hotel_id } = req.query;
+
+      if (!hotel_id) {
+        return {
+          data: null,
+          message: 'Hotel ID is required',
+          status: HttpStatusCodes.BAD_REQUEST,
+        };
+      }
+
+      // Get all bookings for the hotel
+      const hotelBookings = await database
+        .select()
+        .from(bookings)
+        .where(eq(bookings.hotel_id, hotel_id as string));
+
+      return {
+        data: hotelBookings,
+        message: 'Hotel bookings retrieved successfully',
+        status: HttpStatusCodes.OK,
+      };
+    } catch (error: any) {
+      console.error('Error fetching hotel bookings:', error);
+      return {
+        data: null,
+        message: `Failed to retrieve hotel bookings: ${error?.message || error}`,
+        status: HttpStatusCodes.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+
 }
 
 

@@ -106,6 +106,8 @@ export const hotels = pgTable('hotels', {
   // Hotel management
   management_email: varchar("management_email"),
   management_name: varchar("management_name"),
+  // Hotel authentication - password for direct hotel login
+  access_password: text('access_password'), // Hashed password for hotel login
   created_at: timestamp('created_at').defaultNow().notNull(),
   updated_at: timestamp('updated_at').defaultNow().notNull()
 });

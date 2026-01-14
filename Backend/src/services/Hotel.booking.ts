@@ -73,6 +73,20 @@ class Booking {
       });
     }
   }
+
+  async getHotelBookings(req: Request, res: Response): Promise<Response> {
+    try {
+      const { data, message, status } = await bookingRepository.getHotelBookings(req);
+      return res.status(status).json({
+        message: message,
+        data: data
+      });
+    } catch (error) {
+      return res.status(HttpStatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: error
+      });
+    }
+  }
 }
 
 export const BookingService = new Booking();

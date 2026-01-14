@@ -1,27 +1,57 @@
 // components/dashboard/RevenueChart.jsx
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { apiClient } from '@/lib/apiClient';
+import { Loader2 } from 'lucide-react';
 
-// Sample data for the chart
-const data = [
-  { name: 'Jan', revenue: 4000, bookings: 24 },
-  { name: 'Feb', revenue: 3000, bookings: 18 },
-  { name: 'Mar', revenue: 6000, bookings: 38 },
-  { name: 'Apr', revenue: 8000, bookings: 45 },
-  { name: 'May', revenue: 5500, bookings: 32 },
-  { name: 'Jun', revenue: 7500, bookings: 37 },
-  { name: 'Jul', revenue: 9800, bookings: 55 },
-  { name: 'Aug', revenue: 12000, bookings: 70 },
-  { name: 'Sep', revenue: 9300, bookings: 64 },
-  { name: 'Oct', revenue: 7800, bookings: 50 },
-  { name: 'Nov', revenue: 8700, bookings: 52 },
-  { name: 'Dec', revenue: 11300, bookings: 68 },
-];
-
-const RevenueChart = () => {
+const RevenueChart = ({ hotelId, days = 30 }) => {
   const [activeMetric, setActiveMetric] = useState('revenue');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (hotelId) {
+      loadTrends();
+    }
+  }, [hotelId, days]);
+
+  const loadTrends = async () => {
+    try {
+      setLoading(true);
+      const trends = await apiClient.analytics.getBookingTrends(hotelId, days);
+
+      const formattedData = trends.map(trend => ({
+        name: new Date(trend.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        revenue: trend.revenue,
+        bookings: trend.bookings,
+      }));
+
+      setData(formattedData);
+    } catch (error) {
+      console.error('Error loading revenue trends:', error);
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="h-80 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#1995AD]" />
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <div className="h-80 flex items-center justify-center text-gray-500">
+        No revenue data available for this period
+      </div>
+    );
+  }
 
   return (
     <div className="h-80">

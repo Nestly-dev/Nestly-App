@@ -4,6 +4,7 @@ import { BookingService } from "../services/Hotel.booking";
 import { bookingRepository } from "../repository/Hotel.booking";
 import { HttpStatusCode } from "axios";
 import { authMiddleware } from "../middleware/authMiddleware";
+import { hotelAuthMiddleware } from "../middleware/hotelAuthMiddleware";
 
 export const BookingRoutes = Router();
 
@@ -39,5 +40,9 @@ BookingRoutes.patch('/update/:bookingId', authMiddleware, (req: Request, res: Re
 
 BookingRoutes.patch('/cancel/:bookingId', authMiddleware, (req: Request, res: Response) => {
   return BookingService.cancelBooking(req, res);
+});
+
+BookingRoutes.get('/', hotelAuthMiddleware, (req: Request, res: Response) => {
+  return BookingService.getHotelBookings(req, res);
 });
 
