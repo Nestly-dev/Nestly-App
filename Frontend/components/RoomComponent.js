@@ -1,18 +1,16 @@
 import { View, Text, TouchableOpacity, Image, FlatList, StyleSheet } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import axios from "axios"
 import AuthContext from '../context/AuthContext';
+import apiService from '../services/api';
 
 const RoomComponent = ({roomInfo}) => {
 
-  const {currentID, currentRoomId, setCurrentRoomId, ip} = useContext(AuthContext)
+  const {currentID, currentRoomId, setCurrentRoomId} = useContext(AuthContext)
   const [room, setRoom] = useState()
   
 useEffect(() =>{
-  // Getting The Room
-  const url = `http://${ip}:8000/api/v1/hotels/rooms/${currentID}`
-  axios.get(url)
+  apiService.hotels.getRooms(currentID)
   .then((response) =>{
     const results = response.data
     const roomDetail = results.data

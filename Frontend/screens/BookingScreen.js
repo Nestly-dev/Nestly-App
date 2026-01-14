@@ -14,11 +14,11 @@ import React, { useContext, useEffect, useState } from "react";
 import Entypo from "@expo/vector-icons/Entypo";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AuthContext from "../context/AuthContext";
-import axios from "axios";
 import RoomItem from "../components/RoomItem";
+import apiService from "../services/api";
 
 const BookingScreen = ({ navigation, route }) => {
-  const { currentID, user, ip, authToken, isAuthenticated } = useContext(AuthContext);
+  const { currentID, user, authToken, isAuthenticated } = useContext(AuthContext);
   const hotelId = currentID;
   
   const [adults, setAdults] = useState(1);
@@ -59,12 +59,12 @@ const BookingScreen = ({ navigation, route }) => {
 
     setIsLoadingRooms(true);
     try {
-      const hotelResponse = await axios.get(`http://${ip}:8000/api/v1/hotels/profile/${hotelId}`);
+      const hotelResponse = await apiService.hotels.getById(hotelId);
       if (hotelResponse.data && hotelResponse.data.data) {
         setHotelName(hotelResponse.data.data.name);
       }
 
-      const roomsResponse = await axios.get(`http://${ip}:8000/api/v1/hotels/rooms/${hotelId}`);
+      const roomsResponse = await apiService.rooms.getByHotelId(hotelId);
       
       if (roomsResponse.data && roomsResponse.data.data) {
         const roomsData = roomsResponse.data.data;
@@ -213,16 +213,7 @@ const BookingScreen = ({ navigation, route }) => {
 
       console.log('Creating booking with payload:', JSON.stringify(bookingPayload, null, 2));
 
-      const response = await axios.post(
-        `http://${ip}:8000/api/v1/hotels/booking/create/${hotelId}`,
-        bookingPayload,
-        {
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await apiService.bookings.create(hotelId, bookingPayload);
 
       console.log('Booking response:', response.data);
 

@@ -18,9 +18,9 @@ import {
   import FontAwesome from "@expo/vector-icons/FontAwesome";
   import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
   
-  const SecurityScreen = () => {
-    const navigation = useNavigation();
-    const { user, ip } = useContext(AuthContext);
+    const SecurityScreen = () => {
+      const navigation = useNavigation();
+      const { user } = useContext(AuthContext);
     const [isLoading, setIsLoading] = useState(false);
     
     // Password states

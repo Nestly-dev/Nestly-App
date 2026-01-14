@@ -18,8 +18,8 @@ import {
 import React, { useState, useContext, useEffect } from "react";
 import { data } from "../data/reviewdata";
 import * as ImagePicker from 'expo-image-picker';
-import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import apiService from "../services/api";
 
 const { width, height } = Dimensions.get('window');
 
@@ -27,7 +27,7 @@ const ReviewsScreen = () => {
   const [comment, setComment] = useState("");
   const [userRating, setUserRating] = useState(0);
   const [attachments, setAttachments] = useState([]);
-  const {currentID, ip, userId, setReview, review} = useContext(AuthContext);
+  const {currentID, userId, setReview, review} = useContext(AuthContext);
   const [allReviews, setAllReviews] = useState([]);
   const [filteredReviews, setFilteredReviews] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -68,10 +68,9 @@ const ReviewsScreen = () => {
 
   const fetchReviews = async () => {
     try {
-      const getUrl = `http://${ip}:8000/api/v1/hotels/reviews/all-reviews`;
-      console.log('Fetching reviews from:', getUrl);
+      console.log('Fetching reviews using ApiService');
       
-      const response = await axios.get(getUrl);
+      const response = await apiService.reviews.getAll();
       console.log('Reviews response:', response.data);
       
       const reviews = response.data.data || response.data;
@@ -392,13 +391,11 @@ const ReviewsScreen = () => {
         headers['Content-Type'] = 'application/json';
       }
 
-      console.log('Posting review to:', `http://${ip}:8000/api/v1/hotels/reviews/create/${currentID}`);
+      console.log('Posting review using ApiService for hotel:', currentID);
 
-      const response = await axios.post(
-        `http://${ip}:8000/api/v1/hotels/reviews/create/${currentID}`,
-        requestData,
-        { headers }
-      );
+      const response = attachments && attachments.length > 0
+        ? await apiService.reviews.create(currentID, requestData)
+        : await apiService.client.post(`/hotels/reviews/create/${currentID}`, requestData);
 
       console.log('Post response:', response.data);
 
@@ -428,10 +425,8 @@ const ReviewsScreen = () => {
   };
 
   useEffect(() => {
-    if (ip) {
-      fetchReviews();
-    }
-  }, [ip]);
+    fetchReviews();
+  }, []);
 
   useEffect(() => {
     if (allReviews.length > 0) {

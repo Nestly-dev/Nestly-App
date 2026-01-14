@@ -17,16 +17,16 @@ import Entypo from "@expo/vector-icons/Entypo";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import React, { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthContext from "../context/AuthContext";
+import apiService from "../services/api";
 
 const SignUpScreen = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-  const { setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails, ip } = useContext(AuthContext);
+  const { setUser, setSignedIn, setAuthStatus, saveAuthStatus, saveUserDetails } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignUp = async () => {
@@ -40,7 +40,6 @@ const SignUpScreen = () => {
       return;
     }
 
-    const url = `http://${ip}:8000/api/v1/auth/register`;
     const userData = {
       username: name.trim(),
       email: email.trim().toLowerCase(),
@@ -51,7 +50,7 @@ const SignUpScreen = () => {
     console.log("Registering user:", userData.email);
 
     try {
-      const response = await axios.post(url, userData);
+      const response = await apiService.auth.register(userData);
       const result = response.data;
       console.log("✅ Registration response:", result);
 

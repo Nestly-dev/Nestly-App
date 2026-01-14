@@ -80,6 +80,8 @@ class ApiService {
     
     getById: (hotelId) => this.client.get(`/hotels/profile/${hotelId}`),
     
+    getRooms: (hotelId) => this.client.get(`/hotels/rooms/${hotelId}`),
+    
     register: (data) => this.client.post('/hotels/register', data),
     
     update: (hotelId, data) => this.client.patch(`/hotels/update/${hotelId}`, data),
@@ -152,6 +154,15 @@ class ApiService {
     
     getById: (bookingId) => 
       this.client.get(`/hotels/booking/${bookingId}`),
+    
+    getAll: () => 
+      this.client.get('/my-bookings'),
+    
+    getByStatus: (status) => 
+      this.client.get(`/my-bookings/${status}`),
+    
+    getInvoice: (bookingId) => 
+      this.client.get(`/my-bookings/${bookingId}/invoice`),
     
     update: (bookingId, data) => 
       this.client.patch(`/hotels/booking/update/${bookingId}`, data),
@@ -275,6 +286,11 @@ class ApiService {
   // ============= INVITATIONS =============
   invitations = {
     send: (data) => this.client.post('/invitation', data),
+  };
+
+  // ============= CONTENT =============
+  content = {
+    getVideos: () => this.client.get('/content/videos/all'),
   };
 }
 

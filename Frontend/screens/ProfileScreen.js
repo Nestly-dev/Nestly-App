@@ -19,9 +19,9 @@ import AuthContext from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrency } from "../context/CurrencyContext";
 import { CurrencySelector } from "../components/CurrencySelector";
-import axios from "axios";
 import { Alert } from "react-native";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import apiService from "../services/api";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -32,7 +32,7 @@ import WelcomeScreen from "./WelcomeScreen";
 const { width } = Dimensions.get('window');
 
 const ProfileScreen = () => {
-  const { user, isAuthenticated, logout, authToken, ip } = useContext(AuthContext);
+  const { user, isAuthenticated, logout, authToken } = useContext(AuthContext);
   const { theme, isDark, toggleTheme } = useTheme();
   const { selectedCurrency } = useCurrency();
   const navigation = useNavigation();
@@ -43,17 +43,9 @@ const ProfileScreen = () => {
     try {
       setIsLoggingOut(true);
 
-      // Call backend logout endpoint with token
+      // Call backend logout endpoint using ApiService
       try {
-        await axios.post(
-          `http://${ip}:8000/api/v1/auth/logout`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`
-            }
-          }
-        );
+        await apiService.auth.logout();
         console.log('✅ Logout API call successful');
       } catch (apiError) {
         console.warn('⚠️ Logout API call failed (continuing with local logout):', apiError.message);

@@ -17,17 +17,16 @@ import {
   import FontAwesome from "@expo/vector-icons/FontAwesome";
   import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
   import Feather from "@expo/vector-icons/Feather";
-  import axios from "axios";
-  import AuthContext from "../context/AuthContext";
+    import AuthContext from "../context/AuthContext";
+    import apiService from "../services/api";
   
-  const HelpSupportScreen = () => {
-    const navigation = useNavigation();
-    const [issueType, setIssueType] = useState("");
-    const [hotelName, setHotelName] = useState("");
-    const [subject, setSubject] = useState("");
-    const [message, setMessage] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const {ip} = useContext(AuthContext)
+    const HelpSupportScreen = () => {
+      const navigation = useNavigation();
+      const [issueType, setIssueType] = useState("");
+      const [hotelName, setHotelName] = useState("");
+      const [subject, setSubject] = useState("");
+      const [message, setMessage] = useState("");
+      const [isSubmitting, setIsSubmitting] = useState(false);
     
     
     const commonIssues = [
@@ -93,14 +92,7 @@ import {
       };
       
       try {
-        const url = `http://${ip}:8000/api/v1/complaints/send`;
-        
-        const response = await axios.post(url, supportTicketData, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          timeout: 10000,
-        });
+        const response = await apiService.complaints.send(supportTicketData);
 
         if (response.status === 200 || response.status === 201) {
           setIsSubmitting(false);

@@ -27,7 +27,7 @@ import { useContext } from "react";
 import AuthContext from "../context/AuthContext";
 import WelcomeScreen from "./WelcomeScreen";
 import TopHotels from "../components/TopHotels";
-import axios from "axios";
+import apiService from "../services/api";
 
 
 SplashScreen.preventAutoHideAsync();
@@ -38,10 +38,8 @@ const HomeScreen = () => {
     'Poppins': require('../assets/fonts/Poppins-Regular.ttf'),
     'Inter': require('../assets/fonts/Inter-VariableFont_opsz,wght.ttf'),
   });
-  const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn, saveHotelData, setHotelData, hotelData, ip} = useContext(AuthContext)
+  const {signedIn, loadAuthStatus, authStatus, setSignedIn, showLogIn, saveHotelData, setHotelData, hotelData} = useContext(AuthContext)
   const [posts, setPosts] = useState()
-  const hotelURL = `http://${ip}:8000/api/v1/hotels/all-hotels`
-  const postUrl = `http://${ip}:8000/api/v1/hotels/posts/All-hotels`
 
   useEffect(() => {
     if (loaded || error) {
@@ -66,9 +64,8 @@ const HomeScreen = () => {
     checkAuth();
     console.log("Current auth status:", authStatus); // Debug log
 
-    // GET the hotel details from the database
-
-    axios.get(hotelURL)
+    // GET the hotel details from the database using ApiService
+    apiService.hotels.getAll()
     .then((response) =>{
       const result = response.data
       const hotels = result.data
@@ -80,7 +77,8 @@ const HomeScreen = () => {
   }, [authStatus]);
 
   useEffect(() =>{
-    axios.get(postUrl)
+    // GET posts using ApiService
+    apiService.posts.getAll()
     .then((response) =>{
       const result = response.data
       const postData = result.data

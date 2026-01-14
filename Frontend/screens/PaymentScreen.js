@@ -13,11 +13,11 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import AuthContext from '../context/AuthContext';
-import axios from 'axios';
+import apiService from '../services/api';
 
 const PaymentScreen = ({ route, navigation }) => {
   const { grandTotal, bookingData, bookingId } = route.params;
-  const { user, ip, authToken, isAuthenticated } = useContext(AuthContext);
+  const { user, authToken, isAuthenticated } = useContext(AuthContext);
   
   const [loading, setLoading] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState(bookingData?.checkout_url || null);
@@ -80,14 +80,7 @@ const PaymentScreen = ({ route, navigation }) => {
     if (!txRef || !authToken) return;
 
     try {
-      const response = await axios.get(
-        `http://${ip}:8000/api/v1/payment/verify/${txRef}`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`
-          }
-        }
-      );
+      const response = await apiService.client.get(`/payment/verify/${txRef}`);
 
       if (response.data.status === 200 || response.data.message?.includes('success')) {
         setPaymentStatus('completed');
@@ -113,14 +106,7 @@ const PaymentScreen = ({ route, navigation }) => {
 
   const verifyBookingPayment = async () => {
     try {
-      const response = await axios.get(
-        `http://${ip}:8000/api/v1/hotels/booking/${bookingId}/verify-payment`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`
-          }
-        }
-      );
+      const response = await apiService.bookings.verifyPayment(bookingId);
 
       if (response.data.status === 200) {
         showSuccessAndNavigate(response.data.data);

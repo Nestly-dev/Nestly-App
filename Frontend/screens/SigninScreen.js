@@ -16,14 +16,14 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Entypo from "@expo/vector-icons/Entypo";
 import React, { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import apiService from "../services/api";
 
 const SignInScreen = ({ route = {} }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-  const { login, ip } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
 
   // Get return navigation params if coming from another screen
@@ -36,7 +36,6 @@ const SignInScreen = ({ route = {} }) => {
       return;
     }
 
-    const url = `http://${ip}:8000/api/v1/auth/login`;
     const credentials = {
       email: email.trim().toLowerCase(),
       password: password
@@ -46,7 +45,7 @@ const SignInScreen = ({ route = {} }) => {
     console.log("Logging in with:", credentials.email);
 
     try {
-      const response = await axios.post(url, credentials);
+      const response = await apiService.auth.login(credentials);
       const result = response.data;
       console.log("✅ Login response:", result);
 

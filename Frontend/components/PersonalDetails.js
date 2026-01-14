@@ -13,7 +13,6 @@ import {
 import React, { useState, useContext, useEffect } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Toast from "react-native-toast-message";
-import axios from "axios";
 import * as ImagePicker from 'expo-image-picker';
 import AuthContext from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
@@ -21,6 +20,7 @@ import { useTheme } from "../context/ThemeContext";
 import { CurrencySelector } from "./CurrencySelector";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import apiService from "../services/api";
 
 const PersonalDetails = () => {
   const [firstName, setFirstName] = useState("");
@@ -31,7 +31,7 @@ const PersonalDetails = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
 
-  const { user, ip, authToken } = useContext(AuthContext);
+  const { user, authToken } = useContext(AuthContext);
   const { selectedCurrency, changeCurrency } = useCurrency();
   const { theme } = useTheme();
 
@@ -133,16 +133,7 @@ const PersonalDetails = () => {
       formData.append('preferred_language', 'en');
       formData.append('preferred_currency', selectedCurrency);
 
-      const response = await axios.patch(
-        `http://${ip}:8000/api/v1/profile/update/${user.id}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${authToken}`
-          }
-        }
-      );
+      const response = await apiService.profile.update(user.id, formData);
 
       if (response.data.success || response.status === 200) {
         Toast.show({

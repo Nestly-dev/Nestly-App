@@ -1,12 +1,12 @@
 import { StyleSheet, Text, View, FlatList, Dimensions, Image, useWindowDimensions, TouchableOpacity } from 'react-native'
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import AuthContext from '../context/AuthContext'
-import axios from 'axios'
+import apiService from '../services/api'
 
 
 const Gallery = () => {
     const [media, setMedia] = useState()
-    const {currentID, ip} = useContext(AuthContext)
+    const {currentID} = useContext(AuthContext)
     const {width, height} = useWindowDimensions();
     const IMG_SIZE = 150;
     const SPACING = 10;
@@ -28,8 +28,7 @@ const Gallery = () => {
     }
 
   useEffect(() =>{
-    const url = `http://${ip}:8000/api/v1/hotels/profile/${currentID}`
-    axios.get(url)
+    apiService.hotels.getById(currentID)
     .then((response) => {
       const result = response.data
       const photos = result.data.media

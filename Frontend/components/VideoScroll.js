@@ -19,8 +19,8 @@ import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
-import axios from "axios";
 import AuthContext from "../context/AuthContext";
+import apiService from "../services/api";
 
 // Animated Like Button Component
 const AnimatedLikeButton = ({ isLiked, onPress, likesCount }) => {
@@ -236,7 +236,7 @@ const VideoScroll = () => {
   const [error, setError] = useState(null);
   const [likedVideos, setLikedVideos] = useState(new Set());
   const [savedVideos, setSavedVideos] = useState(new Set());
-  const { ip, authToken, setCurrentID } = useContext(AuthContext);
+  const { authToken, setCurrentID } = useContext(AuthContext);
 
   useEffect(() => {
     const setupAudio = async () => {
@@ -258,8 +258,7 @@ const VideoScroll = () => {
     const fetchVideos = async () => {
       setIsLoading(true);
       try {
-        const videoSource = `http://${ip}:8000/api/v1/content/videos/all`;
-        const response = await axios.get(videoSource);
+        const response = await apiService.content.getVideos();
         const result = response.data;
 
         if (result && result.data) {
@@ -448,7 +447,7 @@ const VideoScroll = () => {
           onPress={() => {
             setError(null);
             setIsLoading(true);
-            axios.get(`http://${ip}:8000/api/v1/content/videos/all`)
+            apiService.content.getVideos()
               .then(response => {
                 if (response.data && response.data.data) {
                   setVideoFeed(response.data.data);

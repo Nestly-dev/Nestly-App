@@ -14,14 +14,14 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AuthContext from '../context/AuthContext';
-import axios from 'axios';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import apiService from '../services/api';
 
 const { width } = Dimensions.get('window');
 
 const MyBookingsScreen = () => {
-  const { authToken, ip, isAuthenticated, logout } = useContext(AuthContext);
+  const { authToken, isAuthenticated, logout } = useContext(AuthContext);
   const navigation = useNavigation();
 
   const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming', 'completed', 'all'
@@ -42,15 +42,9 @@ const MyBookingsScreen = () => {
     try {
       setIsLoading(true);
 
-      const endpoint = activeTab === 'all'
-        ? `/api/v1/my-bookings`
-        : `/api/v1/my-bookings/${activeTab}`;
-
-      const response = await axios.get(`http://${ip}:8000${endpoint}`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`
-        }
-      });
+      const response = activeTab === 'all'
+        ? await apiService.bookings.getAll()
+        : await apiService.bookings.getByStatus(activeTab);
 
       if (response.data.success) {
         setBookings(response.data.data.bookings || []);
@@ -73,14 +67,7 @@ const MyBookingsScreen = () => {
     try {
       setLoadingInvoice(true);
 
-      const response = await axios.get(
-        `http://${ip}:8000/api/v1/my-bookings/${bookingId}/invoice`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`
-          }
-        }
-      );
+      const response = await apiService.bookings.getInvoice(bookingId);
 
       if (response.data.success) {
         setSelectedInvoice(response.data.data.invoice);

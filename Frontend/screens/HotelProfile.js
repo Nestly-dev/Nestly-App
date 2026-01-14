@@ -25,20 +25,20 @@ import * as Progress from "react-native-progress";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Reviews from "../components/Reviews";
 import { useNavigation } from "@react-navigation/native";
-import axios from "axios";
 import AuthContext from "../context/AuthContext";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import RoomComponent from "../components/RoomComponent";
 import MapLocation from "../components/MapLocation";
 import Loading from "./LoadingScreen";
 import { WebView } from "react-native-webview";
+import apiService from "../services/api";
 
 const { width } = Dimensions.get("window");
 const IMG_HEIGHT = 350;
 
 const HotelProfile = () => {
   const [isloading, setIsLoading] = useState(true);
-  const { currentID, currentRoomId, ip } = useContext(AuthContext);
+  const { currentID, currentRoomId } = useContext(AuthContext);
   const [hotelName, setHotelName] = useState();
   const [adresse, setAdresse] = useState();
   const [summary, setSummary] = useState("");
@@ -62,10 +62,7 @@ const HotelProfile = () => {
 
   //API Calls
   useEffect(() => {
-    const url = `http://${ip}:8000/api/v1/hotels/profile/${currentID}`;
-
-    axios
-      .get(url)
+    apiService.hotels.getById(currentID)
       .then((response) => {
         const result = response.data;
         const hotelDetails = result.data;

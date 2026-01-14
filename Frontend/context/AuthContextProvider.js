@@ -3,6 +3,9 @@ import AuthContext from "./AuthContext";
 import * as SecureStore from "expo-secure-store";
 import { useSafeAreaFrame } from "react-native-safe-area-context";
 
+// Get API base URL from environment variable (Expo convention)
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.65:8001/api/v1';
+
 const UserContexProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [authToken, setAuthToken] = useState(null);
@@ -12,7 +15,8 @@ const UserContexProvider = ({ children }) => {
   const [currentID, setCurrentID] = useState(null);
   const [currentRoomId, setCurrentRoomId] = useState(null);
   const [review, setReview] = useState(null);
-  const ip = "127.0.0.1"
+  // API base URL from environment - no more hardcoded IP
+  const apiBaseUrl = API_BASE_URL;
   const [signedIn, setSignedIn] = useState(true)
 
 // Initialize auth on app start
@@ -142,8 +146,10 @@ const UserContexProvider = ({ children }) => {
     review,
     setReview,
 
-    // API config
-    ip
+    // API config - apiBaseUrl is the full base URL from environment
+    apiBaseUrl,
+    // Keep 'ip' for backward compatibility (deprecated - use apiBaseUrl instead)
+    ip: apiBaseUrl
   };
 
   return (
